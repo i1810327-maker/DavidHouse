@@ -11,7 +11,7 @@ from datetime import datetime
 from sqlalchemy.exc import SQLAlchemyError
 
 from db import init_db, db        # Configuración de base de datos
-from models import Usuario, Grado, Seccion, Curso, Inscripcion, LogAcceso, Apoderado  # Modelos ORM
+from models import Usuario, Grado, Seccion, Curso, LogAcceso, Apoderado  # Modelos ORM
 
 # ====================== CONFIGURACIÓN ======================
 app = Flask(__name__)
@@ -506,7 +506,7 @@ def eliminar_alumno(id):
 @log_accion('Eliminar docente')
 def eliminar_docente(id):
     """Eliminar docente"""
-    docente = Usuario.query.get_or_404(id)
+    docente = Usuario.query.get_or_400(id)
     if docente.rol != 'docente':
         flash('Usuario no es docente', 'danger')
         return redirect(url_for('listar_docentes'))
@@ -643,22 +643,39 @@ def docente_cambiar_clave():
 def alumno_dashboard():
     """Dashboard de alumno"""
     usuario = Usuario.query.get(session.get('usuario_id'))
-    inscripciones = Inscripcion.query.filter_by(alumno_id=usuario.id).all()
+    inscripciones = []  # Lista vacía ya que no se utiliza Inscripcion
     calificaciones = [ins.calificacion for ins in inscripciones if ins.calificacion is not None]
     promedio = sum(calificaciones) / len(calificaciones) if calificaciones else None
     
     # Calcular asistencia promedio
-    asistencias = [ins.asistencias for ins in inscripciones if ins.asistencias is not None]
-    asistencia_promedio = sum(asistencias) / len(asistencias) if asistencias else 0
+    asistencia = [ins.asistencia for ins in inscripciones if ins.asistencia is not None]
+    asistencia_promedio = sum(asistencia) / len(asistencia) if asistencia else 0
     
+    # Apoderado del alumno
     apoderado = Apoderado.query.filter_by(alumno_id=usuario.id).first()
 
-    # Docente y cantidad de estudiantes de la sección
-    seccion = usuario.seccion_rel if hasattr(usuario, 'seccion_rel') else None
-    docente_seccion = seccion.docente.nombres if seccion and seccion.docente else None
-    cantidad_estudiantes_seccion = len(seccion.usuarios) if seccion else 0
-    seccion_nombre = seccion.nombre if seccion else None
-    grado_nombre = seccion.grado.nombre if seccion and seccion.grado else None
+    # Sección, docente tutor y compañeros de sección
+    # Usar relaciones definidas en models.py: usuario.seccion_rel -> Seccion
+    seccion = None
+    docente_seccion = None
+    cantidad_estudiantes_seccion = 0
+    seccion_nombre = None
+    grado_nombre = None
+    
+    if usuario.seccion_id:
+        seccion = Seccion.query.get(usuario.seccion_id)
+        if seccion:
+            seccion_nombre = seccion.nombre
+            if seccion.grado:
+                grado_nombre = seccion.grado.nombre
+            if seccion.docente:
+                docente_seccion = seccion.docente.nombres
+            # Contar estudiantes en la misma sección
+            cantidad_estudiantes_seccion = Usuario.query.filter_by(
+                seccion_id=seccion.id, 
+                rol='alumno',
+                activo=True
+            ).count()
 
     return render_template('dashboard_alumno.html',
                          usuario=usuario,

@@ -1,4 +1,17 @@
 <!DOCTYPE html>
+<!-- ========================================== -->
+<!-- PLANTILLA BASE - ESTRUCTURA COMÚN DEL SISTEMA -->
+<!-- ========================================== -->
+<!-- Esta es la plantilla principal que heredan todas las demás.
+     Contiene:
+     - Estructura HTML básica
+     - Barra de navegación (header) con usuario y logout
+     - Mensajes flash (alertas de éxito/error)
+     - Menú de navegación según el rol
+     - Bloques para contenido específico (title, content)
+     - Scripts comunes
+-->
+
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -7,10 +20,12 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 <body>
+    <!-- HEADER: Barra superior con título y usuario -->
     <header>
         <h1>David House - Camino de Vida</h1>
         {% if session.get('usuario_id') %}
         <div class="header-user">
+            <!-- Muestra el nombre y rol del usuario autenticado -->
             <span>Bienvenido, <strong>{{ session.nombres }}</strong> <br/>
                 <small>({{ session.rol|title }})</small>
             </span>
@@ -22,7 +37,9 @@
         {% endif %}
     </header>
 
+    <!-- CONTENIDO PRINCIPAL -->
     <div class="container">
+        <!-- MENSAJES FLASH: Alertas de éxito/error -->
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}

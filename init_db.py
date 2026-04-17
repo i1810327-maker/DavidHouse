@@ -9,7 +9,7 @@
 #   - Alumno: alumno@colegio.edu.pe / Alumno2026
 
 from app import app, db, bcrypt
-from models import Usuario, Grado, Seccion, Curso, Inscripcion
+from models import Usuario, Grado, Seccion, Curso
 
 def init_database():
     """Inicializa la BD con tablas y datos de prueba"""
@@ -136,14 +136,6 @@ def init_database():
             db.session.add(curso)
         db.session.commit()
         print("✅ Cursos creados\n")
-
-        # Inscribir alumno en cursos
-        print("📝 Inscribiendo alumno en cursos...")
-        for curso in cursos:
-            inscripcion = Inscripcion(alumno_id=alumno.id, curso_id=curso.id)
-            db.session.add(inscripcion)
-        db.session.commit()
-        print("✅ Alumno inscrito en cursos\n")
 
         print("=" * 50)
         print("🎉 ¡Base de datos inicializada correctamente!")
