@@ -293,6 +293,20 @@ header h1 {
     margin-bottom: 22px;
 }
 
+
+#toggleClave {
+    margin: 0;
+    cursor: pointer;
+    font-size: 18px;
+    display: flex;
+    box-shadow: none;
+    position: absolute;
+    right: 12px;
+    top: 55%;
+    transform: translate(40%, 10%);
+}
+
+
 label {
     display: block;
     margin-bottom: 8px;
