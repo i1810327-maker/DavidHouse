@@ -1,82 +1,78 @@
 {% extends "base.html" %}
-{% block title %}Registrar Docente - ColegioSys{% endblock %}
+{% block title %}Editar Docente - ColegioSys{% endblock %}
 
 {% block content %}
 <div class="card" style="max-width: 800px; margin: 0 auto;">
-    <h2> Registrar Nuevo Docente</h2>
+    <h2> Editar Docente</h2>
     <p style="color: #666; margin-bottom: 25px;">
-        Complete todos los campos para crear una nueva cuenta de docente en el sistema.
+        Actualiza la información del docente en el sistema.
     </p>
     <div class="divider"></div>
 
-    <form method="POST" action="{{ url_for('registrar_docente') }}">
+    <form method="POST">
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
             <!-- Fila 1 -->
             <div class="form-group">
                 <label for="dni">* DNI *</label>
-                <input type="text" id="dni" name="dni" placeholder="12345678" required>
+                <input type="text" id="dni" name="dni" value="{{ docente.dni }}" placeholder="12345678" required>
             </div>
 
             <div class="form-group">
                 <label for="nombres">* Nombres *</label>
-                <input type="text" id="nombres" name="nombres" placeholder="Juan" required>
+                <input type="text" id="nombres" name="nombres" value="{{ docente.nombres }}" placeholder="Juan" required>
             </div>
 
             <!-- Fila 2 -->
             <div class="form-group">
                 <label for="apellido_paterno">* Apellido Paterno *</label>
-                <input type="text" id="apellido_paterno" name="apellido_paterno" placeholder="García" required>
+                <input type="text" id="apellido_paterno" name="apellido_paterno" value="{{ docente.apellido_paterno }}" placeholder="García" required>
             </div>
 
             <div class="form-group">
                 <label for="apellido_materno">* Apellido Materno *</label>
-                <input type="text" id="apellido_materno" name="apellido_materno" placeholder="López" required>
+                <input type="text" id="apellido_materno" name="apellido_materno" value="{{ docente.apellido_materno }}" placeholder="López" required>
             </div>
 
             <!-- Fila 3 -->
             <div class="form-group">
                 <label for="correo">* Correo Electrónico *</label>
-                <input type="email" id="correo" name="correo" placeholder="docente@colegio.edu.pe" required>
+                <input type="email" id="correo" name="correo" value="{{ docente.correo }}" placeholder="docente@colegio.edu.pe" required>
             </div>
 
             <div class="form-group">
-                <label for="telefono_principal">* Teléfono Principal</label>
-                <input type="text" id="telefono_principal" name="telefono_principal" placeholder="987654321" maxlength="20">
+                <label for="telefono_principal"> Teléfono Principal</label>
+                <input type="text" id="telefono_principal" name="telefono_principal" value="{{ docente.telefono_principal or '' }}" placeholder="987654321" maxlength="20">
             </div>
 
             <!-- Fila 4 -->
             <div class="form-group">
-                <label for="telefono_secundario">* Teléfono Secundario</label>
-                <input type="text" id="telefono_secundario" name="telefono_secundario" placeholder="912345678" maxlength="20">
+                <label for="telefono_secundario"> Teléfono Secundario</label>
+                <input type="text" id="telefono_secundario" name="telefono_secundario" value="{{ docente.telefono_secundario or '' }}" placeholder="912345678" maxlength="20">
             </div>
 
             <div class="form-group">
-                <label for="clave">* Contraseña *</label>
-                <input type="password" id="clave" name="clave" placeholder="Contraseña segura" required>
+                <label for="profesion">* Profesión *</label>
+                <input type="text" id="profesion" name="profesion" value="{{ docente.profesion or '' }}" placeholder="Licenciado en Educación" required>
             </div>
 
             <!-- Fila 5 -->
-            <div class="form-group">
-                <label for="profesion">* Profesión *</label>
-                <input type="text" id="profesion" name="profesion" placeholder="Licenciado en Educación" required>
-            </div>
-
             <div class="form-group" style="display: flex; align-items: flex-end;">
                 <label style="margin: 0; display: flex; align-items: center; cursor: pointer;">
                     <input type="checkbox" id="tiene_especialidad" name="tiene_especialidad" value="1" 
+                           {% if docente.tiene_especialidad %}checked{% endif %}
                            onchange="mostrarEspecialidad(this.checked)"
                            style="width: auto; margin-right: 8px;">
                     <span>¿Tiene especialidad?</span>
                 </label>
             </div>
 
-            <!-- Fila 6: Nivel, Grado y Sección -->
+            <!-- Fila 6: Nivel, Grado y Sección (Tutoría) -->
             <div class="form-group">
                 <label for="nivel_docente">* Nivel *</label>
                 <select id="nivel_docente" name="nivel_docente" onchange="filtrarGradosDocente()" required>
                     <option value="">-- Selecciona un nivel --</option>
-                    <option value="inicial">Inicial</option>
-                    <option value="primaria">Primaria</option>
+                    <option value="inicial" {% if docente.seccion_rel and docente.seccion_rel.grado.nivel == 'inicial' %}selected{% endif %}>Inicial</option>
+                    <option value="primaria" {% if docente.seccion_rel and docente.seccion_rel.grado.nivel == 'primaria' %}selected{% endif %}>Primaria</option>
                 </select>
             </div>
 
@@ -96,41 +92,33 @@
         </div>
 
         <!-- Campo de especialidad (oculto por defecto) -->
-        <div id="campo_especialidad" style="display: none; margin-top: 20px;">
+        <div id="campo_especialidad" {% if not docente.tiene_especialidad %}hidden{% endif %} style="margin-top: 20px;">
             <div class="form-group">
                 <label for="descripcion_especialidad"> Descripción de Especialidad *</label>
                 <textarea id="descripcion_especialidad" name="descripcion_especialidad" 
-                          placeholder="Describe tu área de especialidad, certificaciones o experiencia..."></textarea>
+                          placeholder="Describe tu área de especialidad, certificaciones o experiencia...">{{ docente.descripcion_especialidad or '' }}</textarea>
             </div>
         </div>
 
-        <div style="background: #f0f7ff; border-left: 4px solid #0066CC; padding: 15px; border-radius: 4px; margin: 20px 0;">
-            <strong>💡 Nota:</strong> Si el docente tiene especialidad, debe completar la descripción. De lo contrario, dejar sin marcar.
-        </div>
+        <div class="divider"></div>
 
-        <div class="btn-group" style="margin-top: 30px;">
-            <button type="submit" class="btn"> Registrar Docente</button>
-            <a href="{{ url_for('directora_dashboard') }}" class="btn btn-secondary"> Cancelar</a>
+        <div style="display: flex; gap: 15px; justify-content: flex-end;">
+            <a href="{{ url_for('listar_docentes') }}" class="btn btn-secondary">Cancelar</a>
+            <button type="submit" class="btn btn-primary">Guardar Cambios</button>
         </div>
     </form>
 </div>
 
+
+{% set valor_grado = docente.seccion_rel.grado_id if docente.seccion_rel else None %}
+{% set valor_seccion = docente.seccion_id if docente.seccion_id else None %}
 <script>
     // Datos de grados y secciones desde el backend
     const gradosData = JSON.parse('{{ grados_data | default([]) | tojson | safe }}');
+    const datosActuales = JSON.parse('{{ {"gradoId": valor_grado, "seccionId": valor_seccion} | tojson | safe }}');
 
     function mostrarEspecialidad(mostrar) {
-        const campo = document.getElementById('campo_especialidad');
-        const textarea = document.getElementById('descripcion_especialidad');
-        
-        if (mostrar) {
-            campo.style.display = 'block';
-            textarea.required = true;
-        } else {
-            campo.style.display = 'none';
-            textarea.required = false;
-            textarea.value = '';
-        }
+        document.getElementById('campo_especialidad').style.display = mostrar ? 'block' : 'none';
     }
 
     function filtrarGradosDocente() {
@@ -162,10 +150,12 @@
                 const option = document.createElement('option');
                 option.value = grado.id;
                 option.textContent = grado.nombre;
+                if (datosActuales.gradoId === grado.id) option.selected = true;
                 gradoSelect.appendChild(option);
             });
             gradoSelect.disabled = false;
         }
+        filtrarSeccionesDocente();
     }
 
     function filtrarSeccionesDocente() {
@@ -194,20 +184,16 @@
                 const option = document.createElement('option');
                 option.value = seccion.id;
                 option.textContent = seccion.nombre;
+                if (datosActuales.seccionId === seccion.id) option.selected = true;
                 seccionSelect.appendChild(option);
             });
             seccionSelect.disabled = false;
         }
     }
-    
-    // Inicializar al cargar
-    document.addEventListener('DOMContentLoaded', function() {
-        const checkbox = document.getElementById('tiene_especialidad');
-        mostrarEspecialidad(checkbox.checked);
-        
-        // Resetear selects
-        document.getElementById('grado_docente_id').disabled = true;
-        document.getElementById('seccion_docente_id').disabled = true;
+
+    // Inicializar selects al cargar la página
+    window.addEventListener('DOMContentLoaded', function() {
+        filtrarGradosDocente();
     });
 </script>
 {% endblock %}

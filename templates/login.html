@@ -9,7 +9,7 @@
 <body>
     <div class="login-container">
         <div class="login-box">
-            <h2>🎓 Sistema Educativo</h2>
+            <h2> David House - Camino de Vida</h2>
             <p class="login-subtitle">Acceso al Sistema</p>
 
             {% with messages = get_flashed_messages(with_categories=true) %}
@@ -24,20 +24,23 @@
 
             <form method="POST" action="{{ url_for('login') }}">
                 <div class="form-group">
-                    <label for="correo">📧 Correo Electrónico</label>
+                    <label for="correo">* Correo Electrónico</label>
                     <input type="email" id="correo" name="correo" placeholder="alumno@colegio.edu.pe" required>
                 </div>
 
-                <div class="form-group">
-                    <label for="clave">🔐 Contraseña</label>
-                    <input type="password" id="clave" name="clave" placeholder="Tu contraseña" required>
+                <div class="form-group" style="position: relative;">
+                    <label for="clave">* Contraseña</label>
+                    <input type="password" id="clave" name="clave" placeholder="Tu contraseña" required style="padding-right: 40px;">
+                    <button type="button" id="toggleClave" tabindex="-1" style="position: absolute; right: 10px; top: 32px; background: none; border: none; cursor: pointer;">
+                        <span id="iconOjo" style="font-size: 18px;">👁️</span>
+                    </button>
                 </div>
 
                 <button type="submit" style="width: 100%; margin-top: 10px;">Ingresar</button>
             </form>
 
             <p class="login-help">
-                ¿Necesitas ayuda? Contacta a: <strong>admin@colegio.edu.pe</strong>
+                ¿Necesitas ayuda? Contacta a soporte: <strong>soporte@colegio.edu.pe</strong>
             </p>
         </div>
     </div>
@@ -45,5 +48,19 @@
     <footer>
         © 2026 Sistema Educativo - Gestión Institucional. Todos los derechos reservados.
     </footer>
+<script>
+    // Mostrar/ocultar contraseña
+    document.getElementById('toggleClave').addEventListener('click', function() {
+        const claveInput = document.getElementById('clave');
+        const iconOjo = document.getElementById('iconOjo');
+        if (claveInput.type === 'password') {
+            claveInput.type = 'text';
+            iconOjo.textContent = '🙈';
+        } else {
+            claveInput.type = 'password';
+            iconOjo.textContent = '👁️';
+        }
+    });
+</script>
 </body>
 </html>

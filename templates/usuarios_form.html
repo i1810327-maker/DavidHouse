@@ -94,7 +94,7 @@
                 <!-- Fila 4 -->
                 <div class="form-group">
                     <label for="nivel_id">* Nivel *</label>
-                    <select id="nivel_id" name="nivel_id" onchange="filtrarSecciones()" required>
+                    <select id="nivel_id" name="nivel_id" onchange="filtrarGrados()" required>
                         <option value="">-- Selecciona un nivel --</option>
                         <option value="inicial">Inicial</option>
                         <option value="primaria">Primaria</option>
@@ -102,16 +102,20 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="seccion_id">* Sección *</label>
-                    <select id="seccion_id" name="seccion_id" required>
+                    <label for="grado_id">* Grado *</label>
+                    <select id="grado_id" name="grado_id" onchange="filtrarSecciones()" required disabled>
                         <option value="">-- Primero selecciona un nivel --</option>
                     </select>
                 </div>
-            </div>
-        </div>
 
-        <div style="background: #f0f7ff; border-left: 4px solid #0066CC; padding: 15px; border-radius: 4px; margin: 20px 0;">
-            <strong> Nota:</strong> El apoderado es la persona responsable del alumno. El grado se asigna automáticamente según la sección seleccionada.
+                <!-- Fila 5 -->
+                <div class="form-group">
+                    <label for="seccion_id">* Sección *</label>
+                    <select id="seccion_id" name="seccion_id" required disabled>
+                        <option value="">-- Primero selecciona un grado --</option>
+                    </select>
+                </div>
+            </div>
         </div>
 
         <div class="btn-group" style="margin-top: 30px;">
@@ -123,38 +127,66 @@
 
 <script>
     // Datos de grados y secciones desde el backend
-    const gradosData = {{ grados_data | default([]) | tojson | safe }};
+    const gradosData = JSON.parse('{{ grados_data | default([]) | tojson | safe }}');
 
-    function filtrarSecciones() {
+    function filtrarGrados() {
         const nivelSelect = document.getElementById('nivel_id');
+        const gradoSelect = document.getElementById('grado_id');
         const seccionSelect = document.getElementById('seccion_id');
         const nivelSeleccionado = nivelSelect.value;
 
-        // Limpiar opciones actuales
+        // Limpiar opciones
+        gradoSelect.innerHTML = '';
         seccionSelect.innerHTML = '';
+        gradoSelect.disabled = true;
+        seccionSelect.disabled = true;
 
         if (!nivelSeleccionado) {
-            seccionSelect.innerHTML = '<option value="">-- Primero selecciona un nivel --</option>';
-            seccionSelect.disabled = true;
+            gradoSelect.innerHTML = '<option value="">-- Primero selecciona un nivel --</option>';
+            seccionSelect.innerHTML = '<option value="">-- Primero selecciona un grado --</option>';
             return;
         }
 
         // Filtrar grados por nivel
         const gradosFiltrados = gradosData.filter(grado => grado.nivel === nivelSeleccionado);
 
-        // Recopilar todas las secciones de los grados filtrados
-        let secciones = [];
-        gradosFiltrados.forEach(grado => {
-            secciones = secciones.concat(grado.secciones);
-        });
+        if (gradosFiltrados.length === 0) {
+            gradoSelect.innerHTML = '<option value="">No hay grados disponibles</option>';
+        } else {
+            gradoSelect.innerHTML = '<option value="">-- Selecciona un grado --</option>';
+            gradosFiltrados.forEach(grado => {
+                const option = document.createElement('option');
+                option.value = grado.id;
+                option.textContent = grado.nombre;
+                gradoSelect.appendChild(option);
+            });
+            gradoSelect.disabled = false;
+        }
+    }
 
-        // Crear opciones del dropdown
-        if (secciones.length === 0) {
+    function filtrarSecciones() {
+        const gradoSelect = document.getElementById('grado_id');
+        const seccionSelect = document.getElementById('seccion_id');
+        const gradoSeleccionado = gradoSelect.value;
+
+        // Limpiar opciones actuales
+        seccionSelect.innerHTML = '';
+
+        if (!gradoSeleccionado) {
+            seccionSelect.innerHTML = '<option value="">-- Primero selecciona un grado --</option>';
+            seccionSelect.disabled = true;
+            return;
+        }
+
+        // Buscar el grado seleccionado
+        const grado = gradosData.find(g => g.id === parseInt(gradoSeleccionado));
+        
+        if (!grado || !grado.secciones || grado.secciones.length === 0) {
             seccionSelect.innerHTML = '<option value="">No hay secciones disponibles</option>';
             seccionSelect.disabled = true;
         } else {
             seccionSelect.innerHTML = '<option value="">-- Selecciona una sección --</option>';
-            secciones.forEach(seccion => {
+            grado.secciones.forEach(seccion => {
                 const option = document.createElement('option');
                 option.value = seccion.id;
                 option.textContent = seccion.nombre;
@@ -166,7 +198,9 @@
 
     // Inicializar al cargar la página
     window.addEventListener('load', function() {
-        filtrarSecciones();
+        // Resetear selects al cargar
+        document.getElementById('grado_id').disabled = true;
+        document.getElementById('seccion_id').disabled = true;
     });
 </script>
 {% endblock %}

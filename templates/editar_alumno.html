@@ -86,25 +86,123 @@
                     <input type="email" id="correo" name="correo" value="{{ alumno.correo }}" placeholder="alumno@colegio.edu.pe" required>
                 </div>
 
-                <!-- Fila 4 -->
+
+                <!-- Fila 4: Nivel, Grado y Sección -->
+                <div class="form-group">
+                    <label for="nivel_id">* Nivel *</label>
+                    <select id="nivel_id" name="nivel_id" onchange="filtrarGrados()" required>
+                        <option value="">-- Selecciona un nivel --</option>
+                        <option value="inicial" {% if alumno.grado_rel and alumno.grado_rel.nivel == 'inicial' %}selected{% endif %}>Inicial</option>
+                        <option value="primaria" {% if alumno.grado_rel and alumno.grado_rel.nivel == 'primaria' %}selected{% endif %}>Primaria</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="grado_id">* Grado *</label>
+                    <select id="grado_id" name="grado_id" onchange="filtrarSecciones()" required disabled>
+                        <option value="">-- Primero selecciona un nivel --</option>
+                    </select>
+                </div>
+
                 <div class="form-group">
                     <label for="seccion_id">* Sección *</label>
-                    <select id="seccion_id" name="seccion_id" required>
-                        <option value="">Seleccionar Sección</option>
-                        {% for seccion in secciones %}
-                        <option value="{{ seccion.id }}" {% if alumno.seccion_id == seccion.id %}selected{% endif %}>{{ seccion.nombre }} - {{ seccion.grado.nombre }}</option>
-                        {% endfor %}
+                    <select id="seccion_id" name="seccion_id" required disabled>
+                        <option value="">-- Primero selecciona un grado --</option>
                     </select>
                 </div>
 
                 <div class="form-group" style="grid-column: 1 / -1;">
                     <label>📖 Grado</label>
-                    <div style="padding: 12px 14px; background: #f5f5f5; border-radius: 8px; color: #555;">
-                        El grado se asigna automáticamente según la sección.
-                    </div>
                 </div>
             </div>
         </div>
+    </form>
+</div>
+
+
+{% set valor_grado = alumno.grado_id or None %}
+{% set valor_seccion = alumno.seccion_id or None %}
+<script>
+    // Datos de grados y secciones desde el backend
+    const gradosData = JSON.parse('{{ grados_data | default([]) | tojson | safe }}');
+    const datosActuales = JSON.parse('{{ {"gradoId": valor_grado, "seccionId": valor_seccion} | tojson | safe }}');
+
+    function filtrarGrados() {
+        const nivelSelect = document.getElementById('nivel_id');
+        const gradoSelect = document.getElementById('grado_id');
+        const seccionSelect = document.getElementById('seccion_id');
+        const nivelSeleccionado = nivelSelect.value;
+
+        // Limpiar opciones
+        gradoSelect.innerHTML = '';
+        seccionSelect.innerHTML = '';
+        gradoSelect.disabled = true;
+        seccionSelect.disabled = true;
+
+        if (!nivelSeleccionado) {
+            gradoSelect.innerHTML = '<option value="">-- Primero selecciona un nivel --</option>';
+            seccionSelect.innerHTML = '<option value="">-- Primero selecciona un grado --</option>';
+            return;
+        }
+
+        // Filtrar grados por nivel
+        const gradosFiltrados = gradosData.filter(grado => grado.nivel === nivelSeleccionado);
+
+        if (gradosFiltrados.length === 0) {
+            gradoSelect.innerHTML = '<option value="">No hay grados disponibles</option>';
+        } else {
+            gradoSelect.innerHTML = '<option value="">-- Selecciona un grado --</option>';
+            gradosFiltrados.forEach(grado => {
+                const option = document.createElement('option');
+                option.value = grado.id;
+                option.textContent = grado.nombre;
+                if (datosActuales.gradoId === grado.id) option.selected = true;
+                gradoSelect.appendChild(option);
+            });
+            gradoSelect.disabled = false;
+        }
+        filtrarSecciones();
+    }
+
+    function filtrarSecciones() {
+        const gradoSelect = document.getElementById('grado_id');
+        const seccionSelect = document.getElementById('seccion_id');
+        const gradoSeleccionado = gradoSelect.value;
+
+        // Limpiar opciones actuales
+        seccionSelect.innerHTML = '';
+
+        if (!gradoSeleccionado) {
+            seccionSelect.innerHTML = '<option value="">-- Primero selecciona un grado --</option>';
+            seccionSelect.disabled = true;
+            return;
+        }
+
+        // Buscar el grado seleccionado
+        const grado = gradosData.find(g => g.id === parseInt(gradoSeleccionado));
+        
+        if (!grado || !grado.secciones || grado.secciones.length === 0) {
+            seccionSelect.innerHTML = '<option value="">No hay secciones disponibles</option>';
+            seccionSelect.disabled = true;
+        } else {
+            seccionSelect.innerHTML = '<option value="">-- Selecciona una sección --</option>';
+            grado.secciones.forEach(seccion => {
+                const option = document.createElement('option');
+                option.value = seccion.id;
+                option.textContent = seccion.nombre;
+                if (datosActuales.seccionId === seccion.id) option.selected = true;
+                seccionSelect.appendChild(option);
+            });
+            seccionSelect.disabled = false;
+        }
+    }
+
+    // Inicializar selects al cargar la página
+    window.addEventListener('DOMContentLoaded', function() {
+        filtrarGrados();
+    });
+</script>
+{% endblock %}
 
         <div style="background: #f0f7ff; border-left: 4px solid #0066CC; padding: 15px; border-radius: 4px; margin: 20px 0;">
             <strong> Nota:</strong> El apoderado es la persona responsable del alumno. El grado se asigna automáticamente según la sección seleccionada.

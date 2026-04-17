@@ -273,6 +273,15 @@ def registrar_docente():
         try:
             nuevo_docente = crear_usuario_desde_form(request.form, 'docente')
             db.session.add(nuevo_docente)
+            db.session.flush()
+            
+            # Asignar docente como tutor de la sección seleccionada
+            seccion_id = request.form.get('seccion_docente_id')
+            if seccion_id:
+                seccion = Seccion.query.get(seccion_id)
+                if seccion:
+                    seccion.docente_id = nuevo_docente.id
+            
             db.session.commit()
             flash(f'Docente {nuevo_docente.nombres} registrado exitosamente', 'success')
             return redirect(url_for('directora_dashboard'))
@@ -280,7 +289,19 @@ def registrar_docente():
             db.session.rollback()
             flash(f'Error al registrar: {str(e)}', 'danger')
     
-    return render_template('docentes_form.html')
+    # Obtener grados para el formulario
+    grados = Grado.query.filter_by(activo=True).all()
+    grados_data = []
+    for grado in grados:
+        grado_dict = {
+            'id': grado.id,
+            'nombre': grado.nombre,
+            'nivel': grado.nivel,
+            'secciones': [{'id': s.id, 'nombre': s.nombre} for s in grado.secciones if s.activo]
+        }
+        grados_data.append(grado_dict)
+    
+    return render_template('docentes_form.html', grados_data=grados_data)
 
 @app.route('/directora/listar_alumnos')
 @verificar_permisos
@@ -353,7 +374,16 @@ def editar_alumno(id):
     grados = Grado.query.filter_by(activo=True).all()
     secciones = Seccion.query.filter_by(activo=True).all()
     apoderado = Apoderado.query.filter_by(alumno_id=alumno.id).first()
-    return render_template('editar_alumno.html', alumno=alumno, grados=grados, secciones=secciones, apoderado=apoderado)
+    grados_data = []
+    for grado in grados:
+        grado_dict = {
+            'id': grado.id,
+            'nombre': grado.nombre,
+            'nivel': grado.nivel,
+            'secciones': [{'id': s.id, 'nombre': s.nombre} for s in grado.secciones if s.activo]
+        }
+        grados_data.append(grado_dict)
+    return render_template('editar_alumno.html', alumno=alumno, grados=grados, secciones=secciones, apoderado=apoderado, grados_data=grados_data)
 
 @app.route('/directora/editar_docente/<int:id>', methods=['GET', 'POST'])
 @verificar_permisos
@@ -378,6 +408,21 @@ def editar_docente(id):
             docente.profesion = request.form.get('profesion')
             docente.tiene_especialidad = bool(request.form.get('tiene_especialidad'))
             docente.descripcion_especialidad = request.form.get('descripcion_especialidad') if request.form.get('tiene_especialidad') else None
+            
+            # Actualizar sección/tutoría del docente
+            seccion_id = request.form.get('seccion_docente_id')
+            if seccion_id:
+                seccion = Seccion.query.get(seccion_id)
+                if seccion:
+                    # Quitar al docente anterior de esa sección si existía
+                    if docente.seccion_id:
+                        seccion_anterior = Seccion.query.get(docente.seccion_id)
+                        if seccion_anterior and seccion_anterior.docente_id == docente.id:
+                            seccion_anterior.docente_id = None
+                    # Asignar nuevo tutor
+                    docente.seccion_id = seccion_id
+                    seccion.docente_id = docente.id
+            
             db.session.commit()
             flash('Docente actualizado exitosamente', 'success')
             return redirect(url_for('listar_docentes'))
@@ -385,7 +430,19 @@ def editar_docente(id):
             db.session.rollback()
             flash(f'Error al actualizar: {str(e)}', 'danger')
     
-    return render_template('editar_docente.html', docente=docente)
+    # Obtener grados para el formulario
+    grados = Grado.query.filter_by(activo=True).all()
+    grados_data = []
+    for grado in grados:
+        grado_dict = {
+            'id': grado.id,
+            'nombre': grado.nombre,
+            'nivel': grado.nivel,
+            'secciones': [{'id': s.id, 'nombre': s.nombre} for s in grado.secciones if s.activo]
+        }
+        grados_data.append(grado_dict)
+    
+    return render_template('editar_docente.html', docente=docente, grados_data=grados_data)
 
 @app.route('/directora/eliminar_alumno/<int:id>', methods=['POST'])
 @verificar_permisos

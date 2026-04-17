@@ -101,9 +101,6 @@ class Usuario(db.Model):
     def __repr__(self):
         return f"<Usuario {self.nombres} {self.apellido_paterno} ({self.rol})>"
     
-    def __repr__(self):
-        return f"<Usuario {self.nombres} {self.apellido_paterno} ({self.rol})>"
-    
     @property
     def nombre_completo(self):
         return f"{self.nombres} {self.apellido_paterno} {self.apellido_materno}"
