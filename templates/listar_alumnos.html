@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Lista de Estudiantes{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>👨‍🎓 Lista de Estudiantes</h2>
+    <p>Gestión completa de estudiantes registrados.</p>
+    <a href="{{ url_for('directora_dashboard') }}" class="btn btn-sm">← Volver al Panel</a>
+</div>
+
+<div class="card">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>DNI</th>
+                <th>Nombre Completo</th>
+                <th>Correo</th>
+                <th>Grado</th>
+                <th>Sección</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for alumno in alumnos %}
+            <tr>
+                <td>{{ alumno.dni }}</td>
+                <td>{{ alumno.nombre_completo }}</td>
+                <td>{{ alumno.correo }}</td>
+                <td>{{ alumno.grado_rel.nombre if alumno.grado_rel else 'N/A' }}</td>
+                <td>{{ alumno.seccion_rel.nombre if alumno.seccion_rel else 'N/A' }}</td>
+                <td>
+                    {% if alumno.activo %}
+                        <span class="badge badge-success">Activo</span>
+                    {% else %}
+                        <span class="badge badge-danger">Inactivo</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <a href="{{ url_for('editar_alumno', id=alumno.id) }}" class="btn btn-sm btn-primary">Editar</a>
+                    <form method="POST" action="{{ url_for('eliminar_alumno', id=alumno.id) }}" style="display: inline;" onsubmit="return confirm('¿Estás seguro de eliminar este estudiante?')">
+                        <button type="submit" class="btn btn-sm btn-danger">Eliminar</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

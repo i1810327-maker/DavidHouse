@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Panel Directora{% endblock %}
+
+{% block content %}
+<div class="dashboard-top">
+    <div class="summary-card summary-orange">
+        <div class="summary-title">Total Docentes</div>
+        <div class="summary-value">{{ docentes }}</div>
+    </div>
+    <div class="summary-card summary-orange-light">
+        <div class="summary-title">Total Estudiantes</div>
+        <div class="summary-value">{{ alumnos }}</div>
+    </div>
+    <div class="summary-card summary-card-muted">
+        <div class="summary-title">Ingresos Mensuales</div>
+        <div class="summary-value">$8.2M</div>
+    </div>
+    <div class="summary-card summary-card-muted">
+        <div class="summary-title">Promedio Institucional</div>
+        <div class="summary-value">4.1</div>
+    </div>
+</div>
+
+<div class="dashboard-tabs-card">
+    <div class="dashboard-tabs">
+        <div class="dashboard-tab">Colaboradores</div>
+        <div class="dashboard-tab">Pagos</div>
+        <div class="dashboard-tab">Académico</div>
+        <div class="dashboard-tab active">Registro</div>
+    </div>
+
+    <div class="dashboard-panel">
+        <div class="panel-header">
+            <div>
+                <h2>Registro de Usuarios</h2>
+                <p>Registra nuevos estudiantes y docentes en el sistema.</p>
+            </div>
+        </div>
+
+        <div class="panel-actions">
+            <a href="{{ url_for('registrar_alumno') }}" class="btn btn-primary btn-block">Registrar Estudiante</a>
+            <a href="{{ url_for('registrar_docente') }}" class="btn btn-secondary btn-block">Registrar Docente</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

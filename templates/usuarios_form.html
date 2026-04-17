@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}Registrar Alumno - ColegioSys{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 800px; margin: 0 auto;">
+    <h2>👨‍🎓 Registrar Nuevo Alumno</h2>
+    <p style="color: #666; margin-bottom: 25px;">
+        Complete todos los campos para crear una nueva cuenta de alumno en el sistema.
+    </p>
+    <div class="divider"></div>
+
+    <form method="POST" action="{{ url_for('registrar_alumno') }}">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <!-- Fila 1 -->
+            <div class="form-group">
+                <label for="dni">📝 DNI *</label>
+                <input type="text" id="dni" name="dni" placeholder="12345678" required>
+            </div>
+
+            <div class="form-group">
+                <label for="nombres">👤 Nombres *</label>
+                <input type="text" id="nombres" name="nombres" placeholder="Juan" required>
+            </div>
+
+            <!-- Fila 2 -->
+            <div class="form-group">
+                <label for="apellido_paterno">👤 Apellido Paterno *</label>
+                <input type="text" id="apellido_paterno" name="apellido_paterno" placeholder="García" required>
+            </div>
+
+            <div class="form-group">
+                <label for="apellido_materno">👤 Apellido Materno *</label>
+                <input type="text" id="apellido_materno" name="apellido_materno" placeholder="López" required>
+            </div>
+
+            <!-- Fila 3 -->
+            <div class="form-group">
+                <label for="correo">📧 Correo Electrónico *</label>
+                <input type="email" id="correo" name="correo" placeholder="alumno@colegio.edu.pe" required>
+            </div>
+
+            <div class="form-group">
+                <label for="clave">🔐 Contraseña *</label>
+                <input type="password" id="clave" name="clave" placeholder="Contraseña segura" required>
+            </div>
+
+            <!-- Fila 4 -->
+            <div class="form-group">
+                <label for="seccion_id">📚 Sección *</label>
+                <select id="seccion_id" name="seccion_id" required>
+                    <option value="">-- Selecciona una sección --</option>
+                    {% for seccion in secciones %}
+                        <option value="{{ seccion.id }}">{{ seccion.nombre }} - {{ seccion.grado.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="grado_id">📖 Grado</label>
+                <input type="text" id="grado_id" name="grado_id" placeholder="Se asigna automáticamente" disabled style="background: #f5f5f5;">
+            </div>
+        </div>
+
+        <div style="background: #f0f7ff; border-left: 4px solid #0066CC; padding: 15px; border-radius: 4px; margin: 20px 0;">
+            <strong>💡 Nota:</strong> El grado se asigna automáticamente según la sección seleccionada.
+        </div>
+
+        <div class="btn-group" style="margin-top: 30px;">
+            <button type="submit" class="btn">✅ Registrar Alumno</button>
+            <a href="{{ url_for('directora_dashboard') }}" class="btn btn-secondary">❌ Cancelar</a>
+        </div>
+    </form>
+</div>
+
+<script>
+    // Script para asignar grado automáticamente
+    document.getElementById('seccion_id').addEventListener('change', function() {
+        const seccionId = this.value;
+        if (seccionId) {
+            document.getElementById('grado_id').value = seccionId;
+        }
+    });
+</script>
+{% endblock %}

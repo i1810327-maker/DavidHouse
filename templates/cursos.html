@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Dashboard Docente{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>👨‍🏫 Bienvenido Docente</h2>
+    <p>En este panel puedes ver y gestionar tus cursos asignados.</p>
+</div>
+
+<div class="card">
+    <h3>Opciones disponibles:</h3>
+    <ul style="list-style: none; padding: 0;">
+        <li style="padding: 10px 0;">
+            <a href="{{ url_for('docente_cambiar_clave') }}" class="btn btn-secondary">🔐 Cambiar Contraseña</a>
+        </li>
+    </ul>
+</div>
+
+<div class="card">
+    <h3>📚 Tus Cursos</h3>
+    <p style="color: #6b7280;">Aquí aparecerán los cursos que te han sido asignados.</p>
+</div>
+{% endblock %}

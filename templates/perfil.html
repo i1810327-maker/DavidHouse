@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Perfil{% endblock %}
+
+{% block content %}
+<div class="card card-highlight">
+    <h2>Mi Perfil</h2>
+    <p>Revisa y actualiza tu información personal desde este panel.</p>
+</div>
+
+<div class="profile-grid">
+    <div class="card profile-card">
+        <h3>Datos personales</h3>
+        <div class="profile-row"><span>DNI:</span> {{ usuario.dni }}</div>
+        <div class="profile-row"><span>Nombre completo:</span> {{ usuario.nombre_completo }}</div>
+        <div class="profile-row"><span>Correo:</span> {{ usuario.correo }}</div>
+        <div class="profile-row"><span>Rol:</span> {{ usuario.rol|title }}</div>
+        <div class="profile-row"><span>Estado:</span> {{ 'Activo' if usuario.activo else 'Inactivo' }}</div>
+        <div class="profile-row"><span>Registrado:</span> {{ usuario.fecha_registro.strftime('%d/%m/%Y') }}</div>
+    </div>
+
+    <div class="card profile-card">
+        <h3>Detalles adicionales</h3>
+        {% if usuario.rol == 'alumno' %}
+            <div class="profile-row"><span>Grado:</span> {{ usuario.grado_rel.nombre if usuario.grado_rel else 'No asignado' }}</div>
+            <div class="profile-row"><span>Sección:</span> {{ usuario.seccion_rel.nombre if usuario.seccion_rel else 'No asignada' }}</div>
+        {% elif usuario.rol == 'docente' %}
+            <div class="profile-row"><span>Profesión:</span> {{ usuario.profesion or 'No especificada' }}</div>
+            <div class="profile-row"><span>Especialidad:</span> {{ usuario.descripcion_especialidad if usuario.tiene_especialidad else 'No tiene especialidad' }}</div>
+            <div class="profile-row"><span>Sección asignada:</span> {{ usuario.seccion_rel.nombre if usuario.seccion_rel else 'No asignada' }}</div>
+        {% else %}
+            <div class="profile-row"><span>Tipo de acceso:</span> Administración</div>
+        {% endif %}
+
+        <div class="profile-actions">
+            {% if usuario.rol == 'directora' %}
+                <a href="{{ url_for('directora_cambiar_clave') }}" class="btn btn-primary">Cambiar contraseña</a>
+            {% elif usuario.rol == 'docente' %}
+                <a href="{{ url_for('docente_cambiar_clave') }}" class="btn btn-primary">Cambiar contraseña</a>
+            {% elif usuario.rol == 'alumno' %}
+                <a href="{{ url_for('alumno_cambiar_clave') }}" class="btn btn-primary">Cambiar contraseña</a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

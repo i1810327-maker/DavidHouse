@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Dashboard Alumno{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>👨‍🎓 Bienvenido Alumno</h2>
+    <p>En este panel puedes ver tus cursos y calificaciones.</p>
+</div>
+
+<div class="card">
+    <h3>Opciones disponibles:</h3>
+    <ul style="list-style: none; padding: 0;">
+        <li style="padding: 10px 0;">
+            <a href="{{ url_for('alumno_cambiar_clave') }}" class="btn btn-secondary">🔐 Cambiar Contraseña</a>
+        </li>
+    </ul>
+</div>
+
+<div class="card">
+    <h3>📚 Mis Cursos</h3>
+    <p style="color: #6b7280;">Aquí verás todos tus cursos y las calificaciones obtenidas.</p>
+</div>
+{% endblock %}

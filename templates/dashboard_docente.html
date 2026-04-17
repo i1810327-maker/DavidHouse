@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}Panel de Docente{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h2>👨‍🏫 Panel de Docente</h2>
+    <p>Hola <strong>{{ usuario.nombres }}</strong>, aquí puedes ver y gestionar tu información académica.</p>
+</div>
+
+<div class="cards-grid">
+    <div class="stat-card">
+        <h4>{{ usuario.nombres|truncate(15) }}</h4>
+        <p>Nombre</p>
+    </div>
+    <div class="stat-card">
+        <h4>{{ total_cursos }}</h4>
+        <p>Cursos Asignados</p>
+    </div>
+    <div class="stat-card">
+        <h4>{{ usuario.seccion_rel.nombre if usuario.seccion_rel else 'N/A' }}</h4>
+        <p>Sección</p>
+    </div>
+</div>
+
+<div class="card">
+    <h3>📚 Mis Cursos</h3>
+    <div class="divider"></div>
+    
+    {% if cursos %}
+        <table>
+            <tr>
+                <th>Código</th>
+                <th>Curso</th>
+                <th>Grado</th>
+                <th>Sección</th>
+                <th>Alumnos</th>
+            </tr>
+            {% for curso in cursos %}
+            <tr>
+                <td><strong>{{ curso.codigo }}</strong></td>
+                <td>{{ curso.nombre }}</td>
+                <td>{{ curso.grado_rel.nombre }}</td>
+                <td>{{ curso.seccion_rel.nombre }}</td>
+                <td>{{ curso.inscripciones|length }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    {% else %}
+        <p style="text-align: center; color: #999; padding: 30px;">
+            📭 No tienes cursos asignados aún.
+        </p>
+    {% endif %}
+</div>
+
+<div class="card">
+    <h3>Información Personal</h3>
+    <div class="divider"></div>
+    
+    <table>
+        <tr>
+            <th colspan="2">Datos de la Registración</th>
+        </tr>
+        <tr>
+            <td><strong>DNI:</strong></td>
+            <td>{{ usuario.dni }}</td>
+        </tr>
+        <tr>
+            <td><strong>Nombres:</strong></td>
+            <td>{{ usuario.nombre_completo }}</td>
+        </tr>
+        <tr>
+            <td><strong>Correo:</strong></td>
+            <td>{{ usuario.correo }}</td>
+        </tr>
+        <tr>
+            <td><strong>Profesión:</strong></td>
+            <td>{{ usuario.profesion or 'No especificada' }}</td>
+        </tr>
+        <tr>
+            <td><strong>Especialidad:</strong></td>
+            <td>
+                {% if usuario.tiene_especialidad %}
+                    ✓ {{ usuario.descripcion_especialidad or 'Especificada' }}
+                {% else %}
+                    ✗ No tiene especialidad
+                {% endif %}
+            </td>
+        </tr>
+        <tr>
+            <td><strong>Registered:</strong></td>
+            <td>{{ usuario.fecha_registro.strftime('%d/%m/%Y') }}</td>
+        </tr>
+    </table>
+</div>
+
+<div class="card" style="margin-top: 25px;">
+    <h3>🔐 Seguridad</h3>
+    <div class="divider"></div>
+    <a href="{{ url_for('docente_cambiar_clave') }}" class="btn">Cambiar Contraseña</a>
+</div>
+{% endblock %}
