@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Estudiantes{% endblock %}
+
+{% block content %}
+<div class="module-header">
+    <h2>Gestión de Estudiantes</h2>
+    <p>Supervisa y gestiona todos los estudiantes registrados en el sistema</p>
+</div>
+
+<div class="collaborators-grid">
+    {% if alumnos %}
+        {% for alumno in alumnos %}
+        <div class="collaborator-card">
+            <div class="collaborator-avatar">
+                {{ alumno.nombres[0]}}{{ alumno.apellido_paterno[0] }}
+            </div>
+            <div class="collaborator-info">
+                <h4>{{ alumno.nombres }} {{ alumno.apellido_paterno }}</h4>
+                <p class="role">Estudiante • {{ alumno.grado_rel.nombre if alumno.grado_rel else 'Sin grado' }}</p>
+                
+                {% if alumno.seccion_rel %}
+                <p class="specialty">Sección {{ alumno.seccion_rel.nombre }}</p>
+                {% endif %}
+                
+                <div class="collaborator-stats">
+                    <span>DNI: {{ alumno.dni }}</span>
+                    <span>•</span>
+                    <span>{{ alumno.inscripciones|length }} cursos</span>
+                </div>
+            </div>
+            
+            <div class="collaborator-status">
+                {% if alumno.activo %}
+                    <span class="badge badge-active">Activo</span>
+                {% else %}
+                    <span class="badge badge-inactive">Inactivo</span>
+                {% endif %}
+            </div>
+            
+            <div class="collaborator-actions">
+                <a href="{{ url_for('editar_alumno', id=alumno.id) }}" class="icon-btn">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M12 20H21M17 4l-10 10M11 4l-8 8v8h8l8-8"></path>
+                    </svg>
+                </a>
+                <button class="icon-btn" onclick="alert('Ver detalle: {{ alumno.nombre_completo }}')">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #999;">
+            <p>No hay estudiantes registrados aún</p>
+        </div>
+    {% endif %}
+</div>
+
+<a href="{{ url_for('directora_dashboard') }}" class="btn btn-secondary" style="margin-top: 20px;">Volver al Panel</a>
+{% endblock %}

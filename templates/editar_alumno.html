@@ -3,59 +3,114 @@
 
 {% block content %}
 <div class="card">
-    <h2>✏️ Editar Estudiante</h2>
-    <p>Actualiza la información del estudiante.</p>
+    <h2> Editar Estudiante</h2>
+    <p>Actualiza la información del estudiante y su apoderado.</p>
     <a href="{{ url_for('listar_alumnos') }}" class="btn btn-sm">← Volver a la Lista</a>
 </div>
 
 <div class="card">
     <form method="POST">
-        <div class="form-group">
-            <label for="dni">DNI</label>
-            <input type="text" id="dni" name="dni" value="{{ alumno.dni }}" required>
+        <!-- SECCIÓN APODERADO -->
+        <div style="background: #e8f5e9; border-left: 4px solid #4caf50; padding: 20px; margin-bottom: 30px; border-radius: 8px;">
+            <h3 style="color: #2e7d32; margin-bottom: 15px;"> Información del Apoderado</h3>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <!-- Fila 1 Apoderado -->
+                <div class="form-group">
+                    <label for="apoderado_nombres">* Nombres *</label>
+                    <input type="text" id="apoderado_nombres" name="apoderado_nombres" value="{{ apoderado.nombres if apoderado else '' }}" placeholder="Juan" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="apoderado_apellido_paterno">* Apellido Paterno *</label>
+                    <input type="text" id="apoderado_apellido_paterno" name="apoderado_apellido_paterno" value="{{ apoderado.apellido_paterno if apoderado else '' }}" placeholder="García" required>
+                </div>
+
+                <!-- Fila 2 Apoderado -->
+                <div class="form-group">
+                    <label for="apoderado_apellido_materno">* Apellido Materno *</label>
+                    <input type="text" id="apoderado_apellido_materno" name="apoderado_apellido_materno" value="{{ apoderado.apellido_materno if apoderado else '' }}" placeholder="López" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="apoderado_telefono_principal">* Teléfono Principal</label>
+                    <input type="text" id="apoderado_telefono_principal" name="apoderado_telefono_principal" value="{{ apoderado.telefono_principal if apoderado else '' }}" placeholder="987654321" maxlength="20">
+                </div>
+
+                <!-- Fila 3 Apoderado -->
+                <div class="form-group">
+                    <label for="apoderado_telefono_secundario">* Teléfono Secundario</label>
+                    <input type="text" id="apoderado_telefono_secundario" name="apoderado_telefono_secundario" value="{{ apoderado.telefono_secundario if apoderado else '' }}" placeholder="912345678" maxlength="20">
+                </div>
+
+                <div class="form-group" style="display: flex; align-items: flex-end;">
+                    <label style="margin: 0; display: flex; align-items: center; cursor: pointer;">
+                        <input type="checkbox" id="es_apoderado" name="es_apoderado" value="1" {% if apoderado and apoderado.es_apoderado %}checked{% endif %} 
+                               style="width: auto; margin-right: 8px;">
+                        <span>¿Es apoderado?</span>
+                    </label>
+                </div>
+            </div>
         </div>
 
-        <div class="form-group">
-            <label for="nombres">Nombres</label>
-            <input type="text" id="nombres" name="nombres" value="{{ alumno.nombres }}" required>
+        <!-- SECCIÓN ALUMNO -->
+        <div style="background: #fff3e0; border-left: 4px solid #ff9800; padding: 20px; margin-bottom: 30px; border-radius: 8px;">
+            <h3 style="color: #f57c00; margin-bottom: 15px;"> Información del Alumno</h3>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <!-- Fila 1 -->
+                <div class="form-group">
+                    <label for="dni">* DNI *</label>
+                    <input type="text" id="dni" name="dni" value="{{ alumno.dni }}" placeholder="12345678" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="nombres">* Nombres *</label>
+                    <input type="text" id="nombres" name="nombres" value="{{ alumno.nombres }}" placeholder="Juan" required>
+                </div>
+
+                <!-- Fila 2 -->
+                <div class="form-group">
+                    <label for="apellido_paterno">* Apellido Paterno *</label>
+                    <input type="text" id="apellido_paterno" name="apellido_paterno" value="{{ alumno.apellido_paterno }}" placeholder="García" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="apellido_materno">* Apellido Materno *</label>
+                    <input type="text" id="apellido_materno" name="apellido_materno" value="{{ alumno.apellido_materno }}" placeholder="López" required>
+                </div>
+
+                <!-- Fila 3 -->
+                <div class="form-group">
+                    <label for="correo">* Correo Electrónico *</label>
+                    <input type="email" id="correo" name="correo" value="{{ alumno.correo }}" placeholder="alumno@colegio.edu.pe" required>
+                </div>
+
+                <!-- Fila 4 -->
+                <div class="form-group">
+                    <label for="seccion_id">* Sección *</label>
+                    <select id="seccion_id" name="seccion_id" required>
+                        <option value="">Seleccionar Sección</option>
+                        {% for seccion in secciones %}
+                        <option value="{{ seccion.id }}" {% if alumno.seccion_id == seccion.id %}selected{% endif %}>{{ seccion.nombre }} - {{ seccion.grado.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group" style="grid-column: 1 / -1;">
+                    <label>📖 Grado</label>
+                    <div style="padding: 12px 14px; background: #f5f5f5; border-radius: 8px; color: #555;">
+                        El grado se asigna automáticamente según la sección.
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <div class="form-group">
-            <label for="apellido_paterno">Apellido Paterno</label>
-            <input type="text" id="apellido_paterno" name="apellido_paterno" value="{{ alumno.apellido_paterno }}" required>
+        <div style="background: #f0f7ff; border-left: 4px solid #0066CC; padding: 15px; border-radius: 4px; margin: 20px 0;">
+            <strong> Nota:</strong> El apoderado es la persona responsable del alumno. El grado se asigna automáticamente según la sección seleccionada.
         </div>
 
-        <div class="form-group">
-            <label for="apellido_materno">Apellido Materno</label>
-            <input type="text" id="apellido_materno" name="apellido_materno" value="{{ alumno.apellido_materno }}" required>
-        </div>
-
-        <div class="form-group">
-            <label for="correo">Correo Electrónico</label>
-            <input type="email" id="correo" name="correo" value="{{ alumno.correo }}" required>
-        </div>
-
-        <div class="form-group">
-            <label for="grado_id">Grado</label>
-            <select id="grado_id" name="grado_id">
-                <option value="">Seleccionar Grado</option>
-                {% for grado in grados %}
-                <option value="{{ grado.id }}" {% if alumno.grado_id == grado.id %}selected{% endif %}>{{ grado.nombre }}</option>
-                {% endfor %}
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label for="seccion_id">Sección</label>
-            <select id="seccion_id" name="seccion_id">
-                <option value="">Seleccionar Sección</option>
-                {% for seccion in secciones %}
-                <option value="{{ seccion.id }}" {% if alumno.seccion_id == seccion.id %}selected{% endif %}>{{ seccion.nombre }}</option>
-                {% endfor %}
-            </select>
-        </div>
-
-        <button type="submit" class="btn">Actualizar Estudiante</button>
+        <button type="submit" class="btn">Actualizar Estudiante y Apoderado</button>
     </form>
 </div>
 {% endblock %}

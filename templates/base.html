@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Sistema Educativo{% endblock %}</title>
+    <title>{% block title %}David House - Camino de Vida{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 <body>
     <header>
-        <h1>🎓 Sistema Educativo</h1>
+        <h1>David House - Camino de Vida</h1>
         {% if session.get('usuario_id') %}
         <div class="header-user">
             <span>Bienvenido, <strong>{{ session.nombres }}</strong> <br/>
@@ -36,9 +36,5 @@
         {% block content %}{% endblock %}
     </div>
 
-    <footer>
-        <p><strong>© 2026 Sistema Educativo</strong> - Gestión Institucional</p>
-        <p>Todos los derechos reservados | Institución Educativa de Excelencia</p>
-    </footer>
 </body>
 </html>

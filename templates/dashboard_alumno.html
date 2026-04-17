@@ -2,102 +2,141 @@
 {% block title %}Panel de Alumno{% endblock %}
 
 {% block content %}
-<div class="card">
-    <h2>👨‍🎓 Panel de Alumno</h2>
-    <p>Hola <strong>{{ usuario.nombres }}</strong>, aquí puedes ver tus cursos y calificaciones.</p>
+<div class="dashboard-top">
+    <div class="summary-card summary-orange">
+        <div class="summary-title">Promedio General</div>
+        <div class="summary-value">{{ "%.2f"|format(promedio) if promedio else "-" }}</div>
+    </div>
+    <div class="summary-card summary-orange-light">
+        <div class="summary-title">Asistencia</div>
+        <div class="summary-value">{{ asistencia_promedio }}%</div>
+    </div>
+    <div class="summary-card summary-card-muted">
+        <div class="summary-title">Materias</div>
+        <div class="summary-value">{{ total_cursos }}</div>
+    </div>
+    <div class="summary-card summary-card-muted">
+        <div class="summary-title">Grado</div>
+        <div class="summary-value">{{ usuario.grado_rel.nombre if usuario.grado_rel else 'N/A' }}</div>
+    </div>
 </div>
 
-<div class="cards-grid">
-    <div class="stat-card">
-        <h4>{{ usuario.nombres|truncate(15) }}</h4>
-        <p>Nombre</p>
+<div class="dashboard-tabs-card">
+    <div class="dashboard-tabs">
+        <button class="dashboard-tab active" onclick="showTab('notas', this)">Notas</button>
+        <button class="dashboard-tab" onclick="showTab('asistencia', this)">Asistencia</button>
+        <button class="dashboard-tab" onclick="showTab('comentarios', this)">Comentarios</button>
+        <button class="dashboard-tab" onclick="showTab('pagos', this)">Pagos</button>
     </div>
-    <div class="stat-card">
-        <h4>{{ usuario.grado_rel.nombre if usuario.grado_rel else 'N/A' }}</h4>
-        <p>Grado</p>
-    </div>
-    <div class="stat-card">
-        <h4>{{ usuario.seccion_rel.nombre if usuario.seccion_rel else 'N/A' }}</h4>
-        <p>Sección</p>
-    </div>
-</div>
 
-<div class="card">
-    <h3>📚 Mis Cursos y Calificaciones</h3>
-    <div class="divider"></div>
-    
-    {% if inscripciones %}
-        <table>
-            <tr>
-                <th>Curso</th>
-                <th>Código</th>
-                <th>Docente</th>
-                <th>Calificación</th>
-                <th>Asistencias</th>
-            </tr>
+    <!-- TAB: NOTAS -->
+    <div id="notas" class="dashboard-panel" style="display: block;">
+        <div class="panel-header">
+            <div>
+                <h2>Calificaciones de {{ usuario.nombres }}</h2>
+                <p>Revisa las notas y evaluaciones más recientes</p>
+            </div>
+        </div>
+
+        {% if inscripciones %}
             {% for inscripcion in inscripciones %}
-            <tr>
-                <td><strong>{{ inscripcion.curso.nombre }}</strong></td>
-                <td>{{ inscripcion.curso.codigo }}</td>
-                <td>{{ inscripcion.curso.docente.nombres }}</td>
-                <td>
+            <div style="background: white; border-radius: 12px; padding: 20px; margin-bottom: 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); display: flex; align-items: center; gap: 20px;">
+                <div style="width: 60px; height: 60px; background: linear-gradient(135deg, #ff9800 0%, #ffb74d 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 22px;">
+                    {{ "%.1f"|format(inscripcion.calificacion) if inscripcion.calificacion else "-" }}
+                </div>
+                <div style="flex: 1;">
+                    <h4 style="margin-bottom: 4px; color: #333; font-size: 16px;">{{ inscripcion.curso.nombre }}</h4>
+                    <p style="color: #666; font-size: 13px; margin-bottom: 8px;">Prof. {{ inscripcion.curso.docente.nombres }}</p>
+                    <p style="color: #999; font-size: 12px;">Evaluación • Última actualización</p>
+                </div>
+                <div style="text-align: right;">
                     {% if inscripcion.calificacion %}
-                        <span style="background: #003D82; color: white; padding: 5px 10px; border-radius: 4px;">
-                            {{ "%.1f"|format(inscripcion.calificacion) }}
-                        </span>
-                    {% else %}
-                        <span style="color: #999;">-</span>
+                        {% if inscripcion.calificacion >= 4.0 %}
+                            <span style="background: #1565c0; color: white; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600;">Excelente</span>
+                        {% elif inscripcion.calificacion >= 3.0 %}
+                            <span style="background: #28a745; color: white; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600;">Bueno</span>
+                        {% elif inscripcion.calificacion >= 2.0 %}
+                            <span style="background: #ff9800; color: white; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600;">Regular</span>
+                        {% else %}
+                            <span style="background: #dc3545; color: white; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600;">Bajo</span>
+                        {% endif %}
                     {% endif %}
-                </td>
-                <td>{{ inscripcion.asistencias }}</td>
-            </tr>
+                </div>
+            </div>
             {% endfor %}
-        </table>
-    {% else %}
-        <p style="text-align: center; color: #999; padding: 30px;">
-            📭 No tienes cursos inscritos aún.
-        </p>
-    {% endif %}
+        {% else %}
+            <div style="padding: 40px; text-align: center; color: #999;">
+                No tienes calificaciones registradas aún.
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- TAB: ASISTENCIA -->
+    <div id="asistencia" class="dashboard-panel" style="display: none;">
+        <div class="panel-header">
+            <div>
+                <h2>Asistencia</h2>
+                <p>Control de asistencia por curso.</p>
+            </div>
+        </div>
+        {% if inscripciones %}
+            {% for inscripcion in inscripciones %}
+            <div style="background: white; border-radius: 12px; padding: 20px; margin-bottom: 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h4 style="margin-bottom: 4px; color: #333;">{{ inscripcion.curso.nombre }}</h4>
+                    <p style="color: #666; font-size: 13px;">Prof. {{ inscripcion.curso.docente.nombres }}</p>
+                </div>
+                <div style="text-align: right;">
+                    <p style="font-weight: 700; font-size: 18px; color: #28a745;">{{ inscripcion.asistencias or 0 }}</p>
+                    <p style="color: #999; font-size: 12px;">Asistencias</p>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div style="padding: 40px; text-align: center; color: #999;">
+                No tienes registro de asistencia.
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- TAB: COMENTARIOS -->
+    <div id="comentarios" class="dashboard-panel" style="display: none;">
+        <div class="panel-header">
+            <div>
+                <h2>Comentarios</h2>
+                <p>Comentarios y observaciones de los docentes.</p>
+            </div>
+        </div>
+        <div style="padding: 40px; text-align: center; color: #999;">
+            Módulo en desarrollo.
+        </div>
+    </div>
+
+    <!-- TAB: PAGOS -->
+    <div id="pagos" class="dashboard-panel" style="display: none;">
+        <div class="panel-header">
+            <div>
+                <h2>Pagos</h2>
+                <p>Estado de pagos y cuotas.</p>
+            </div>
+        </div>
+        <div style="padding: 40px; text-align: center; color: #999;">
+            Módulo en desarrollo.
+        </div>
+    </div>
 </div>
 
-<div class="card">
-    <h3>📋 Información Personal</h3>
-    <div class="divider"></div>
-    
-    <table>
-        <tr>
-            <th colspan="2">Datos de la Registración</th>
-        </tr>
-        <tr>
-            <td><strong>DNI:</strong></td>
-            <td>{{ usuario.dni }}</td>
-        </tr>
-        <tr>
-            <td><strong>Nombres Completos:</strong></td>
-            <td>{{ usuario.nombre_completo }}</td>
-        </tr>
-        <tr>
-            <td><strong>Correo:</strong></td>
-            <td>{{ usuario.correo }}</td>
-        </tr>
-        <tr>
-            <td><strong>Grado:</strong></td>
-            <td>{{ usuario.grado_rel.nombre if usuario.grado_rel else 'No asignado' }}</td>
-        </tr>
-        <tr>
-            <td><strong>Sección:</strong></td>
-            <td>{{ usuario.seccion_rel.nombre if usuario.seccion_rel else 'No asignada' }}</td>
-        </tr>
-        <tr>
-            <td><strong>Fecha de Registro:</strong></td>
-            <td>{{ usuario.fecha_registro.strftime('%d/%m/%Y') }}</td>
-        </tr>
-    </table>
-</div>
+<script>
+function showTab(tabId, button) {
+    const panels = document.querySelectorAll('.dashboard-panel');
+    panels.forEach(panel => panel.style.display = 'none');
+    document.getElementById(tabId).style.display = 'block';
 
-<div class="card" style="margin-top: 25px;">
-    <h3>🔐 Seguridad</h3>
-    <div class="divider"></div>
-    <a href="{{ url_for('alumno_cambiar_clave') }}" class="btn">Cambiar Contraseña</a>
-</div>
+    const tabs = document.querySelectorAll('.dashboard-tab');
+    tabs.forEach(tab => tab.classList.remove('active'));
+    if (button) {
+        button.classList.add('active');
+    }
+}
+</script>
 {% endblock %}

@@ -86,6 +86,8 @@ class Usuario(db.Model):
     apellido_paterno = db.Column(db.String(80), nullable=False)
     apellido_materno = db.Column(db.String(80), nullable=False)
     correo = db.Column(db.String(120), unique=True, nullable=False)
+    telefono_principal = db.Column(db.String(20))
+    telefono_secundario = db.Column(db.String(20))
     clave = db.Column(db.String(255), nullable=False)
     rol = db.Column(db.Enum('directora', 'docente', 'alumno'), nullable=False)
     profesion = db.Column(db.String(100))
@@ -98,6 +100,34 @@ class Usuario(db.Model):
     
     def __repr__(self):
         return f"<Usuario {self.nombres} {self.apellido_paterno} ({self.rol})>"
+    
+    def __repr__(self):
+        return f"<Usuario {self.nombres} {self.apellido_paterno} ({self.rol})>"
+    
+    @property
+    def nombre_completo(self):
+        return f"{self.nombres} {self.apellido_paterno} {self.apellido_materno}"
+
+# ===== MODELO APODERADO =====
+class Apoderado(db.Model):
+    __tablename__ = 'apoderados'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    alumno_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=False)
+    nombres = db.Column(db.String(100), nullable=False)
+    apellido_paterno = db.Column(db.String(80), nullable=False)
+    apellido_materno = db.Column(db.String(80), nullable=False)
+    telefono_principal = db.Column(db.String(20))
+    telefono_secundario = db.Column(db.String(20))
+    es_apoderado = db.Column(db.Boolean, default=True)
+    activo = db.Column(db.Boolean, default=True)
+    fecha_registro = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relaciones
+    alumno = db.relationship('Usuario', backref='apoderados', lazy=True)
+    
+    def __repr__(self):
+        return f"<Apoderado {self.nombres} {self.apellido_paterno} - Alumno {self.alumno.nombre_completo}>"
     
     @property
     def nombre_completo(self):

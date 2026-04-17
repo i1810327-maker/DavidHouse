@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Colaboradores{% endblock %}
+
+{% block content %}
+<div class="module-header">
+    <h2>Gestión de Colaboradores</h2>
+    <p>Supervisa y gestiona todo el personal docente en un solo lugar</p>
+</div>
+
+<div class="collaborators-grid">
+    {% if docentes %}
+        {% for docente in docentes %}
+        <div class="collaborator-card">
+            <div class="collaborator-avatar">
+                {{ docente.nombres[0]}}{{ docente.apellido_paterno[0] }}
+            </div>
+            <div class="collaborator-info">
+                <h4>{{ docente.nombres }} {{ docente.apellido_paterno }}</h4>
+                <p class="role">Docente • {{ docente.profesion or 'Educación' }}</p>
+                
+                {% if docente.tiene_especialidad %}
+                <p class="specialty">{{ docente.descripcion_especialidad }}</p>
+                {% endif %}
+                
+                <div class="collaborator-stats">
+                    <span>{{ docente.cursos_docente|length }} cursos</span>
+                    <span>•</span>
+                    <span>{{ docente.inscripciones|length if docente.rol == 'docente' else '0' }} estudiantes</span>
+                </div>
+            </div>
+            
+            <div class="collaborator-status">
+                {% if docente.activo %}
+                    <span class="badge badge-active">Activo</span>
+                {% else %}
+                    <span class="badge badge-inactive">Inactivo</span>
+                {% endif %}
+            </div>
+            
+            <div class="collaborator-actions">
+                <a href="{{ url_for('editar_docente', id=docente.id) }}" class="icon-btn">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M12 20H21M17 4l-10 10M11 4l-8 8v8h8l8-8"></path>
+                    </svg>
+                </a>
+                <button class="icon-btn" onclick="alert('Ver detalle: {{ docente.nombre_completo }}')">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #999;">
+            <p>No hay docentes registrados aún</p>
+        </div>
+    {% endif %}
+</div>
+
+<a href="{{ url_for('directora_dashboard') }}" class="btn btn-secondary" style="margin-top: 20px;">Volver al Panel</a>
+{% endblock %}

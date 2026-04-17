@@ -3,7 +3,7 @@
 
 {% block content %}
 <div class="card" style="max-width: 800px; margin: 0 auto;">
-    <h2>👨‍🏫 Registrar Nuevo Docente</h2>
+    <h2> Registrar Nuevo Docente</h2>
     <p style="color: #666; margin-bottom: 25px;">
         Complete todos los campos para crear una nueva cuenta de docente en el sistema.
     </p>
@@ -13,40 +13,51 @@
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
             <!-- Fila 1 -->
             <div class="form-group">
-                <label for="dni">📝 DNI *</label>
+                <label for="dni">* DNI *</label>
                 <input type="text" id="dni" name="dni" placeholder="12345678" required>
             </div>
 
             <div class="form-group">
-                <label for="nombres">👤 Nombres *</label>
+                <label for="nombres">* Nombres *</label>
                 <input type="text" id="nombres" name="nombres" placeholder="Juan" required>
             </div>
 
             <!-- Fila 2 -->
             <div class="form-group">
-                <label for="apellido_paterno">👤 Apellido Paterno *</label>
+                <label for="apellido_paterno">* Apellido Paterno *</label>
                 <input type="text" id="apellido_paterno" name="apellido_paterno" placeholder="García" required>
             </div>
 
             <div class="form-group">
-                <label for="apellido_materno">👤 Apellido Materno *</label>
+                <label for="apellido_materno">* Apellido Materno *</label>
                 <input type="text" id="apellido_materno" name="apellido_materno" placeholder="López" required>
             </div>
 
             <!-- Fila 3 -->
             <div class="form-group">
-                <label for="correo">📧 Correo Electrónico *</label>
+                <label for="correo">* Correo Electrónico *</label>
                 <input type="email" id="correo" name="correo" placeholder="docente@colegio.edu.pe" required>
             </div>
 
             <div class="form-group">
-                <label for="clave">🔐 Contraseña *</label>
-                <input type="password" id="clave" name="clave" placeholder="Contraseña segura" required>
+                <label for="telefono_principal">* Teléfono Principal</label>
+                <input type="text" id="telefono_principal" name="telefono_principal" placeholder="987654321" maxlength="20">
             </div>
 
             <!-- Fila 4 -->
             <div class="form-group">
-                <label for="profesion">🎓 Profesión *</label>
+                <label for="telefono_secundario">* Teléfono Secundario</label>
+                <input type="text" id="telefono_secundario" name="telefono_secundario" placeholder="912345678" maxlength="20">
+            </div>
+
+            <div class="form-group">
+                <label for="clave">* Contraseña *</label>
+                <input type="password" id="clave" name="clave" placeholder="Contraseña segura" required>
+            </div>
+
+            <!-- Fila 5 -->
+            <div class="form-group">
+                <label for="profesion">* Profesión *</label>
                 <input type="text" id="profesion" name="profesion" placeholder="Licenciado en Educación" required>
             </div>
 
@@ -63,7 +74,7 @@
         <!-- Campo de especialidad (oculto por defecto) -->
         <div id="campo_especialidad" style="display: none; margin-top: 20px;">
             <div class="form-group">
-                <label for="descripcion_especialidad">📚 Descripción de Especialidad *</label>
+                <label for="descripcion_especialidad"> Descripción de Especialidad *</label>
                 <textarea id="descripcion_especialidad" name="descripcion_especialidad" 
                           placeholder="Describe tu área de especialidad, certificaciones o experiencia..."></textarea>
             </div>
@@ -74,8 +85,8 @@
         </div>
 
         <div class="btn-group" style="margin-top: 30px;">
-            <button type="submit" class="btn">✅ Registrar Docente</button>
-            <a href="{{ url_for('directora_dashboard') }}" class="btn btn-secondary">❌ Cancelar</a>
+            <button type="submit" class="btn"> Registrar Docente</button>
+            <a href="{{ url_for('directora_dashboard') }}" class="btn btn-secondary"> Cancelar</a>
         </div>
     </form>
 </div>

@@ -5,7 +5,7 @@ from datetime import datetime
 from sqlalchemy.exc import SQLAlchemyError
 
 from db import init_db, db
-from models import Usuario, Grado, Seccion, Curso, Inscripcion, LogAcceso
+from models import Usuario, Grado, Seccion, Curso, Inscripcion, LogAcceso, Apoderado
 
 # ====================== CONFIGURACIÓN ======================
 app = Flask(__name__)
@@ -92,6 +92,8 @@ def crear_usuario_desde_form(form_data, rol):
         apellido_paterno=form_data.get('apellido_paterno'),
         apellido_materno=form_data.get('apellido_materno'),
         correo=form_data.get('correo'),
+        telefono_principal=form_data.get('telefono_principal') if rol == 'docente' else None,
+        telefono_secundario=form_data.get('telefono_secundario') if rol == 'docente' else None,
         clave=bcrypt.generate_password_hash(form_data.get('clave')).decode('utf-8'),
         rol=rol,
         grado_id=form_data.get('grado_id') if rol == 'alumno' else None,
@@ -175,6 +177,22 @@ def perfil():
     usuario = Usuario.query.get(session.get('usuario_id'))
     return render_template('perfil.html', usuario=usuario)
 
+@app.route('/directora/colaboradores')
+@verificar_permisos
+@role_required('directora')
+def colaboradores():
+    """Lista todos los docentes (colaboradores)"""
+    docentes = Usuario.query.filter_by(rol='docente').all()
+    return render_template('colaboradores.html', docentes=docentes)
+
+@app.route('/directora/estudiantes')
+@verificar_permisos
+@role_required('directora')
+def estudiantes():
+    """Lista todos los alumnos (estudiantes)"""
+    alumnos = Usuario.query.filter_by(rol='alumno').all()
+    return render_template('estudiantes.html', alumnos=alumnos)
+
 # ====================== RUTAS DIRECTORA ======================
 
 @app.route('/directora/dashboard')
@@ -182,14 +200,15 @@ def perfil():
 @role_required('directora')
 def directora_dashboard():
     """Dashboard de directora"""
-    usuarios = Usuario.query.all()
     alumnos = Usuario.query.filter_by(rol='alumno').count()
-    docentes = Usuario.query.filter_by(rol='docente').count()
+    docentes_list = Usuario.query.filter_by(rol='docente').all()
+    docentes = len(docentes_list)
     
     return render_template('dashboard_directora.html', 
                          usuarios_totales=alumnos + docentes,
                          alumnos=alumnos,
-                         docentes=docentes)
+                         docentes=docentes_list,
+                         docentes_count=docentes)
 
 @app.route('/directora/registrar_alumno', methods=['GET', 'POST'])
 @verificar_permisos
@@ -200,16 +219,49 @@ def registrar_alumno():
     if request.method == 'POST':
         try:
             nuevo_alumno = crear_usuario_desde_form(request.form, 'alumno')
+            if nuevo_alumno.seccion_id:
+                seccion = Seccion.query.get(nuevo_alumno.seccion_id)
+                nuevo_alumno.grado_id = seccion.grado_id if seccion else None
             db.session.add(nuevo_alumno)
+            db.session.flush()
+            
+            # Crear apoderado
+            nuevo_apoderado = Apoderado(
+                alumno_id=nuevo_alumno.id,
+                nombres=request.form.get('apoderado_nombres'),
+                apellido_paterno=request.form.get('apoderado_apellido_paterno'),
+                apellido_materno=request.form.get('apoderado_apellido_materno'),
+                telefono_principal=request.form.get('apoderado_telefono_principal'),
+                telefono_secundario=request.form.get('apoderado_telefono_secundario'),
+                es_apoderado=bool(request.form.get('es_apoderado'))
+            )
+            db.session.add(nuevo_apoderado)
+            
             db.session.commit()
-            flash(f'Alumno {nuevo_alumno.nombres} registrado exitosamente', 'success')
+            flash(f'Alumno {nuevo_alumno.nombres} y su apoderado registrados exitosamente', 'success')
             return redirect(url_for('directora_dashboard'))
         except Exception as e:
             db.session.rollback()
             flash(f'Error al registrar: {str(e)}', 'danger')
     
     secciones = Seccion.query.filter_by(activo=True).all()
-    return render_template('usuarios_form.html', secciones=secciones)
+    grados = Grado.query.filter_by(activo=True).all()
+    
+    # Convertir grados a formato serializable para JavaScript
+    grados_data = []
+    for grado in grados:
+        grado_dict = {
+            'id': grado.id,
+            'nombre': grado.nombre,
+            'nivel': grado.nivel,
+            'secciones': [{'id': s.id, 'nombre': s.nombre} for s in grado.secciones]
+        }
+        grados_data.append(grado_dict)
+    
+    return render_template('usuarios_form.html', 
+                           secciones=secciones, 
+                           grados=grados,
+                           grados_data=grados_data)
 
 @app.route('/directora/registrar_docente', methods=['GET', 'POST'])
 @verificar_permisos
@@ -264,10 +316,35 @@ def editar_alumno(id):
             alumno.apellido_paterno = request.form.get('apellido_paterno')
             alumno.apellido_materno = request.form.get('apellido_materno')
             alumno.correo = request.form.get('correo')
-            alumno.grado_id = request.form.get('grado_id')
             alumno.seccion_id = request.form.get('seccion_id')
+            if alumno.seccion_id:
+                seccion = Seccion.query.get(alumno.seccion_id)
+                alumno.grado_id = seccion.grado_id if seccion else None
+            
+            # Actualizar o crear apoderado
+            apoderado = Apoderado.query.filter_by(alumno_id=alumno.id).first()
+            if apoderado:
+                apoderado.nombres = request.form.get('apoderado_nombres')
+                apoderado.apellido_paterno = request.form.get('apoderado_apellido_paterno')
+                apoderado.apellido_materno = request.form.get('apoderado_apellido_materno')
+                apoderado.telefono_principal = request.form.get('apoderado_telefono_principal')
+                apoderado.telefono_secundario = request.form.get('apoderado_telefono_secundario')
+                apoderado.es_apoderado = bool(request.form.get('es_apoderado'))
+            else:
+                # Crear nuevo apoderado si no existe
+                nuevo_apoderado = Apoderado(
+                    alumno_id=alumno.id,
+                    nombres=request.form.get('apoderado_nombres'),
+                    apellido_paterno=request.form.get('apoderado_apellido_paterno'),
+                    apellido_materno=request.form.get('apoderado_apellido_materno'),
+                    telefono_principal=request.form.get('apoderado_telefono_principal'),
+                    telefono_secundario=request.form.get('apoderado_telefono_secundario'),
+                    es_apoderado=bool(request.form.get('es_apoderado'))
+                )
+                db.session.add(nuevo_apoderado)
+            
             db.session.commit()
-            flash('Alumno actualizado exitosamente', 'success')
+            flash('Alumno y apoderado actualizados exitosamente', 'success')
             return redirect(url_for('listar_alumnos'))
         except Exception as e:
             db.session.rollback()
@@ -275,7 +352,8 @@ def editar_alumno(id):
     
     grados = Grado.query.filter_by(activo=True).all()
     secciones = Seccion.query.filter_by(activo=True).all()
-    return render_template('editar_alumno.html', alumno=alumno, grados=grados, secciones=secciones)
+    apoderado = Apoderado.query.filter_by(alumno_id=alumno.id).first()
+    return render_template('editar_alumno.html', alumno=alumno, grados=grados, secciones=secciones, apoderado=apoderado)
 
 @app.route('/directora/editar_docente/<int:id>', methods=['GET', 'POST'])
 @verificar_permisos
@@ -295,6 +373,8 @@ def editar_docente(id):
             docente.apellido_paterno = request.form.get('apellido_paterno')
             docente.apellido_materno = request.form.get('apellido_materno')
             docente.correo = request.form.get('correo')
+            docente.telefono_principal = request.form.get('telefono_principal')
+            docente.telefono_secundario = request.form.get('telefono_secundario')
             docente.profesion = request.form.get('profesion')
             docente.tiene_especialidad = bool(request.form.get('tiene_especialidad'))
             docente.descripcion_especialidad = request.form.get('descripcion_especialidad') if request.form.get('tiene_especialidad') else None
@@ -319,9 +399,11 @@ def eliminar_alumno(id):
         return redirect(url_for('listar_alumnos'))
     
     try:
+        # Eliminar apoderados relacionados primero (por la foreign key)
+        Apoderado.query.filter_by(alumno_id=alumno.id).delete()
         db.session.delete(alumno)
         db.session.commit()
-        flash('Alumno eliminado exitosamente', 'success')
+        flash('Alumno y apoderado eliminados exitosamente', 'success')
     except Exception as e:
         db.session.rollback()
         flash(f'Error al eliminar: {str(e)}', 'danger')
@@ -391,10 +473,25 @@ def docente_dashboard():
     usuario = Usuario.query.get(session.get('usuario_id'))
     cursos = Curso.query.filter_by(docente_id=usuario.id).all()
     
+    estudiante_ids = set()
+    seccion_nombres = set()
+    for curso in cursos:
+        if curso.seccion_rel:
+            seccion_nombres.add(curso.seccion_rel.nombre)
+        for ins in curso.inscripciones:
+            estudiante_ids.add(ins.alumno_id)
+
+    estudiantes = Usuario.query.filter(Usuario.id.in_(list(estudiante_ids))).all() if estudiante_ids else []
+    total_estudiantes = len(estudiantes)
+    secciones = ', '.join(sorted(seccion_nombres)) if seccion_nombres else 'No asignado'
+
     return render_template('dashboard_docente.html', 
                          usuario=usuario,
                          cursos=cursos,
-                         total_cursos=len(cursos))
+                         estudiantes=estudiantes,
+                         total_cursos=len(cursos),
+                         total_estudiantes=total_estudiantes,
+                         secciones=secciones)
 
 @app.route('/docente/cambiar_clave', methods=['GET', 'POST'])
 @verificar_permisos
@@ -437,11 +534,23 @@ def alumno_dashboard():
     """Dashboard de alumno"""
     usuario = Usuario.query.get(session.get('usuario_id'))
     inscripciones = Inscripcion.query.filter_by(alumno_id=usuario.id).all()
+    calificaciones = [ins.calificacion for ins in inscripciones if ins.calificacion is not None]
+    promedio = sum(calificaciones) / len(calificaciones) if calificaciones else None
+    
+    # Calcular asistencia promedio
+    asistencias = [ins.asistencias for ins in inscripciones if ins.asistencias is not None]
+    asistencia_promedio = sum(asistencias) / len(asistencias) if asistencias else 0
+    
+    apoderado = Apoderado.query.filter_by(alumno_id=usuario.id).first()
     
     return render_template('dashboard_alumno.html',
                          usuario=usuario,
                          inscripciones=inscripciones,
-                         total_cursos=len(inscripciones))
+                         total_cursos=len(inscripciones),
+                         promedio=promedio,
+                         asistencia_promedio=int(asistencia_promedio),
+                         apoderado=apoderado)
+
 
 @app.route('/alumno/cambiar_clave', methods=['GET', 'POST'])
 @verificar_permisos
