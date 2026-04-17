@@ -1,23 +1,31 @@
+# ==========================================
+# APLICACIÓN PRINCIPAL - SISTEMA DE GESTIÓN ESCOLAR
+# ==========================================
+# Este archivo contiene todas las rutas, configuración y lógica del servidor Flask
+
+# --- IMPORTACIONES ---
 from flask import Flask, render_template, request, redirect, url_for, session, flash
-from flask_bcrypt import Bcrypt
-from functools import wraps
+from flask_bcrypt import Bcrypt  # Para encriptar contraseñas
+from functools import wraps       # Para crear decoradores
 from datetime import datetime
 from sqlalchemy.exc import SQLAlchemyError
 
-from db import init_db, db
-from models import Usuario, Grado, Seccion, Curso, Inscripcion, LogAcceso, Apoderado
+from db import init_db, db        # Configuración de base de datos
+from models import Usuario, Grado, Seccion, Curso, Inscripcion, LogAcceso, Apoderado  # Modelos ORM
 
 # ====================== CONFIGURACIÓN ======================
 app = Flask(__name__)
-app.secret_key = "clave_super_segura_2026_ColegioSys"
+app.secret_key = "clave_super_segura_2026_ColegioSys"  # Clave para sesiones Flask
 
-bcrypt = Bcrypt(app)
-init_db(app)
+bcrypt = Bcrypt(app)  # Inicializar encriptador de contraseñas
+init_db(app)          # Inicializar conexión a MySQL
 
-# ====================== DECORADORES ======================
+# ====================== DECORADORES (CONTROL DE ACCESO) ======================
 
+# --- login_required ---
+# Función: Obliga a iniciar sesión para acceder a una ruta protegida
+# Uso: @login_required antes de una función de ruta
 def login_required(f):
-    """Verifica que el usuario esté autenticado"""
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if 'usuario_id' not in session:
@@ -26,8 +34,10 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+# --- usuario_activo ---
+# Función: Verifica que el usuario no esté desactivado
+# Uso: @usuario_activo antes de una función de ruta
 def usuario_activo(f):
-    """Verifica que el usuario esté activo"""
     @wraps(f)
     def decorated_function(*args, **kwargs):
         usuario = Usuario.query.get(session.get('usuario_id'))
@@ -38,8 +48,10 @@ def usuario_activo(f):
         return f(*args, **kwargs)
     return decorated_function
 
+# --- role_required ---
+# Función: Limita el acceso según el rol del usuario (directora, docente, alumno)
+# Uso: @role_required('directora', 'docente')
 def role_required(*roles):
-    """Verifica que el usuario tenga uno de los roles especificados"""
     def decorator(f):
         @wraps(f)
         def decorated_function(*args, **kwargs):
@@ -50,8 +62,10 @@ def role_required(*roles):
         return decorated_function
     return decorator
 
+# --- log_accion ---
+# Función: Registra cada acción del usuario en la tabla LogAcceso (auditoría)
+# Uso: @log_accion('Crear usuario')
 def log_accion(accion):
-    """Registra una acción en los logs"""
     def decorator(f):
         @wraps(f)
         def decorated_function(*args, **kwargs):
@@ -65,8 +79,10 @@ def log_accion(accion):
         return decorated_function
     return decorator
 
+# --- verificar_permisos ---
+# Función: Decorador que combina login_required + usuario_activo
+# Uso: @verificar_permisos antes de una función de ruta
 def verificar_permisos(f):
-    """Decorador que combina login_required, usuario_activo"""
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if 'usuario_id' not in session:
@@ -84,6 +100,9 @@ def verificar_permisos(f):
 
 # ====================== FUNCIONES AUXILIARES ======================
 
+# --- crear_usuario_desde_form ---
+# Función: Crea un objeto Usuario desde datos de formulario
+# Parámetros: form_data (datos del formulario), rol (directora, docente, alumno)
 def crear_usuario_desde_form(form_data, rol):
     """Crea un objeto Usuario desde datos de formulario"""
     return Usuario(
@@ -104,10 +123,12 @@ def crear_usuario_desde_form(form_data, rol):
     )
 
 # ====================== RUTAS PÚBLICAS ======================
+# Rutas accesibles sin autenticación
 
+# --- / (raíz) ---
+# Redirige al dashboard según el rol del usuario o al login si no está autenticado
 @app.route('/')
 def index():
-    """Redirige al dashboard o login según autenticación"""
     if 'usuario_id' in session:
         rol = session.get('rol')
         if rol == 'directora':
@@ -118,13 +139,13 @@ def index():
             return redirect(url_for('alumno_dashboard'))
     return redirect(url_for('login'))
 
+# --- /login ---
+# Formulario de inicio de sesión. Verifica credenciales y crea sesión.
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    """Autenticación de usuarios"""
     if request.method == 'POST':
         correo = request.form.get('correo')
         clave = request.form.get('clave')
-
         try:
             usuario = Usuario.query.filter_by(correo=correo).first()
         except SQLAlchemyError:
@@ -140,11 +161,12 @@ def login():
             session['rol'] = usuario.rol
             session['nombres'] = usuario.nombres
             
-            # Registrar acceso
+            # Registrar acceso en logs
             log = LogAcceso(usuario_id=usuario.id, accion='Inicio de sesión')
             db.session.add(log)
             db.session.commit()
 
+            # Redirigir según rol
             if usuario.rol == 'directora':
                 return redirect(url_for('directora_dashboard'))
             elif usuario.rol == 'docente':
@@ -156,10 +178,11 @@ def login():
     
     return render_template('login.html')
 
+# --- /logout ---
+# Cierra la sesión del usuario y registra el cierre en logs
 @app.route('/logout')
 @login_required
 def logout():
-    """Cierra sesión del usuario"""
     usuario_id = session.get('usuario_id')
     if usuario_id:
         log = LogAcceso(usuario_id=usuario_id, accion='Cierre de sesión')
@@ -170,36 +193,41 @@ def logout():
     flash('Sesión cerrada correctamente', 'success')
     return redirect(url_for('login'))
 
+# --- /perfil ---
+# Muestra el perfil del usuario autenticado
 @app.route('/perfil')
 @login_required
 def perfil():
-    """Muestra el perfil del usuario"""
     usuario = Usuario.query.get(session.get('usuario_id'))
     return render_template('perfil.html', usuario=usuario)
 
+# --- /directora/colaboradores ---
+# Lista todos los docentes del sistema (solo директор)
 @app.route('/directora/colaboradores')
 @verificar_permisos
 @role_required('directora')
 def colaboradores():
-    """Lista todos los docentes (colaboradores)"""
     docentes = Usuario.query.filter_by(rol='docente').all()
     return render_template('colaboradores.html', docentes=docentes)
 
+# --- /directora/estudiantes ---
+# Lista todos los alumnos del sistema (solo директор)
 @app.route('/directora/estudiantes')
 @verificar_permisos
 @role_required('directora')
 def estudiantes():
-    """Lista todos los alumnos (estudiantes)"""
     alumnos = Usuario.query.filter_by(rol='alumno').all()
     return render_template('estudiantes.html', alumnos=alumnos)
 
 # ====================== RUTAS DIRECTORA ======================
+# Rutas exclusivas para la директор (administradora)
 
+# --- /directora/dashboard ---
+# Panel principal de la директор: muestra estadísticas de alumnos y docentes
 @app.route('/directora/dashboard')
 @verificar_permisos
 @role_required('directora')
 def directora_dashboard():
-    """Dashboard de directora"""
     alumnos = Usuario.query.filter_by(rol='alumno').count()
     docentes_list = Usuario.query.filter_by(rol='docente').all()
     docentes = len(docentes_list)
@@ -210,12 +238,13 @@ def directora_dashboard():
                          docentes=docentes_list,
                          docentes_count=docentes)
 
+# --- /directora/registrar_alumno ---
+# Formulario para registrar un nuevo alumno con su apoderado
 @app.route('/directora/registrar_alumno', methods=['GET', 'POST'])
 @verificar_permisos
 @role_required('directora')
 @log_accion('Registrar alumno')
 def registrar_alumno():
-    """Registra un nuevo alumno"""
     if request.method == 'POST':
         try:
             nuevo_alumno = crear_usuario_desde_form(request.form, 'alumno')
@@ -225,7 +254,7 @@ def registrar_alumno():
             db.session.add(nuevo_alumno)
             db.session.flush()
             
-            # Crear apoderado
+            # Crear apoderado linked al alumno
             nuevo_apoderado = Apoderado(
                 alumno_id=nuevo_alumno.id,
                 nombres=request.form.get('apoderado_nombres'),
@@ -247,7 +276,7 @@ def registrar_alumno():
     secciones = Seccion.query.filter_by(activo=True).all()
     grados = Grado.query.filter_by(activo=True).all()
     
-    # Convertir grados a formato serializable para JavaScript
+    # Convertir grados a JSON para JavaScript (selects dinámicos)
     grados_data = []
     for grado in grados:
         grado_dict = {
@@ -263,12 +292,13 @@ def registrar_alumno():
                            grados=grados,
                            grados_data=grados_data)
 
+# --- /directora/registrar_docente ---
+# Formulario para registrar un nuevo docente
 @app.route('/directora/registrar_docente', methods=['GET', 'POST'])
 @verificar_permisos
 @role_required('directora')
 @log_accion('Registrar docente')
 def registrar_docente():
-    """Registra un nuevo docente"""
     if request.method == 'POST':
         try:
             nuevo_docente = crear_usuario_desde_form(request.form, 'docente')
@@ -303,28 +333,31 @@ def registrar_docente():
     
     return render_template('docentes_form.html', grados_data=grados_data)
 
+# --- /directora/listar_alumnos ---
+# Lista todos los alumnos registrados (solo директор)
 @app.route('/directora/listar_alumnos')
 @verificar_permisos
 @role_required('directora')
 def listar_alumnos():
-    """Lista todos los alumnos"""
     alumnos = Usuario.query.filter_by(rol='alumno').all()
     return render_template('listar_alumnos.html', alumnos=alumnos)
 
+# --- /directora/listar_docentes ---
+# Lista todos los docentes registrados (solo директор)
 @app.route('/directora/listar_docentes')
 @verificar_permisos
 @role_required('directora')
 def listar_docentes():
-    """Lista todos los docentes"""
     docentes = Usuario.query.filter_by(rol='docente').all()
     return render_template('listar_docentes.html', docentes=docentes)
 
+# --- /directora/editar_alumno/<id> ---
+# Formulario para editar los datos de un alumno y su apoderado
 @app.route('/directora/editar_alumno/<int:id>', methods=['GET', 'POST'])
 @verificar_permisos
 @role_required('directora')
 @log_accion('Editar alumno')
 def editar_alumno(id):
-    """Editar alumno"""
     alumno = Usuario.query.get_or_404(id)
     if alumno.rol != 'alumno':
         flash('Usuario no es alumno', 'danger')
@@ -332,6 +365,7 @@ def editar_alumno(id):
     
     if request.method == 'POST':
         try:
+            # Actualizar datos del alumno
             alumno.dni = request.form.get('dni')
             alumno.nombres = request.form.get('nombres')
             alumno.apellido_paterno = request.form.get('apellido_paterno')
@@ -342,17 +376,16 @@ def editar_alumno(id):
                 seccion = Seccion.query.get(alumno.seccion_id)
                 alumno.grado_id = seccion.grado_id if seccion else None
             
-            # Actualizar o crear apoderado
+            # Actualizar o crear apoderado linked al alumno
             apoderado = Apoderado.query.filter_by(alumno_id=alumno.id).first()
             if apoderado:
                 apoderado.nombres = request.form.get('apoderado_nombres')
-                apoderado.apellido_paterno = request.form.get('apoderado_apellido_paterno')
-                apoderado.apellido_materno = request.form.get('apoderado_apellido_materno')
-                apoderado.telefono_principal = request.form.get('apoderado_telefono_principal')
-                apoderado.telefono_secundario = request.form.get('apoderado_telefono_secundario')
-                apoderado.es_apoderado = bool(request.form.get('es_apoderado'))
+                apoderaApellido_paterno = request.form.get('apoderado_apellido_paterno')
+                apoderaApellido_materno = request.form.get('apoderado_apellido_materno')
+                apoderaTelefono_principal = request.form.get('apoderado_telefono_principal')
+                apoderaTelefono_secundario = request.form.get('apoderado_telefono_secundario')
+                apoderaEs_apoderado = bool(request.form.get('es_apoderado'))
             else:
-                # Crear nuevo apoderado si no existe
                 nuevo_apoderado = Apoderado(
                     alumno_id=alumno.id,
                     nombres=request.form.get('apoderado_nombres'),

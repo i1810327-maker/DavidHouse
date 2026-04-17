@@ -1,7 +1,12 @@
-"""
-Script para inicializar la base de datos con datos de prueba
-Ejecutar: python init_db.py
-"""
+# ==========================================
+# SCRIPT DE INICIALIZACIÓN DE BASE DE DATOS
+# ==========================================
+# Este script crea las tablas e inserta datos de prueba en la base de datos.
+# Uso: python init_db.py
+# Credenciales creadas:
+#   - Diretora: admin@colegio.edu.pe / Admin2026
+#   - Docente: docente@colegio.edu.pe / Docente2026
+#   - Alumno: alumno@colegio.edu.pe / Alumno2026
 
 from app import app, db, bcrypt
 from models import Usuario, Grado, Seccion, Curso, Inscripcion
