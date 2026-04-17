@@ -532,9 +532,19 @@ def docente_dashboard():
     
     estudiante_ids = set()
     seccion_nombres = set()
+    estudiantes_por_seccion = {}
     for curso in cursos:
         if curso.seccion_rel:
             seccion_nombres.add(curso.seccion_rel.nombre)
+            # Contar estudiantes por sección
+            seccion_id = curso.seccion_rel.id
+            if seccion_id not in estudiantes_por_seccion:
+                estudiantes_por_seccion[seccion_id] = {
+                    'nombre': curso.seccion_rel.nombre,
+                    'grado': curso.seccion_rel.grado.nombre if curso.seccion_rel.grado else 'N/A',
+                    'cantidad': 0
+                }
+            estudiantes_por_seccion[seccion_id]['cantidad'] += len(curso.inscripciones)
         for ins in curso.inscripciones:
             estudiante_ids.add(ins.alumno_id)
 
@@ -542,13 +552,23 @@ def docente_dashboard():
     total_estudiantes = len(estudiantes)
     secciones = ', '.join(sorted(seccion_nombres)) if seccion_nombres else 'No asignado'
 
+    # Datos de sección donde el docente es tutor
+    seccion_tutor = Seccion.query.get(usuario.seccion_id) if usuario.seccion_id else None
+    seccion_tutor_nombre = seccion_tutor.nombre if seccion_tutor else 'No asignado'
+    seccion_tutor_grado = seccion_tutor.grado.nombre if seccion_tutor and seccion_tutor.grado else 'No asignado'
+    seccion_tutor_cantidad = len(seccion_tutor.usuarios) if seccion_tutor else 0
+
     return render_template('dashboard_docente.html', 
                          usuario=usuario,
                          cursos=cursos,
                          estudiantes=estudiantes,
                          total_cursos=len(cursos),
                          total_estudiantes=total_estudiantes,
-                         secciones=secciones)
+                         secciones=secciones,
+                         estudiantes_por_seccion=estudiantes_por_seccion,
+                         seccion_tutor_nombre=seccion_tutor_nombre,
+                         seccion_tutor_grado=seccion_tutor_grado,
+                         seccion_tutor_cantidad=seccion_tutor_cantidad)
 
 @app.route('/docente/cambiar_clave', methods=['GET', 'POST'])
 @verificar_permisos
@@ -599,14 +619,25 @@ def alumno_dashboard():
     asistencia_promedio = sum(asistencias) / len(asistencias) if asistencias else 0
     
     apoderado = Apoderado.query.filter_by(alumno_id=usuario.id).first()
-    
+
+    # Docente y cantidad de estudiantes de la sección
+    seccion = usuario.seccion_rel if hasattr(usuario, 'seccion_rel') else None
+    docente_seccion = seccion.docente.nombres if seccion and seccion.docente else None
+    cantidad_estudiantes_seccion = len(seccion.usuarios) if seccion else 0
+    seccion_nombre = seccion.nombre if seccion else None
+    grado_nombre = seccion.grado.nombre if seccion and seccion.grado else None
+
     return render_template('dashboard_alumno.html',
                          usuario=usuario,
                          inscripciones=inscripciones,
                          total_cursos=len(inscripciones),
                          promedio=promedio,
                          asistencia_promedio=int(asistencia_promedio),
-                         apoderado=apoderado)
+                         apoderado=apoderado,
+                         docente_seccion=docente_seccion,
+                         cantidad_estudiantes_seccion=cantidad_estudiantes_seccion,
+                         seccion_nombre=seccion_nombre,
+                         grado_nombre=grado_nombre)
 
 
 @app.route('/alumno/cambiar_clave', methods=['GET', 'POST'])

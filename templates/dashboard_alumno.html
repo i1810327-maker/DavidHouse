@@ -3,21 +3,21 @@
 
 {% block content %}
 <div class="dashboard-top">
-    <div class="summary-card summary-orange">
-        <div class="summary-title">Promedio General</div>
-        <div class="summary-value">{{ "%.2f"|format(promedio) if promedio else "-" }}</div>
-    </div>
-    <div class="summary-card summary-orange-light">
-        <div class="summary-title">Asistencia</div>
-        <div class="summary-value">{{ asistencia_promedio }}%</div>
-    </div>
-    <div class="summary-card summary-card-muted">
-        <div class="summary-title">Materias</div>
-        <div class="summary-value">{{ total_cursos }}</div>
-    </div>
     <div class="summary-card summary-card-muted">
         <div class="summary-title">Grado</div>
-        <div class="summary-value">{{ usuario.grado_rel.nombre if usuario.grado_rel else 'N/A' }}</div>
+        <div class="summary-value">{{ grado_nombre or (usuario.grado_rel.nombre if usuario.grado_rel else 'N/A') }}</div>
+    </div>
+    <div class="summary-card summary-card-muted">
+        <div class="summary-title">Sección</div>
+        <div class="summary-value">{{ seccion_nombre or (usuario.seccion_rel.nombre if usuario.seccion_rel else 'N/A') }}</div>
+    </div>
+    <div class="summary-card summary-card-muted">
+        <div class="summary-title">Docente de Sección</div>
+        <div class="summary-value">{{ docente_seccion or 'N/A' }}</div>
+    </div>
+    <div class="summary-card summary-card-muted">
+        <div class="summary-title">Compañeros en Sección</div>
+        <div class="summary-value">{{ cantidad_estudiantes_seccion }}</div>
     </div>
 </div>
 
