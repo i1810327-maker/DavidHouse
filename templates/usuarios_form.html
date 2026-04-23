@@ -2,96 +2,187 @@
 {% block title %}Registrar Alumno - ColegioSys{% endblock %}
 
 {% block content %}
+<style>
+    .dni-wrapper {
+        position: relative;
+        display: flex;
+        gap: 8px;
+        align-items: center;
+    }
+    .dni-wrapper input {
+        flex: 1;
+    }
+    .btn-consultar-dni {
+        padding: 10px 14px;
+        background: #1976d2;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 18px;
+        transition: background 0.2s;
+        white-space: nowrap;
+    }
+    .btn-consultar-dni:hover { background: #1565c0; }
+    .btn-consultar-dni:disabled { background: #90caf9; cursor: not-allowed; }
+
+    .dni-status {
+        font-size: 12px;
+        margin-top: 4px;
+        min-height: 18px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .dni-status.loading { color: #1976d2; }
+    .dni-status.success { color: #2e7d32; }
+    .dni-status.error   { color: #c62828; }
+
+    .spinner {
+        width: 14px; height: 14px;
+        border: 2px solid #ccc;
+        border-top-color: #1976d2;
+        border-radius: 50%;
+        animation: spin 0.7s linear infinite;
+        display: inline-block;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .field-autofilled {
+        background: #e8f5e9 !important;
+        border-color: #4caf50 !important;
+        transition: background 0.3s;
+    }
+</style>
+
 <div class="card" style="max-width: 800px; margin: 0 auto;">
-    <h2> Registrar Nuevo Alumno</h2>
+    <h2>Registrar Nuevo Alumno</h2>
     <p style="color: #666; margin-bottom: 25px;">
-        Complete todos los campos para crear una nueva cuenta de alumno en el sistema.
+        Complete todos los campos. Al ingresar el DNI se autocompletarán los nombres.
     </p>
     <div class="divider"></div>
 
     <form method="POST" action="{{ url_for('registrar_alumno') }}">
-        <!-- SECCIÓN APODERADO -->
+
+        <!--APODERADO -->
         <div style="background: #e8f5e9; border-left: 4px solid #4caf50; padding: 20px; margin-bottom: 30px; border-radius: 8px;">
-            <h3 style="color: #2e7d32; margin-bottom: 15px;"> Información del Apoderado</h3>
-            
+            <h3 style="color: #2e7d32; margin-bottom: 15px;">Información del Apoderado</h3>
+
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                <!-- Fila 1 Apoderado -->
+
+                <!-- DNI Apoderado -->
+                <div class="form-group" style="grid-column: 1 / -1;">
+                    <label for="apoderado_dni">DNI del Apoderado</label>
+                    <div class="dni-wrapper">
+                        <input type="text" id="apoderado_dni" name="apoderado_dni"
+                               placeholder="12345678" maxlength="8" inputmode="numeric">
+                        <button type="button" class="btn-consultar-dni"
+                                onclick="consultarDNI('apoderado')" id="btn-apoderado">
+                            Buscar
+                        </button>
+                    </div>
+                    <div class="dni-status" id="status-apoderado"></div>
+                </div>
+
+                <!-- Fila 1 -->
                 <div class="form-group">
                     <label for="apoderado_nombres">* Nombres *</label>
-                    <input type="text" id="apoderado_nombres" name="apoderado_nombres" placeholder="Juan" required>
+                    <input type="text" id="apoderado_nombres" name="apoderado_nombres"
+                           placeholder="Juan" required>
                 </div>
 
                 <div class="form-group">
                     <label for="apoderado_apellido_paterno">* Apellido Paterno *</label>
-                    <input type="text" id="apoderado_apellido_paterno" name="apoderado_apellido_paterno" placeholder="García" required>
-                </div>
-
-                <!-- Fila 2 Apoderado -->
-                <div class="form-group">
-                    <label for="apoderado_apellido_materno">* Apellido Materno *</label>
-                    <input type="text" id="apoderado_apellido_materno" name="apoderado_apellido_materno" placeholder="López" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="apoderado_telefono_principal">* Teléfono Principal</label>
-                    <input type="text" id="apoderado_telefono_principal" name="apoderado_telefono_principal" placeholder="987654321" maxlength="20">
-                </div>
-
-                <!-- Fila 3 Apoderado -->
-                <div class="form-group">
-                    <label for="apoderado_telefono_secundario">* Teléfono Secundario</label>
-                    <input type="text" id="apoderado_telefono_secundario" name="apoderado_telefono_secundario" placeholder="912345678" maxlength="20">
-                </div>
-
-                <div class="form-group" style="display: flex; align-items: flex-end;">
-                    <label style="margin: 0; display: flex; align-items: center; cursor: pointer;">
-                        <input type="checkbox" id="es_apoderado" name="es_apoderado" value="1" checked 
-                               style="width: auto; margin-right: 8px;">
-                        <span>¿Es apoderado?</span>
-                    </label>
-                </div>
-            </div>
-        </div>
-
-        <!-- SECCIÓN ALUMNO -->
-        <div style="background: #fff3e0; border-left: 4px solid #ff9800; padding: 20px; margin-bottom: 30px; border-radius: 8px;">
-            <h3 style="color: #f57c00; margin-bottom: 15px;">* Información del Alumno</h3>
-            
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                <!-- Fila 1 -->
-                <div class="form-group">
-                    <label for="dni">* DNI *</label>
-                    <input type="text" id="dni" name="dni" placeholder="12345678" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="nombres">* Nombres *</label>
-                    <input type="text" id="nombres" name="nombres" placeholder="Juan" required>
+                    <input type="text" id="apoderado_apellido_paterno" name="apoderado_apellido_paterno"
+                           placeholder="García" required>
                 </div>
 
                 <!-- Fila 2 -->
                 <div class="form-group">
-                    <label for="apellido_paterno">* Apellido Paterno *</label>
-                    <input type="text" id="apellido_paterno" name="apellido_paterno" placeholder="García" required>
+                    <label for="apoderado_apellido_materno">* Apellido Materno *</label>
+                    <input type="text" id="apoderado_apellido_materno" name="apoderado_apellido_materno"
+                           placeholder="López" required>
                 </div>
 
                 <div class="form-group">
-                    <label for="apellido_materno">* Apellido Materno *</label>
-                    <input type="text" id="apellido_materno" name="apellido_materno" placeholder="López" required>
+                    <label for="apoderado_telefono_principal">Teléfono Principal</label>
+                    <input type="text" id="apoderado_telefono_principal" name="apoderado_telefono_principal"
+                           placeholder="987654321" maxlength="20">
                 </div>
 
                 <!-- Fila 3 -->
                 <div class="form-group">
-                    <label for="correo">* Correo Electrónico *</label>
-                    <input type="email" id="correo" name="correo" placeholder="alumno@colegio.edu.pe" required>
+                    <label for="apoderado_telefono_secundario">Teléfono Secundario</label>
+                    <input type="text" id="apoderado_telefono_secundario" name="apoderado_telefono_secundario"
+                           placeholder="912345678" maxlength="20">
+                </div>
+
+                <div class="form-group" style="display: flex; align-items: flex-end;">
+                    <label style="margin: 0; display: flex; align-items: center; cursor: pointer;">
+                        <input type="checkbox" id="es_apoderado" name="es_apoderado" value="1" checked
+                               style="width: auto; margin-right: 8px;">
+                        <span>¿Es apoderado?</span>
+                    </label>
+                </div>
+
+            </div>
+        </div>
+
+<!-- SECCIÓN ALUMNO -->
+        <div style="background: #fff3e0; border-left: 4px solid #ff9800; padding: 20px; margin-bottom: 30px; border-radius: 8px;">
+            <h3 style="color: #f57c00; margin-bottom: 15px;">Información del Alumno</h3>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+
+                <!-- Fila 1: DNI con botón -->
+                <div class="form-group" style="grid-column: 1 / -1;">
+                    <label for="dni">* DNI *</label>
+                    <div class="dni-wrapper">
+                        <input type="text" id="dni" name="dni"
+                               placeholder="12345678" maxlength="8"
+                               inputmode="numeric" required>
+                        <button type="button" class="btn-consultar-dni"
+                                onclick="consultarDNI('alumno')" id="btn-alumno">
+                            Buscar
+                        </button>
+                    </div>
+                    <div class="dni-status" id="status-alumno"></div>
+                </div>
+
+                <!-- Fila 2 -->
+                <div class="form-group">
+                    <label for="nombres">* Nombres *</label>
+                    <input type="text" id="nombres" name="nombres"
+                           placeholder="Juan" required>
                 </div>
 
                 <div class="form-group">
-                    <label for="clave">* Contraseña *</label>
-                    <input type="password" id="clave" name="clave" placeholder="Contraseña segura" required>
+                    <label for="apellido_paterno">* Apellido Paterno *</label>
+                    <input type="text" id="apellido_paterno" name="apellido_paterno"
+                           placeholder="García" required>
+                </div>
+
+                <!-- Fila 3 -->
+                <div class="form-group">
+                    <label for="apellido_materno">* Apellido Materno *</label>
+                    <input type="text" id="apellido_materno" name="apellido_materno"
+                           placeholder="López" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="correo">* Correo Electrónico *</label>
+                    <input type="email" id="correo" name="correo"
+                           placeholder="alumno@colegio.edu.pe" required>
                 </div>
 
                 <!-- Fila 4 -->
+                <div class="form-group">
+                    <label for="clave">* Contraseña *</label>
+                    <input type="password" id="clave" name="clave"
+                           placeholder="Contraseña segura" required>
+                </div>
+
+                <!-- Fila 5: Nivel / Grado / Sección -->
                 <div class="form-group">
                     <label for="nivel_id">* Nivel *</label>
                     <select id="nivel_id" name="nivel_id" onchange="filtrarGrados()" required>
@@ -108,99 +199,213 @@
                     </select>
                 </div>
 
-                <!-- Fila 5 -->
                 <div class="form-group">
                     <label for="seccion_id">* Sección *</label>
                     <select id="seccion_id" name="seccion_id" required disabled>
                         <option value="">-- Primero selecciona un grado --</option>
                     </select>
                 </div>
+
             </div>
         </div>
 
         <div class="btn-group" style="margin-top: 30px;">
-            <button type="submit" class="btn"> Registrar Alumno y Apoderado</button>
-            <a href="{{ url_for('directora_dashboard') }}" class="btn btn-secondary"> Cancelar</a>
+            <button type="submit" class="btn">Registrar Alumno y Apoderado</button>
+            <a href="{{ url_for('directora_dashboard') }}" class="btn btn-secondary">Cancelar</a>
         </div>
     </form>
 </div>
 
 <script>
-    // Datos de grados y secciones desde el backend
-    const gradosData = JSON.parse('{{ grados_data | default([]) | tojson | safe }}');
+//  CONFIG 
+const API_TOKEN = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJlbWFpbCI6ImkyNTEzNzAyQGNvbnRpbmVudGFsLmVkdS5wZSJ9.o02LSzKdddnW-h9XO-sf5hFbquw5vroU6ZAoFhbl9mY';
+const API_BASE  = 'https://dniruc.apisperu.com/api/v1/dni/';
 
-    function filtrarGrados() {
-        const nivelSelect = document.getElementById('nivel_id');
-        const gradoSelect = document.getElementById('grado_id');
-        const seccionSelect = document.getElementById('seccion_id');
-        const nivelSeleccionado = nivelSelect.value;
+// Mapeo de sección → IDs de campos
+const CAMPOS = {
+    alumno: {
+        dni:      'dni',
+        nombres:  'nombres',
+        apPat:    'apellido_paterno',
+        apMat:    'apellido_materno',
+        btn:      'btn-alumno',
+        status:   'status-alumno',
+    },
+    apoderado: {
+        dni:      'apoderado_dni',
+        nombres:  'apoderado_nombres',
+        apPat:    'apoderado_apellido_paterno',
+        apMat:    'apoderado_apellido_materno',
+        btn:      'btn-apoderado',
+        status:   'status-apoderado',
+    }
+};
 
-        // Limpiar opciones
-        gradoSelect.innerHTML = '';
-        seccionSelect.innerHTML = '';
-        gradoSelect.disabled = true;
-        seccionSelect.disabled = true;
+// FUNCIÓN PRINCIPAL 
+async function consultarDNI(seccion) {
+    const c       = CAMPOS[seccion];
+    const dniVal  = document.getElementById(c.dni).value.trim();
+    const statusEl = document.getElementById(c.status);
+    const btnEl    = document.getElementById(c.btn);
 
-        if (!nivelSeleccionado) {
-            gradoSelect.innerHTML = '<option value="">-- Primero selecciona un nivel --</option>';
-            seccionSelect.innerHTML = '<option value="">-- Primero selecciona un grado --</option>';
+    // — Validaciones previas —
+    if (!/^\d+$/.test(dniVal)) {
+        setStatus(statusEl, 'error', 'El DNI solo debe contener números.');
+        return;
+    }
+    if (dniVal.length !== 8) {
+        setStatus(statusEl, 'error', `El DNI debe tener exactamente 8 dígitos (tiene ${dniVal.length}).`);
+        return;
+    }
+
+    // — Estado de carga —
+    setStatus(statusEl, 'loading', '<span class="spinner"></span> Consultando RENIEC...');
+    btnEl.disabled = true;
+
+    try {
+        const response = await fetch(`${API_BASE}${dniVal}?token=${API_TOKEN}`);
+
+        if (!response.ok) {
+            if (response.status === 404) {
+                setStatus(statusEl, 'error', 'DNI no encontrado en RENIEC.');
+            } else if (response.status === 401) {
+                setStatus(statusEl, 'error', 'Token de API inválido o expirado.');
+            } else {
+                setStatus(statusEl, 'error', `Error del servidor (código ${response.status}).`);
+            }
             return;
         }
 
-        // Filtrar grados por nivel
-        const gradosFiltrados = gradosData.filter(grado => grado.nivel === nivelSeleccionado);
+        const data = await response.json();
 
-        if (gradosFiltrados.length === 0) {
-            gradoSelect.innerHTML = '<option value="">No hay grados disponibles</option>';
-        } else {
-            gradoSelect.innerHTML = '<option value="">-- Selecciona un grado --</option>';
-            gradosFiltrados.forEach(grado => {
-                const option = document.createElement('option');
-                option.value = grado.id;
-                option.textContent = grado.nombre;
-                gradoSelect.appendChild(option);
-            });
-            gradoSelect.disabled = false;
-        }
-    }
-
-    function filtrarSecciones() {
-        const gradoSelect = document.getElementById('grado_id');
-        const seccionSelect = document.getElementById('seccion_id');
-        const gradoSeleccionado = gradoSelect.value;
-
-        // Limpiar opciones actuales
-        seccionSelect.innerHTML = '';
-
-        if (!gradoSeleccionado) {
-            seccionSelect.innerHTML = '<option value="">-- Primero selecciona un grado --</option>';
-            seccionSelect.disabled = true;
+        // APISPerú devuelve: { nombres, apellidoPaterno, apellidoMaterno, ... }
+        if (!data.nombres) {
+            setStatus(statusEl, 'error', 'Respuesta inesperada de la API.');
             return;
         }
 
-        // Buscar el grado seleccionado
-        const grado = gradosData.find(g => g.id === parseInt(gradoSeleccionado));
-        
-        if (!grado || !grado.secciones || grado.secciones.length === 0) {
-            seccionSelect.innerHTML = '<option value="">No hay secciones disponibles</option>';
-            seccionSelect.disabled = true;
-        } else {
-            seccionSelect.innerHTML = '<option value="">-- Selecciona una sección --</option>';
-            grado.secciones.forEach(seccion => {
-                const option = document.createElement('option');
-                option.value = seccion.id;
-                option.textContent = seccion.nombre;
-                seccionSelect.appendChild(option);
-            });
-            seccionSelect.disabled = false;
-        }
-    }
+        // — Rellenar campos con efecto visual —
+        autoFill(c.nombres, capitalizarNombre(data.nombres));
+        autoFill(c.apPat,   capitalizarNombre(data.apellidoPaterno));
+        autoFill(c.apMat,   capitalizarNombre(data.apellidoMaterno));
 
-    // Inicializar al cargar la página
-    window.addEventListener('load', function() {
-        // Resetear selects al cargar
-        document.getElementById('grado_id').disabled = true;
-        document.getElementById('seccion_id').disabled = true;
+        setStatus(statusEl, 'success', ' Datos cargados correctamente desde RENIEC.');
+
+    } catch (err) {
+        console.error('Error consultando DNI:', err);
+        setStatus(statusEl, 'error', ' No se pudo conectar con la API. Verifique su conexión.');
+    } finally {
+        btnEl.disabled = false;
+    }
+}
+
+
+
+// Rellena un campo 
+function autoFill(fieldId, valor) {
+    const el = document.getElementById(fieldId);
+    if (!el) return;
+    el.value = valor;
+    el.classList.add('field-autofilled');
+    setTimeout(() => el.classList.remove('field-autofilled'), 2500);
+}
+
+/** Muestra mensaje de estado con clase CSS */
+function setStatus(el, tipo, html) {
+    el.className = `dni-status ${tipo}`;
+    el.innerHTML = html;
+}
+
+// convierte nombre a formato admitido
+function capitalizarNombre(str) {
+    if (!str) return '';
+    return str.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+}
+
+// ─── CONSULTA AUTOMÁTICA al completar 8 dígitos ──────────
+['alumno', 'apoderado'].forEach(seccion => {
+    const c = CAMPOS[seccion];
+    const inputEl = document.getElementById(c.dni);
+    if (!inputEl) return;
+
+    // Solo permitir números mientras escribe
+    inputEl.addEventListener('input', function () {
+        this.value = this.value.replace(/\D/g, '').slice(0, 8);
+        if (this.value.length === 8) {
+            consultarDNI(seccion);   // disparo automático
+        }
+        // Limpiar estado si borra
+        if (this.value.length < 8) {
+            document.getElementById(c.status).className = 'dni-status';
+            document.getElementById(c.status).innerHTML = '';
+        }
     });
+});
+
+// GRADOS / SECCIONES
+const gradosData = JSON.parse('{{ grados_data | default([]) | tojson | safe }}');
+
+function filtrarGrados() {
+    const nivelSelect  = document.getElementById('nivel_id');
+    const gradoSelect  = document.getElementById('grado_id');
+    const seccionSelect = document.getElementById('seccion_id');
+
+    gradoSelect.innerHTML  = '';
+    seccionSelect.innerHTML = '';
+    gradoSelect.disabled   = true;
+    seccionSelect.disabled = true;
+
+    if (!nivelSelect.value) {
+        gradoSelect.innerHTML   = '<option value="">-- Primero selecciona un nivel --</option>';
+        seccionSelect.innerHTML = '<option value="">-- Primero selecciona un grado --</option>';
+        return;
+    }
+
+    const filtrados = gradosData.filter(g => g.nivel === nivelSelect.value);
+    if (filtrados.length === 0) {
+        gradoSelect.innerHTML = '<option value="">No hay grados disponibles</option>';
+    } else {
+        gradoSelect.innerHTML = '<option value="">-- Selecciona un grado --</option>';
+        filtrados.forEach(g => {
+            const opt = document.createElement('option');
+            opt.value = g.id;
+            opt.textContent = g.nombre;
+            gradoSelect.appendChild(opt);
+        });
+        gradoSelect.disabled = false;
+    }
+}
+
+function filtrarSecciones() {
+    const gradoSelect   = document.getElementById('grado_id');
+    const seccionSelect = document.getElementById('seccion_id');
+
+    seccionSelect.innerHTML = '';
+    if (!gradoSelect.value) {
+        seccionSelect.innerHTML = '<option value="">-- Primero selecciona un grado --</option>';
+        seccionSelect.disabled = true;
+        return;
+    }
+
+    const grado = gradosData.find(g => g.id === parseInt(gradoSelect.value));
+    if (!grado || !grado.secciones || grado.secciones.length === 0) {
+        seccionSelect.innerHTML = '<option value="">No hay secciones disponibles</option>';
+        seccionSelect.disabled = true;
+    } else {
+        seccionSelect.innerHTML = '<option value="">-- Selecciona una sección --</option>';
+        grado.secciones.forEach(s => {
+            const opt = document.createElement('option');
+            opt.value = s.id;
+            opt.textContent = s.nombre;
+            seccionSelect.appendChild(opt);
+        });
+        seccionSelect.disabled = false;
+    }
+}
+
+window.addEventListener('load', () => {
+    document.getElementById('grado_id').disabled   = true;
+    document.getElementById('seccion_id').disabled = true;
+});
 </script>
 {% endblock %}
