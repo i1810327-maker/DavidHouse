@@ -4,7 +4,7 @@
 # Este script crea las tablas e inserta datos de prueba en la base de datos.
 # Uso: python init_db.py
 # Credenciales creadas:
-#   - Diretora: admin@colegio.edu.pe / Admin2026
+#   - Directora: admin@colegio.edu.pe / Admin2026
 #   - Docente: docente@colegio.edu.pe / Docente2026
 #   - Alumno: alumno@colegio.edu.pe / Alumno2026
 
@@ -52,85 +52,58 @@ def init_database():
         db.session.commit()
         print("✅ Secciones creadas\n")
 
-        # Crear Usuario Directora
-        print("👩‍💼 Creando usuario Directora...")
-        directora = Usuario(
-            dni="12345678",
-            nombres="María",
-            apellido_paterno="García",
-            apellido_materno="López",
-            correo="admin@colegio.edu.pe",
-            clave=bcrypt.generate_password_hash("Admin2026").decode('utf-8'),
-            rol="directora",
-            activo=True
-        )
-        db.session.add(directora)
+        # Crear Usuarios (Admin, Docente, Alumno)
+        print("👤 Creando usuarios...")
+        usuarios = [
+            Usuario(
+                dni="12345678",
+                nombres="Admin",
+                apellido_paterno="Sistema",
+                apellido_materno="Colegio",
+                correo="admin@colegio.edu.pe",
+                clave=bcrypt.generate_password_hash("Admin2026").decode('utf-8'),
+                rol="directora",
+                activo=True
+            ),
+            Usuario(
+                dni="87654321",
+                nombres="Juan",
+                apellido_paterno="Pérez",
+                apellido_materno="García",
+                correo="docente@colegio.edu.pe",
+                telefono_principal="999888777",
+                telefono_secundario="988777666",
+                clave=bcrypt.generate_password_hash("Docente2026").decode('utf-8'),
+                rol="docente",
+                profesion="Educación Primaria",
+                tiene_especialidad=True,
+                descripcion_especialidad="Especialista en Lengua y Literatura",
+                activo=True
+            ),
+            Usuario(
+                dni="11111111",
+                nombres="Carlos",
+                apellido_paterno="López",
+                apellido_materno="Rodríguez",
+                correo="alumno@colegio.edu.pe",
+                clave=bcrypt.generate_password_hash("Alumno2026").decode('utf-8'),
+                rol="alumno",
+                grado_id=1,
+                seccion_id=1,
+                activo=True
+            ),
+        ]
+        for usuario in usuarios:
+            db.session.add(usuario)
         db.session.commit()
-        print("✅ Directora creada")
-        print("   📧 Correo: admin@colegio.edu.pe")
-        print("   🔑 Contraseña: Admin2026\n")
+        print("✅ Usuarios creados\n")
 
-        # Crear Usuario Docente de Prueba
-        print("👨‍🏫 Creando usuario Docente...")
-        docente = Usuario(
-            dni="87654321",
-            nombres="Juan",
-            apellido_paterno="Pérez",
-            apellido_materno="Martínez",
-            correo="docente@colegio.edu.pe",
-            clave=bcrypt.generate_password_hash("Docente2026").decode('utf-8'),
-            rol="docente",
-            profesion="Licenciado en Educación Primaria",
-            tiene_especialidad=True,
-            descripcion_especialidad="Especialista en Matemáticas y Ciencias",
-            seccion_id=1,
-            activo=True
-        )
-        db.session.add(docente)
-        db.session.commit()
-        print("✅ Docente creado")
-        print("   📧 Correo: docente@colegio.edu.pe")
-        print("   🔑 Contraseña: Docente2026\n")
-
-        # Crear Usuario Alumno de Prueba
-        print("👨‍🎓 Creando usuario Alumno...")
-        alumno = Usuario(
-            dni="11111111",
-            nombres="Carlos",
-            apellido_paterno="Sánchez",
-            apellido_materno="Rodríguez",
-            correo="alumno@colegio.edu.pe",
-            clave=bcrypt.generate_password_hash("Alumno2026").decode('utf-8'),
-            rol="alumno",
-            grado_id=1,
-            seccion_id=1,
-            activo=True
-        )
-        db.session.add(alumno)
-        db.session.commit()
-        print("✅ Alumno creado")
-        print("   📧 Correo: alumno@colegio.edu.pe")
-        print("   🔑 Contraseña: Alumno2026\n")
-
-        # Crear Cursos de Prueba
-        print("📕 Creando cursos...")
+        # Crear Cursos
+        print("📚 Creando cursos...")
         cursos = [
-            Curso(
-                nombre="Matemáticas",
-                codigo="MAT101",
-                descripcion="Matemáticas básicas",
-                docente_id=docente.id,
-                grado_id=1,
-                seccion_id=1
-            ),
-            Curso(
-                nombre="Lenguaje",
-                codigo="LEN101",
-                descripcion="Lenguaje y comunicación",
-                docente_id=docente.id,
-                grado_id=1,
-                seccion_id=1
-            ),
+            Curso(nombre="Matemática", grado_id=1, docente_id=2),
+            Curso(nombre="Comunicación", grado_id=1, docente_id=2),
+            Curso(nombre="Ciencia y Ambiente", grado_id=1, docente_id=2),
         ]
         for curso in cursos:
             db.session.add(curso)
@@ -138,27 +111,12 @@ def init_database():
         print("✅ Cursos creados\n")
 
         print("=" * 50)
-        print("🎉 ¡Base de datos inicializada correctamente!")
+        print("✅ ¡Base de datos inicializada correctamente!")
         print("=" * 50)
-        print("\n📝 USUARIOS DE PRUEBA:\n")
-        print("1️⃣  DIRECTORA (Administrador)")
-        print("   • Correo: admin@colegio.edu.pe")
-        print("   • Contraseña: Admin2026")
-        print("   • Rol: Directora\n")
-        print("2️⃣  DOCENTE")
-        print("   • Correo: docente@colegio.edu.pe")
-        print("   • Contraseña: Docente2026")
-        print("   • Rol: Docente\n")
-        print("3️⃣  ALUMNO")
-        print("   • Correo: alumno@colegio.edu.pe")
-        print("   • Contraseña: Alumno2026")
-        print("   • Rol: Alumno\n")
-        print("=" * 50)
+        print("\nCredenciales de prueba:")
+        print("  📌 Directora: admin@colegio.edu.pe / Admin2026")
+        print("  📌 Docente: docente@colegio.edu.pe / Docente2026")
+        print("  📌 Alumno: alumno@colegio.edu.pe / Alumno2026")
 
 if __name__ == '__main__':
-    try:
-        init_database()
-    except Exception as e:
-        print(f"❌ Error: {str(e)}")
-        import traceback
-        traceback.print_exc()
+    init_database()

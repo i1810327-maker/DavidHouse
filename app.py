@@ -4,21 +4,23 @@
 # Este archivo contiene todas las rutas, configuración y lógica del servidor Flask
 
 # --- IMPORTACIONES ---
-from flask import Flask, render_template, request, redirect, url_for, session, flash
+from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 from flask_bcrypt import Bcrypt  # Para encriptar contraseñas
 from functools import wraps       # Para crear decoradores
 from datetime import datetime
 from sqlalchemy.exc import SQLAlchemyError
 
-from db import init_db, db        # Configuración de base de datos
+from db import db, init_db        # Configuración de base de datos
 from models import Usuario, Grado, Seccion, Curso, LogAcceso, Apoderado  # Modelos ORM
 
 # ====================== CONFIGURACIÓN ======================
 app = Flask(__name__)
 app.secret_key = "clave_super_segura_2026_ColegioSys"  # Clave para sesiones Flask
 
+# Inicializar conexión a base de datos (Alwaysdata o local)
+init_db(app)
+
 bcrypt = Bcrypt(app)  # Inicializar encriptador de contraseñas
-init_db(app)          # Inicializar conexión a MySQL
 
 # ====================== DECORADORES (CONTROL DE ACCESO) ======================
 
@@ -192,6 +194,29 @@ def logout():
     session.clear()
     flash('Sesión cerrada correctamente', 'success')
     return redirect(url_for('login'))
+
+# --- /api/consultar-dni ---
+# API para consultar datos de una persona por su DNI (RENIEC)
+@app.route('/api/consultar-dni/<dni>', methods=['GET'])
+def api_consultar_dni(dni):
+    """
+    Endpoint JSON que consulta datos por DNI usando la API de RENIEC
+    
+    Parámetro: dni (8 dígitos)
+    Retorna: JSON con nombres, apellido_paterno, apellido_materno o error
+    """
+    try:
+        # Consultar datos mediante el módulo ConsultaAPI
+        resultado = ConsultaAPI.consultar_dni(dni)
+        return jsonify(resultado)
+    
+    except Exception as e:
+        return jsonify({
+            'error': f'Error al procesar la solicitud: {str(e)}',
+            'nombres': '',
+            'apellido_paterno': '',
+            'apellido_materno': ''
+        }), 500
 
 # --- /perfil ---
 # Muestra el perfil del usuario autenticado
@@ -736,6 +761,4 @@ def server_error(error):
 
 # ====================== EJECUCIÓN ======================
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
     app.run(debug=True)
