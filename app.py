@@ -205,6 +205,7 @@ def api_consultar_dni(dni):
     Parámetro: dni (8 dígitos)
     Retorna: JSON con nombres, apellido_paterno, apellido_materno o error
     """
+    """
     try:
         # Consultar datos mediante el módulo ConsultaAPI
         resultado = ConsultaAPI.consultar_dni(dni)
@@ -217,7 +218,7 @@ def api_consultar_dni(dni):
             'apellido_paterno': '',
             'apellido_materno': ''
         }), 500
-
+"""
 # --- /perfil ---
 # Muestra el perfil del usuario autenticado
 @app.route('/perfil')
