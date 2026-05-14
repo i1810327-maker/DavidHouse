@@ -22,19 +22,32 @@
 <body>
     <!-- HEADER: Barra superior con título y usuario -->
     <header>
-        <h1>David House - Camino de Vida</h1>
-        {% if session.get('usuario_id') %}
-        <div class="header-user">
-            <!-- Muestra el nombre y rol del usuario autenticado -->
-            <span>Bienvenido, <strong>{{ session.nombres }}</strong> <br/>
-                <small>({{ session.rol|title }})</small>
-            </span>
-            <div class="header-actions">
-                <a href="{{ url_for('perfil') }}" class="btn btn-secondary btn-sm">Perfil</a>
-                <a href="{{ url_for('logout') }}" class="btn btn-secondary btn-sm">Cerrar sesión</a>
+        {% block header %}
+        <div class="default-header-content">
+            <div class="header-left">
+                <h1>David House - Camino de Vida</h1>
             </div>
+            {% if session.get('usuario_id') %}
+            <div class="header-right">
+                <!-- Muestra el nombre y rol del usuario autenticado -->
+                <div class="user-info">
+                    <div class="user-text">
+                        <span class="user-name">{{ session.nombres }}</span>
+                        <span class="user-role">({{ session.rol|title }})</span>
+                    </div>
+                </div>
+                <div class="header-actions">
+                    <a href="{{ url_for('perfil') }}" class="btn btn-perfil">
+                        <span class="icon"></span> Perfil
+                    </a>
+                    <a href="{{ url_for('logout') }}" class="btn btn-logout">
+                        <span class="icon"></span> Cerrar sesión
+                    </a>
+                </div>
+            </div>
+            {% endif %}
         </div>
-        {% endif %}
+        {% endblock %}
     </header>
 
     <!-- CONTENIDO PRINCIPAL -->

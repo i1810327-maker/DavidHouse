@@ -1,0 +1,178 @@
+{% extends 'base.html' %}
+
+{% block title %}David House - Página Principal{% endblock %}
+
+{% block header %}
+<div class="home-header">
+    <a href="{{ url_for('index') }}" class="brand-logo">
+        <span class="brand-icon">DH</span>
+        <span class="brand-text">
+            <strong>David House</strong>
+            <small>Camino de Vida</small>
+        </span>
+    </a>
+    <nav class="main-menu" aria-label="Menú principal">
+        <a href="#inicio">Inicio</a>
+        <a href="#nosotros">Nosotros</a>
+        <a href="#mision">Misión &amp; Visión</a>
+        <a href="#niveles">Niveles</a>
+        <a href="#galeria">Galería</a>
+        <a href="#contacto">Contacto</a>
+    </nav>
+    <a href="{{ url_for('login') }}" class="btn btn-ghost">Aula Virtual</a>
+</div>
+{% endblock %}
+
+{% block content %}
+<section id="inicio"></section>
+<div class="hero hero-centered">
+    <div class="hero-copy hero-copy-centered">
+        <span class="eyebrow">David House · Camino de Vida</span>
+        <h1>David House - Camino de Vida</h1>
+        <p>Institución educativa de excelencia que forma líderes del futuro con valores sólidos y educación integral.</p>
+    </div>
+</div>
+
+<section class="section section-light" id="mision">
+    <div class="section-grid">
+        <div>
+            <p class="section-label">Misión & Visión</p>
+            <h3>Formar líderes del futuro con una educación integral y con valores.</h3>
+            <p>Buscamos fortalecer la educación escolar mediante experiencias claras, ordenadas y con propósito. Nuestra misión es proporcionar herramientas que permitan a estudiantes, docentes y familias avanzar con confianza y coherencia.</p>
+        </div>
+        <div class="stat-cards">
+            <div class="stat-card">
+                <span>Misión</span>
+                <p>Guiar la formación educativa con una arquitectura de información accesible y bien estructurada.</p>
+            </div>
+            <div class="stat-card">
+                <span>Visión</span>
+                <p>Ser un referente en la gestión educativa digital con procesos intuitivos y navegación sólida.</p>
+            </div>
+            <div class="stat-card">
+                <span>Valores</span>
+                <p>Claridad, orden y compromiso con el crecimiento del estudiante.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section section-light" id="nosotros">
+    <div class="section-grid">
+        <div>
+            <p class="section-label">Quiénes somos</p>
+            <h3>Una plataforma pensada para la educación y el crecimiento social.</h3>
+            <p>David House ofrece soluciones digitales con enfoque en experiencia de usuario, organización de contenidos y accesibilidad. Nuestro objetivo es crear un entorno donde las decisiones estén guiadas por información clara y estructurada.</p>
+        </div>
+        <div class="stat-cards">
+            <div class="stat-card">
+                <span>+15 años</span>
+                <p>de apoyo en procesos educativos y comunitarios.</p>
+            </div>
+            <div class="stat-card">
+                <span>5 áreas</span>
+                <p>de servicio que conectan gestión, seguimiento y colaboración.</p>
+            </div>
+            <div class="stat-card">
+                <span>100%</span>
+                <p>de compromiso con una navegación clara y fácil de usar.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section section-blue" id="niveles">
+    <div class="section-header">
+        <p class="section-label section-label-light">Niveles</p>
+        <h3>Ofrecemos niveles educativos con acompañamiento integral.</h3>
+        <p class="section-subtitle">Programas diseñados para cada etapa escolar, con recursos y seguimiento para estudiantes y familias.</p>
+    </div>
+    <div class="feature-grid">
+        <article class="feature-card">
+            <h4>Inicial</h4>
+            <p>Aprendizaje afectivo y motriz con espacios seguros y pedagógicos.</p>
+        </article>
+        <article class="feature-card">
+            <h4>Primaria</h4>
+            <p>Fortalecemos competencias académicas y valores a través de contenidos claros y herramientas didácticas.</p>
+        </article>
+        <article class="feature-card">
+            <h4>Secundaria</h4>
+            <p>Acompañamos el desarrollo crítico y social que exige la formación de líderes jóvenes.</p>
+        </article>
+    </div>
+</section>
+
+<section class="section section-light" id="galeria">
+    <div class="section-header">
+        <p class="section-label">Galería</p>
+        <h3>Un vistazo a nuestra experiencia educativa.</h3>
+        <p class="section-subtitle">Imágenes y valores que reflejan el trabajo y el ambiente que ofrecemos.</p>
+    </div>
+    <div class="feature-grid">
+        <article class="feature-card">
+            <h4>Espacios seguros</h4>
+            <p>Ambientes preparados para el aprendizaje y la convivencia.</p>
+        </article>
+        <article class="feature-card">
+            <h4>Aprendizaje activo</h4>
+            <p>Metodologías que motivan a los estudiantes a participar y crecer.</p>
+        </article>
+        <article class="feature-card">
+            <h4>Familia y escuela</h4>
+            <p>Trabajo colaborativo entre docentes y apoderados en cada etapa.</p>
+        </article>
+    </div>
+</section>
+
+<section class="section" id="beneficios">
+    <div class="section-header">
+        <p class="section-label">Beneficios clave</p>
+        <h3>Claridad, velocidad y confianza en cada pantalla.</h3>
+    </div>
+    <div class="benefits-grid">
+        <div class="benefit-card">
+            <h4>Jerarquía visual</h4>
+            <p>Contenido estructurado con títulos, subtítulos y llamadas a la acción destacadas.</p>
+        </div>
+        <div class="benefit-card">
+            <h4>Navegación amable</h4>
+            <p>Menús y accesos pensados para que usuarios nuevos se orienten al instante.</p>
+        </div>
+        <div class="benefit-card">
+            <h4>Diseño eficiente</h4>
+            <p>Tipografía, colores y espacios trabajados para reducir la carga cognitiva del usuario.</p>
+        </div>
+    </div>
+</section>
+
+<section class="section section-light" id="proceso">
+    <div class="section-header">
+        <p class="section-label">Proceso</p>
+        <h3>Cómo entregamos una experiencia de usuario sólida.</h3>
+    </div>
+    <ol class="process-list">
+        <li>
+            <strong>Auditoría</strong>
+            <p>Revisamos el flujo actual y detectamos oportunidades de organización.</p>
+        </li>
+        <li>
+            <strong>Jerarquía</strong>
+            <p>Definimos qué información debe aparecer primero y cómo debe enlazarse.</p>
+        </li>
+        <li>
+            <strong>Implementación</strong>
+            <p>Construimos páginas con estructura clara y estilo accesible a todos.</p>
+        </li>
+    </ol>
+</section>
+
+<section class="section section-blue" id="contacto">
+    <div class="section-header">
+        <p class="section-label section-label-light">Contacto</p>
+        <h3>Conecta con nuestro equipo y mejora tu experiencia escolar.</h3>
+        <p class="section-subtitle">Estamos listos para ayudarte a ordenar tu información y mejorar la comunicación en tu institución.</p>
+        <a href="{{ url_for('login') }}" class="btn btn-primary">Accede a la plataforma</a>
+    </div>
+</section>
+{% endblock %}

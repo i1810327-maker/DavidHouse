@@ -9,9 +9,14 @@ from flask_bcrypt import Bcrypt  # Para encriptar contraseñas
 from functools import wraps       # Para crear decoradores
 from datetime import datetime
 from sqlalchemy.exc import SQLAlchemyError
+import logging
 
 from db import db, init_db        # Configuración de base de datos
 from models import Usuario, Grado, Seccion, Curso, LogAcceso, Apoderado  # Modelos ORM
+
+# Configurar logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 # ====================== CONFIGURACIÓN ======================
 app = Flask(__name__)
@@ -128,7 +133,7 @@ def crear_usuario_desde_form(form_data, rol):
 # Rutas accesibles sin autenticación
 
 # --- / (raíz) ---
-# Redirige al dashboard según el rol del usuario o al login si no está autenticado
+# Redirige al dashboard según el rol del usuario o muestra la página principal pública
 @app.route('/')
 def index():
     if 'usuario_id' in session:
@@ -139,7 +144,7 @@ def index():
             return redirect(url_for('docente_dashboard'))
         elif rol == 'alumno':
             return redirect(url_for('alumno_dashboard'))
-    return redirect(url_for('login'))
+    return render_template('home.html')
 
 # --- /login ---
 # Formulario de inicio de sesión. Verifica credenciales y crea sesión.
@@ -150,7 +155,12 @@ def login():
         clave = request.form.get('clave')
         try:
             usuario = Usuario.query.filter_by(correo=correo).first()
-        except SQLAlchemyError:
+        except SQLAlchemyError as e:
+            logger.error(f"Error de base de datos en login: {str(e)}")
+            flash('Error interno en el inicio de sesión. Intenta nuevamente.', 'danger')
+            return render_template('login.html')
+        except Exception as e:
+            logger.error(f"Error inesperado en login: {str(e)}")
             flash('Error interno en el inicio de sesión. Intenta nuevamente.', 'danger')
             return render_template('login.html')
 
