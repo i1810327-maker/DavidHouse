@@ -166,3 +166,40 @@ class LogAcceso(db.Model):
     
     def __repr__(self):
         return f"<LogAcceso {self.usuario.nombres} - {self.accion}>"
+
+# ===== MODELO INTENTO LOGIN =====
+# Tabla: intentos_login
+# Descripción: Registra los intentos de login fallidos para detectar ataques de fuerza bruta
+class IntentoLogin(db.Model):
+    __tablename__ = 'intentos_login'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    correo = db.Column(db.String(120), nullable=False)
+    ip_address = db.Column(db.String(45), nullable=False)
+    fecha_intento = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    def __repr__(self):
+        return f"<IntentoLogin {self.correo} - {self.ip_address}>"
+
+# ===== MODELO Baneo =====
+# Tabla: baneos
+# Descripción: Almacena los baneos de usuarios e IPs por intentos fallidos repetidos
+class Baneo(db.Model):
+    __tablename__ = 'baneos'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    tipo_baneo = db.Column(db.Enum('usuario', 'ip'), nullable=False)  # 'usuario' o 'ip'
+    identificador = db.Column(db.String(120), nullable=False)  # correo del usuario o IP
+    ip_address = db.Column(db.String(45), nullable=True)  # IP del usuario baneado
+    motivo = db.Column(db.String(255), default='Demasiados intentos fallidos')
+    fecha_inicio = db.Column(db.DateTime, default=datetime.utcnow)
+    fecha_fin = db.Column(db.DateTime, nullable=False)  # Cuando termina el baneo
+    activo = db.Column(db.Boolean, default=True)
+    
+    def __repr__(self):
+        return f"<Baneo {self.tipo_baneo}: {self.identificador}>"
+    
+    @property
+    def esta_activo(self):
+        """Verifica si el baneo aún está activo"""
+        return self.activo and self.fecha_fin > datetime.utcnow()

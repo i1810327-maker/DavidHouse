@@ -7,12 +7,13 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 from flask_bcrypt import Bcrypt  # Para encriptar contraseñas
 from functools import wraps       # Para crear decoradores
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from sqlalchemy.exc import SQLAlchemyError
 import logging
 
 from db import db, init_db        # Configuración de base de datos
-from models import Usuario, Grado, Seccion, Curso, LogAcceso, Apoderado  # Modelos ORM
+from models import Usuario, Grado, Seccion, Curso, LogAcceso, Apoderado, IntentoLogin, Baneo  # Modelos ORM
+from datetime import datetime, timedelta
 
 # Configurar logging
 logging.basicConfig(level=logging.DEBUG)
@@ -21,6 +22,31 @@ logger = logging.getLogger(__name__)
 # ====================== CONFIGURACIÓN ======================
 app = Flask(__name__)
 app.secret_key = "clave_super_segura_2026_ColegioSys"  # Clave para sesiones Flask
+
+# Configuración de baneo
+MAX_INTENTOS_USUARIO = 3  # Intentos fallidos antes de banear usuario
+TIEMPO_BANEO_MINUTOS = 5  # Tiempo de baneo en minutos
+VENTANA_TIEMPO_MINUTOS = 5  # Ventana de tiempo para contar intentos
+
+def obtener_ip():
+    """Obtiene la IP del cliente, considerando proxies"""
+    if request.headers.get('X-Forwarded-For'):
+        return request.headers.get('X-Forwarded-For').split(',')[0].strip()
+    return request.remote_addr
+
+def obtener_tiempo_actual():
+    """Obtiene el tiempo actual (sin timezone para compatibilidad con la BD)"""
+    return datetime.now()
+
+def limpiar_intentos_vencidos():
+    """Limpia intentos y baneos vencidos para permitir nuevos intentos"""
+    try:
+        tiempo_limite = obtener_tiempo_actual() - timedelta(minutes=VENTANA_TIEMPO_MINUTOS + 5)
+        IntentoLogin.query.filter(IntentoLogin.fecha_intento < tiempo_limite).delete()
+        db.session.commit()
+    except Exception as e:
+        logger.error(f"Error al limpiar intentos vencidos: {e}")
+        db.session.rollback()
 
 # Inicializar conexión a base de datos (Alwaysdata o local)
 init_db(app)
@@ -151,19 +177,49 @@ def index():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        correo = request.form.get('correo')
-        clave = request.form.get('clave')
-        try:
-            usuario = Usuario.query.filter_by(correo=correo).first()
-        except SQLAlchemyError as e:
-            logger.error(f"Error de base de datos en login: {str(e)}")
-            flash('Error interno en el inicio de sesión. Intenta nuevamente.', 'danger')
+        correo = request.form.get('correo', '').strip()
+        clave = request.form.get('clave', '')
+        ip_address = obtener_ip()
+        
+        # Limpiar intentos y baneos vencidos
+        limpiar_intentos_vencidos()
+        
+        # Verificar baneo de IP
+        baneo_ip = db.session.query(Baneo).filter(
+            Baneo.tipo_baneo == 'ip',
+            Baneo.identificador == ip_address,
+            Baneo.activo == True,
+            Baneo.fecha_fin > obtener_tiempo_actual()
+        ).first()
+        
+        if baneo_ip:
+            tiempo_restante = int((baneo_ip.fecha_fin - obtener_tiempo_actual()).total_seconds() / 60)
+            flash(f'IP bloqueada temporalmente. Intenta en {max(1, tiempo_restante)} minutos.', 'danger')
             return render_template('login.html')
+        
+        # Consultar usuario
+        try:
+            usuario = db.session.query(Usuario).filter(Usuario.correo == correo).first()
         except Exception as e:
-            logger.error(f"Error inesperado en login: {str(e)}")
-            flash('Error interno en el inicio de sesión. Intenta nuevamente.', 'danger')
+            logger.error(f"Error en login: {str(e)}")
+            flash('Error interno. Intenta nuevamente.', 'danger')
             return render_template('login.html')
 
+        # Verificar baneo de usuario
+        if usuario:
+            baneo_usuario = db.session.query(Baneo).filter(
+                Baneo.tipo_baneo == 'usuario',
+                Baneo.identificador == correo,
+                Baneo.activo == True,
+                Baneo.fecha_fin > obtener_tiempo_actual()
+            ).first()
+            
+            if baneo_usuario:
+                tiempo_restante = int((baneo_usuario.fecha_fin - obtener_tiempo_actual()).total_seconds() / 60)
+                flash(f'Usuario bloqueado temporalmente. Intenta en {max(1, tiempo_restante)} minutos.', 'danger')
+                return render_template('login.html')
+
+        # Verificar credenciales
         if usuario and bcrypt.check_password_hash(usuario.clave, clave):
             if not usuario.activo:
                 flash('Usuario inactivo', 'danger')
@@ -173,7 +229,7 @@ def login():
             session['rol'] = usuario.rol
             session['nombres'] = usuario.nombres
             
-            # Registrar acceso en logs
+            # Registrar acceso
             log = LogAcceso(usuario_id=usuario.id, accion='Inicio de sesión')
             db.session.add(log)
             db.session.commit()
@@ -186,7 +242,78 @@ def login():
             elif usuario.rol == 'alumno':
                 return redirect(url_for('alumno_dashboard'))
         else:
-            flash('Correo o contraseña incorrectos', 'danger')
+            # Login fallido - registrar intento
+            try:
+                intento = IntentoLogin(correo=correo, ip_address=ip_address)
+                db.session.add(intento)
+                db.session.commit()
+                logger.info(f"Intento guardado: correo={correo}, ip={ip_address}")
+            except Exception as e:
+                logger.error(f"Error al guardar intento: {e}")
+                db.session.rollback()
+            
+            # Calcular ventana de tiempo
+            tiempo_inicio = obtener_tiempo_actual() - timedelta(minutes=VENTANA_TIEMPO_MINUTOS)
+            
+            # Contar usuarios baneados desde esta IP usando el campo ip_address
+            usuarios_baneados_ip = db.session.query(db.func.count(Baneo.id)).filter(
+                Baneo.tipo_baneo == 'usuario',
+                Baneo.ip_address == ip_address,
+                Baneo.activo == True,
+                Baneo.fecha_fin > obtener_tiempo_actual()
+            ).scalar() or 0
+            
+            # Si ya hay 2+ usuarios baneados de esta IP, el nuevo usuario NO puede intentar → banear IP
+            if usuarios_baneados_ip >= 2:
+                # Verificar si la IP ya está baneada para no duplicar
+                ip_ya_baneada = db.session.query(Baneo).filter(
+                    Baneo.tipo_baneo == 'ip',
+                    Baneo.identificador == ip_address,
+                    Baneo.activo == True,
+                    Baneo.fecha_fin > obtener_tiempo_actual()
+                ).first()
+                
+                if not ip_ya_baneada:
+                    fecha_fin = obtener_tiempo_actual() + timedelta(minutes=TIEMPO_BANEO_MINUTOS * 2)
+                    baneo = Baneo(
+                        tipo_baneo='ip',
+                        identificador=ip_address,
+                        motivo=f'{usuarios_baneados_ip} usuarios baneados desde esta IP',
+                        fecha_fin=fecha_fin
+                    )
+                    db.session.add(baneo)
+                    db.session.commit()
+                    flash(f'⚠️ Tu IP ha sido bloqueada por seguridad. 2 usuarios ya fueron bloqueados desde esta dirección. Intenta en {TIEMPO_BANEO_MINUTOS * 2} minutos.', 'danger')
+                    return render_template('login.html')
+                else:
+                    tiempo_restante = int((ip_ya_baneada.fecha_fin - obtener_tiempo_actual()).total_seconds() / 60)
+                    flash(f'⚠️ Tu IP está bloqueada. Intenta en {max(1, tiempo_restante)} minutos.', 'danger')
+                    return render_template('login.html')
+            
+            # Si el usuario existe, contar sus intentos
+            if usuario:
+                intentos_usuario = db.session.query(db.func.count(IntentoLogin.id)).filter(
+                    IntentoLogin.correo == correo,
+                    IntentoLogin.fecha_intento >= tiempo_inicio
+                ).scalar() or 0
+                
+                # Si el usuario falla 3+ veces → baneo ese usuario (guardando su IP)
+                if intentos_usuario >= MAX_INTENTOS_USUARIO:
+                    fecha_fin = obtener_tiempo_actual() + timedelta(minutes=TIEMPO_BANEO_MINUTOS)
+                    baneo = Baneo(
+                        tipo_baneo='usuario',
+                        identificador=correo,
+                        ip_address=ip_address,  # Guardar la IP del usuario baneado
+                        motivo=f'Demasiados intentos fallidos ({intentos_usuario})',
+                        fecha_fin=fecha_fin
+                    )
+                    db.session.add(baneo)
+                    db.session.commit()
+                    logger.info(f"Usuario baneado: {correo}, IP: {ip_address}")
+                    flash(f'🔒 Tu usuario ha sido bloqueado por {TIEMPO_BANEO_MINUTOS} minutos. Demasiados intentos fallidos. Intenta más tarde.', 'danger')
+                    return render_template('login.html')
+            
+            flash('Usuario o Contraseña incorrecta', 'danger')
     
     return render_template('login.html')
 
@@ -413,14 +540,14 @@ def editar_alumno(id):
                 alumno.grado_id = seccion.grado_id if seccion else None
             
             # Actualizar o crear apoderado linked al alumno
-            apoderado = Apoderado.query.filter_by(alumno_id=alumno.id).first()
-            if apoderado:
-                apoderado.nombres = request.form.get('apoderado_nombres')
-                apoderaApellido_paterno = request.form.get('apoderado_apellido_paterno')
-                apoderaApellido_materno = request.form.get('apoderado_apellido_materno')
-                apoderaTelefono_principal = request.form.get('apoderado_telefono_principal')
-                apoderaTelefono_secundario = request.form.get('apoderado_telefono_secundario')
-                apoderaEs_apoderado = bool(request.form.get('es_apoderado'))
+            apodera = Apoderado.query.filter_by(alumno_id=alumno.id).first()
+            if apodera:
+                apodera.nombres = request.form.get('apoderado_nombres')
+                apodera.apellido_paterno = request.form.get('apoderado_apellido_paterno')
+                apodera.apellido_materno = request.form.get('apoderado_apellido_materno')
+                apodera.telefono_principal = request.form.get('apoderado_telefono_principal')
+                apodera.telefono_secundario = request.form.get('apoderado_telefono_secundario')
+                apodera.es_apoderado = bool(request.form.get('es_apoderado'))
             else:
                 nuevo_apoderado = Apoderado(
                     alumno_id=alumno.id,
@@ -772,4 +899,4 @@ def server_error(error):
 
 # ====================== EJECUCIÓN ======================
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True)    

@@ -1,178 +1,623 @@
 {% extends 'base.html' %}
 
-{% block title %}David House - Página Principal{% endblock %}
+{% block title %}David House - Camino de Vida | Educación de Excelencia{% endblock %}
 
 {% block header %}
-<div class="home-header">
-    <a href="{{ url_for('index') }}" class="brand-logo">
-        <span class="brand-icon">DH</span>
-        <span class="brand-text">
-            <strong>David House</strong>
-            <small>Camino de Vida</small>
-        </span>
-    </a>
-    <nav class="main-menu" aria-label="Menú principal">
-        <a href="#inicio">Inicio</a>
-        <a href="#nosotros">Nosotros</a>
-        <a href="#mision">Misión &amp; Visión</a>
-        <a href="#niveles">Niveles</a>
-        <a href="#galeria">Galería</a>
-        <a href="#contacto">Contacto</a>
-    </nav>
-    <a href="{{ url_for('login') }}" class="btn btn-ghost">Aula Virtual</a>
-</div>
+<header class="home-header">
+    <div class="header-container">
+        <a href="{{ url_for('index') }}" class="brand-logo">
+            <div class="brand-icon">🏫</div>
+            <div class="brand-text">
+                <strong>David House</strong>
+                <small>Camino de Vida</small>
+            </div>
+        </a>
+        
+        <nav class="main-nav">
+            <ul class="nav-menu">
+                <li><a href="#inicio" class="nav-link">Inicio</a></li>
+                <li><a href="#nosotros" class="nav-link">Nosotros</a></li>
+                <li><a href="#servicios" class="nav-link">Servicios</a></li>
+                <li><a href="#niveles" class="nav-link">Niveles</a></li>
+                <li><a href="#contacto" class="nav-link">Contacto</a></li>
+            </ul>
+        </nav>
+        
+        <a href="{{ url_for('login') }}" class="btn-login">
+            🎓 Acceso
+        </a>
+    </div>
+</header>
 {% endblock %}
 
 {% block content %}
-<section id="inicio"></section>
-<div class="hero hero-centered">
-    <div class="hero-copy hero-copy-centered">
-        <span class="eyebrow">David House · Camino de Vida</span>
-        <h1>David House - Camino de Vida</h1>
-        <p>Institución educativa de excelencia que forma líderes del futuro con valores sólidos y educación integral.</p>
-    </div>
-</div>
-
-<section class="section section-light" id="mision">
-    <div class="section-grid">
-        <div>
-            <p class="section-label">Misión & Visión</p>
-            <h3>Formar líderes del futuro con una educación integral y con valores.</h3>
-            <p>Buscamos fortalecer la educación escolar mediante experiencias claras, ordenadas y con propósito. Nuestra misión es proporcionar herramientas que permitan a estudiantes, docentes y familias avanzar con confianza y coherencia.</p>
+<!-- HERO -->
+<section id="inicio" class="hero-section">
+    <div class="hero-bg"></div>
+    <div class="hero-content">
+        <div class="hero-badge">✨ Educación de Excelencia</div>
+        <h1 class="hero-title">Formamos <span class="highlight">Líderes</span><br>del Futuro</h1>
+        <p class="hero-desc">Institución educativa que combina excelencia académica con valores sólidos. Donde cada estudiante encuentra su camino hacia el éxito.</p>
+        
+        <div class="hero-btns">
+            <a href="{{ url_for('login') }}" class="btn-primary">🚀 Iniciar Sesión</a>
+            <a href="#nosotros" class="btn-outline">Conócenos</a>
         </div>
-        <div class="stat-cards">
-            <div class="stat-card">
-                <span>Misión</span>
-                <p>Guiar la formación educativa con una arquitectura de información accesible y bien estructurada.</p>
-            </div>
-            <div class="stat-card">
-                <span>Visión</span>
-                <p>Ser un referente en la gestión educativa digital con procesos intuitivos y navegación sólida.</p>
-            </div>
-            <div class="stat-card">
-                <span>Valores</span>
-                <p>Claridad, orden y compromiso con el crecimiento del estudiante.</p>
-            </div>
+        
+        <div class="hero-stats">
+            <div class="stat"><span class="num">15+</span><span class="txt">Años</span></div>
+            <div class="stat"><span class="num">100%</span><span class="txt">Compromiso</span></div>
+            <div class="stat"><span class="num">500+</span><span class="txt">Estudiantes</span></div>
         </div>
     </div>
 </section>
 
-<section class="section section-light" id="nosotros">
-    <div class="section-grid">
-        <div>
-            <p class="section-label">Quiénes somos</p>
-            <h3>Una plataforma pensada para la educación y el crecimiento social.</h3>
-            <p>David House ofrece soluciones digitales con enfoque en experiencia de usuario, organización de contenidos y accesibilidad. Nuestro objetivo es crear un entorno donde las decisiones estén guiadas por información clara y estructurada.</p>
+<!-- NOSOTROS -->
+<section id="nosotros" class="section">
+    <div class="container">
+        <div class="section-header">
+            <span class="badge">Sobre Nosotros</span>
+            <h2>Una Educación que <span>Transforma</span></h2>
+            <p class="section-desc">Más que una institución educativa, somos una comunidad dedicada al desarrollo integral.</p>
         </div>
-        <div class="stat-cards">
-            <div class="stat-card">
-                <span>+15 años</span>
-                <p>de apoyo en procesos educativos y comunitarios.</p>
+        
+        <div class="cards-3">
+            <div class="card">
+                <div class="card-icon">🎯</div>
+                <h3>Misión</h3>
+                <p>Proporcionar educación integral combinando excelencia académica con formación en valores.</p>
             </div>
-            <div class="stat-card">
-                <span>5 áreas</span>
-                <p>de servicio que conectan gestión, seguimiento y colaboración.</p>
+            <div class="card">
+                <div class="card-icon">🔭</div>
+                <h3>Visión</h3>
+                <p>Ser una institución líder que forme personas íntegras y comprometidas con la sociedad.</p>
             </div>
-            <div class="stat-card">
-                <span>100%</span>
-                <p>de compromiso con una navegación clara y fácil de usar.</p>
+            <div class="card">
+                <div class="card-icon">💎</div>
+                <h3>Valores</h3>
+                <p>Honestidad, respeto, responsabilidad, solidaridad y excelencia.</p>
             </div>
         </div>
     </div>
 </section>
 
-<section class="section section-blue" id="niveles">
-    <div class="section-header">
-        <p class="section-label section-label-light">Niveles</p>
-        <h3>Ofrecemos niveles educativos con acompañamiento integral.</h3>
-        <p class="section-subtitle">Programas diseñados para cada etapa escolar, con recursos y seguimiento para estudiantes y familias.</p>
-    </div>
-    <div class="feature-grid">
-        <article class="feature-card">
-            <h4>Inicial</h4>
-            <p>Aprendizaje afectivo y motriz con espacios seguros y pedagógicos.</p>
-        </article>
-        <article class="feature-card">
-            <h4>Primaria</h4>
-            <p>Fortalecemos competencias académicas y valores a través de contenidos claros y herramientas didácticas.</p>
-        </article>
-        <article class="feature-card">
-            <h4>Secundaria</h4>
-            <p>Acompañamos el desarrollo crítico y social que exige la formación de líderes jóvenes.</p>
-        </article>
-    </div>
-</section>
-
-<section class="section section-light" id="galeria">
-    <div class="section-header">
-        <p class="section-label">Galería</p>
-        <h3>Un vistazo a nuestra experiencia educativa.</h3>
-        <p class="section-subtitle">Imágenes y valores que reflejan el trabajo y el ambiente que ofrecemos.</p>
-    </div>
-    <div class="feature-grid">
-        <article class="feature-card">
-            <h4>Espacios seguros</h4>
-            <p>Ambientes preparados para el aprendizaje y la convivencia.</p>
-        </article>
-        <article class="feature-card">
-            <h4>Aprendizaje activo</h4>
-            <p>Metodologías que motivan a los estudiantes a participar y crecer.</p>
-        </article>
-        <article class="feature-card">
-            <h4>Familia y escuela</h4>
-            <p>Trabajo colaborativo entre docentes y apoderados en cada etapa.</p>
-        </article>
-    </div>
-</section>
-
-<section class="section" id="beneficios">
-    <div class="section-header">
-        <p class="section-label">Beneficios clave</p>
-        <h3>Claridad, velocidad y confianza en cada pantalla.</h3>
-    </div>
-    <div class="benefits-grid">
-        <div class="benefit-card">
-            <h4>Jerarquía visual</h4>
-            <p>Contenido estructurado con títulos, subtítulos y llamadas a la acción destacadas.</p>
+<!-- SERVICIOS -->
+<section id="servicios" class="section section-blue">
+    <div class="container">
+        <div class="section-header">
+            <span class="badge badge-light">Servicios</span>
+            <h2 class="text-white">Plataforma <span>Integral</span></h2>
+            <p class="section-desc-light">Sistema de gestión educativa diseñado para simplificar procesos.</p>
         </div>
-        <div class="benefit-card">
-            <h4>Navegación amable</h4>
-            <p>Menús y accesos pensados para que usuarios nuevos se orienten al instante.</p>
-        </div>
-        <div class="benefit-card">
-            <h4>Diseño eficiente</h4>
-            <p>Tipografía, colores y espacios trabajados para reducir la carga cognitiva del usuario.</p>
+        
+        <div class="services-grid">
+            <div class="service-card">
+                <span class="service-icon">📊</span>
+                <h4>Gestión Académica</h4>
+                <p>Administra notas, asistencia y reportes de manera eficiente.</p>
+            </div>
+            <div class="service-card">
+                <span class="service-icon">👨‍👩‍👧</span>
+                <h4>Comunicación Familia-Escuela</h4>
+                <p>Mantén a las familias informadas sobre el progreso de sus hijos.</p>
+            </div>
+            <div class="service-card">
+                <span class="service-icon">📅</span>
+                <h4>Agenda y Eventos</h4>
+                <p>Organiza actividades escolares y calendario académico.</p>
+            </div>
+            <div class="service-card">
+                <span class="service-icon">📈</span>
+                <h4>Reportes y Analytics</h4>
+                <p>Visualiza el desempeño institucional en tiempo real.</p>
+            </div>
+            <div class="service-card">
+                <span class="service-icon">🔐</span>
+                <h4>Seguridad</h4>
+                <p>Protección de datos con altos estándares de seguridad.</p>
+            </div>
+            <div class="service-card">
+                <span class="service-icon">📱</span>
+                <h4>Multiplataforma</h4>
+                <p>Accede desde cualquier dispositivo.</p>
+            </div>
         </div>
     </div>
 </section>
 
-<section class="section section-light" id="proceso">
-    <div class="section-header">
-        <p class="section-label">Proceso</p>
-        <h3>Cómo entregamos una experiencia de usuario sólida.</h3>
+<!-- NIVELES -->
+<section id="niveles" class="section">
+    <div class="container">
+        <div class="section-header">
+            <span class="badge">Niveles Educativos</span>
+            <h2>Educación para <span>cada etapa</span></h2>
+        </div>
+        
+        <div class="levels-grid">
+            <div class="level-card level-1">
+                <span class="level-icon">🌱</span>
+                <span class="level-age">3-5 años</span>
+                <h3>Inicial</h3>
+                <p>Aprendizaje a través del juego en ambientes seguros.</p>
+                <ul>
+                    <li>✓ Desarrollo socioemocional</li>
+                    <li>✓ Estimulación temprana</li>
+                    <li>✓ Pre-escritura</li>
+                </ul>
+            </div>
+            <div class="level-card level-2">
+                <span class="level-icon">📚</span>
+                <span class="level-age">6-11 años</span>
+                <h3>Primaria</h3>
+                <p>Bases sólidas de conocimiento con énfasis en valores.</p>
+                <ul>
+                    <li>✓ Curriculum integral</li>
+                    <li>✓ Tutoría personalizada</li>
+                    <li>✓ Tecnología educativa</li>
+                </ul>
+            </div>
+            <div class="level-card level-3">
+                <span class="level-icon">🎓</span>
+                <span class="level-age">12-17 años</span>
+                <h3>Secundaria</h3>
+                <p>Formamos jóvenes críticos preparados para la universidad.</p>
+                <ul>
+                    <li>✓ Pensamiento crítico</li>
+                    <li>✓ Proyectos de investigación</li>
+                    <li>✓ Orientación vocacional</li>
+                </ul>
+            </div>
+        </div>
     </div>
-    <ol class="process-list">
-        <li>
-            <strong>Auditoría</strong>
-            <p>Revisamos el flujo actual y detectamos oportunidades de organización.</p>
-        </li>
-        <li>
-            <strong>Jerarquía</strong>
-            <p>Definimos qué información debe aparecer primero y cómo debe enlazarse.</p>
-        </li>
-        <li>
-            <strong>Implementación</strong>
-            <p>Construimos páginas con estructura clara y estilo accesible a todos.</p>
-        </li>
-    </ol>
 </section>
 
-<section class="section section-blue" id="contacto">
-    <div class="section-header">
-        <p class="section-label section-label-light">Contacto</p>
-        <h3>Conecta con nuestro equipo y mejora tu experiencia escolar.</h3>
-        <p class="section-subtitle">Estamos listos para ayudarte a ordenar tu información y mejorar la comunicación en tu institución.</p>
-        <a href="{{ url_for('login') }}" class="btn btn-primary">Accede a la plataforma</a>
+<!-- CONTACTO -->
+<section id="contacto" class="section section-blue">
+    <div class="container">
+        <div class="contact-wrapper">
+            <div class="contact-info">
+                <span class="badge badge-light">Contacto</span>
+                <h2 class="text-white">¿Listo para comenzar?</h2>
+                <p>Escríbenos o visítanos. Estaremos encantado de mostrarte David House.</p>
+                
+                <div class="contact-items">
+                    <div class="contact-item">
+                        <span>📍</span>
+                        <div><strong>Dirección</strong><span>Av. Educación 123</span></div>
+                    </div>
+                    <div class="contact-item">
+                        <span>📞</span>
+                        <div><strong>Teléfono</strong><span>+51 123 456 789</span></div>
+                    </div>
+                    <div class="contact-item">
+                        <span>✉️</span>
+                        <div><strong>Correo</strong><span>contacto@davidhouse.edu.pe</span></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="contact-cta">
+                <div class="cta-box">
+                    <h3>Accede a la Plataforma</h3>
+                    <p>Ingresa al sistema para ver calificaciones y más.</p>
+                    <a href="{{ url_for('login') }}" class="btn-primary btn-large">🔑 Iniciar Sesión</a>
+                </div>
+            </div>
+        </div>
     </div>
 </section>
+
+<!-- FOOTER -->
+<footer class="home-footer">
+    <div class="container">
+        <div class="footer-grid">
+            <div class="footer-brand">
+                <a href="{{ url_for('index') }}" class="brand-logo">
+                    <div class="brand-icon">🏫</div>
+                    <div class="brand-text">
+                        <strong>David House</strong>
+                        <small>Camino de Vida</small>
+                    </div>
+                </a>
+                <p>Educando líderes del mañana con valores de hoy.</p>
+            </div>
+            
+            <div class="footer-col">
+                <h4>Enlaces</h4>
+                <ul>
+                    <li><a href="#inicio">Inicio</a></li>
+                    <li><a href="#nosotros">Nosotros</a></li>
+                    <li><a href="#niveles">Niveles</a></li>
+                    <li><a href="#contacto">Contacto</a></li>
+                </ul>
+            </div>
+            
+            <div class="footer-col">
+                <h4>Acceso</h4>
+                <ul>
+                    <li><a href="{{ url_for('login') }}">Aula Virtual</a></li>
+                    <li><a href="{{ url_for('login') }}">Padres</a></li>
+                    <li><a href="{{ url_for('login') }}">Docentes</a></li>
+                </ul>
+            </div>
+            
+            <div class="footer-col">
+                <h4>Síguenos</h4>
+                <div class="social">
+                    <a href="#">📘</a>
+                    <a href="#">📷</a>
+                    <a href="#">💬</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer-bottom">
+            <p>© 2026 David House - Camino de Vida. Todos los derechos reservados.</p>
+        </div>
+    </div>
+</footer>
+
+<style>
+:root {
+    --primary: #003D82;
+    --primary-light: #0066CC;
+    --accent: #ff9800;
+    --white: #ffffff;
+    --gray-50: #f8f9fa;
+    --gray-100: #f0f1f2;
+    --gray-600: #666;
+    --gray-800: #333;
+    --radius: 12px;
+    --shadow: 0 4px 20px rgba(0,0,0,0.1);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body { font-family: 'Segoe UI', sans-serif; line-height: 1.6; }
+
+/* HEADER */
+.home-header {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    background: rgba(255,255,255,0.98);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 2px 20px rgba(0,0,0,0.08);
+    z-index: 1000;
+}
+
+.header-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 15px 30px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.brand-logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+}
+
+.brand-icon {
+    width: 45px; height: 45px;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+}
+
+.brand-text strong { color: var(--primary); font-size: 18px; display: block; }
+.brand-text small { color: var(--accent); font-size: 10px; text-transform: uppercase; letter-spacing: 1px; }
+
+.nav-menu { display: flex; list-style: none; gap: 8px; }
+.nav-link { color: var(--gray-800); text-decoration: none; padding: 10px 18px; border-radius: 8px; font-weight: 500; transition: 0.3s; }
+.nav-link:hover { color: var(--primary); background: rgba(0,102,204,0.08); }
+
+.btn-login {
+    padding: 12px 24px;
+    background: linear-gradient(135deg, var(--accent) 0%, #ff7700 100%);
+    color: var(--white);
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: 0.3s;
+    box-shadow: 0 4px 15px rgba(255,152,0,0.3);
+}
+.btn-login:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(255,152,0,0.4); }
+
+/* HERO */
+.hero-section {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 120px 30px 80px;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 50%, #0052a3 100%);
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-bg {
+    position: absolute;
+    inset: 0;
+    background: 
+        radial-gradient(circle at 20% 80%, rgba(255,152,0,0.15) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(255,255,255,0.1) 0%, transparent 40%);
+}
+
+.hero-content { position: relative; z-index: 1; max-width: 800px; color: var(--white); }
+
+.hero-badge {
+    display: inline-block;
+    padding: 10px 24px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 50px;
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 24px;
+}
+
+.hero-title {
+    font-size: 56px;
+    font-weight: 800;
+    line-height: 1.15;
+    margin-bottom: 20px;
+}
+
+.hero-title .highlight { color: var(--accent); }
+
+.hero-desc {
+    font-size: 18px;
+    opacity: 0.9;
+    max-width: 550px;
+    margin: 0 auto 30px;
+}
+
+.hero-btns {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    margin-bottom: 50px;
+}
+
+.btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 16px 32px;
+    background: var(--white);
+    color: var(--primary);
+    text-decoration: none;
+    border-radius: var(--radius);
+    font-weight: 600;
+    transition: 0.3s;
+}
+.btn-primary:hover { transform: translateY(-3px); box-shadow: 0 15px 40px rgba(0,0,0,0.2); }
+
+.btn-outline {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 16px 32px;
+    background: transparent;
+    color: var(--white);
+    border: 2px solid rgba(255,255,255,0.4);
+    text-decoration: none;
+    border-radius: var(--radius);
+    font-weight: 600;
+    transition: 0.3s;
+}
+.btn-outline:hover { background: rgba(255,255,255,0.1); border-color: var(--white); }
+
+.hero-stats {
+    display: flex;
+    justify-content: center;
+    gap: 50px;
+}
+
+.stat { text-align: center; }
+.stat .num { display: block; font-size: 36px; font-weight: 800; color: var(--accent); }
+.stat .txt { font-size: 13px; opacity: 0.8; }
+
+/* SECTIONS */
+.section { padding: 80px 0; }
+.section-blue { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); }
+
+.container { max-width: 1100px; margin: 0 auto; padding: 0 30px; }
+
+.section-header { text-align: center; margin-bottom: 50px; }
+.badge {
+    display: inline-block;
+    padding: 8px 20px;
+    background: rgba(0,102,204,0.1);
+    color: var(--primary);
+    border-radius: 50px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 16px;
+}
+.badge-light { background: rgba(255,255,255,0.15); color: var(--white); }
+
+.section-header h2 { font-size: 40px; color: var(--gray-800); margin-bottom: 12px; }
+.section-header h2 span { color: var(--accent); }
+.section-header .text-white { color: var(--white); }
+
+.section-desc { color: var(--gray-600); max-width: 550px; margin: 0 auto; }
+.section-desc-light { color: rgba(255,255,255,0.8); }
+
+/* CARDS */
+.cards-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+}
+
+.card {
+    background: var(--gray-50);
+    padding: 35px 28px;
+    border-radius: var(--radius);
+    text-align: center;
+    transition: 0.3s;
+}
+.card:hover { transform: translateY(-8px); box-shadow: var(--shadow); }
+
+.card-icon { font-size: 42px; margin-bottom: 16px; }
+.card h3 { color: var(--primary); font-size: 20px; margin-bottom: 10px; }
+.card p { color: var(--gray-600); font-size: 14px; }
+
+/* SERVICES GRID */
+.services-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+
+.service-card {
+    background: rgba(255,255,255,0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: var(--radius);
+    padding: 28px;
+    transition: 0.3s;
+}
+.service-card:hover { background: rgba(255,255,255,0.15); transform: translateY(-5px); }
+
+.service-icon { font-size: 36px; margin-bottom: 14px; display: block; }
+.service-card h4 { color: var(--white); font-size: 18px; margin-bottom: 8px; }
+.service-card p { color: rgba(255,255,255,0.75); font-size: 13px; }
+
+/* LEVELS GRID */
+.levels-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+}
+
+.level-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 35px 25px;
+    box-shadow: var(--shadow);
+    transition: 0.3s;
+    position: relative;
+    overflow: hidden;
+}
+.level-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 5px;
+}
+.level-1::before { background: linear-gradient(90deg, #4caf50, #8bc34a); }
+.level-2::before { background: linear-gradient(90deg, var(--primary), var(--primary-light)); }
+.level-3::before { background: linear-gradient(90deg, var(--accent), #ff7700); }
+
+.level-card:hover { transform: translateY(-10px); box-shadow: 0 20px 40px rgba(0,0,0,0.15); }
+
+.level-icon { font-size: 38px; display: block; margin-bottom: 12px; }
+.level-age {
+    display: inline-block;
+    padding: 4px 12px;
+    background: var(--gray-100);
+    border-radius: 20px;
+    font-size: 11px;
+    color: var(--gray-600);
+    margin-bottom: 12px;
+}
+.level-card h3 { font-size: 22px; color: var(--gray-800); margin-bottom: 10px; }
+.level-card > p { color: var(--gray-600); font-size: 13px; margin-bottom: 16px; }
+.level-card ul { list-style: none; }
+.level-card li { color: var(--gray-600); font-size: 13px; padding: 6px 0; }
+
+/* CONTACT */
+.contact-wrapper {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 50px;
+    align-items: center;
+}
+
+.contact-info h2 { margin-bottom: 12px; }
+.contact-info > p { color: rgba(255,255,255,0.8); margin-bottom: 30px; }
+
+.contact-items { display: flex; flex-direction: column; gap: 18px; }
+.contact-item { display: flex; align-items: center; gap: 14px; }
+.contact-item > span { font-size: 22px; }
+.contact-item strong { display: block; color: var(--white); font-size: 14px; }
+.contact-item span:last-child { color: rgba(255,255,255,0.7); font-size: 13px; }
+
+.cta-box {
+    background: rgba(255,255,255,0.1);
+    backdrop-filter: blur(10px);
+    border-radius: var(--radius);
+    padding: 40px;
+    text-align: center;
+    border: 1px solid rgba(255,255,255,0.2);
+}
+.cta-box h3 { color: var(--white); font-size: 24px; margin-bottom: 10px; }
+.cta-box p { color: rgba(255,255,255,0.7); margin-bottom: 24px; }
+.btn-large { font-size: 16px; }
+
+/* FOOTER */
+.home-footer { background: var(--gray-800); color: var(--white); padding: 50px 0 20px; }
+
+.footer-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    gap: 40px;
+    margin-bottom: 40px;
+}
+
+.footer-brand p { color: rgba(255,255,255,0.6); margin-top: 12px; font-size: 14px; }
+
+.footer-col h4 { color: var(--accent); font-size: 15px; margin-bottom: 16px; }
+.footer-col ul { list-style: none; }
+.footer-col li { margin-bottom: 10px; }
+.footer-col a { color: rgba(255,255,255,0.7); text-decoration: none; font-size: 14px; transition: 0.3s; }
+.footer-col a:hover { color: var(--white); }
+
+.social { display: flex; gap: 10px; }
+.social a {
+    width: 40px; height: 40px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    transition: 0.3s;
+}
+.social a:hover { background: var(--accent); transform: translateY(-3px); }
+
+.footer-bottom {
+    text-align: center;
+    padding-top: 25px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+}
+.footer-bottom p { color: rgba(255,255,255,0.5); font-size: 13px; }
+
+/* RESPONSIVE */
+@media (max-width: 900px) {
+    .nav-menu { display: none; }
+    .hero-title { font-size: 40px; }
+    .cards-3, .services-grid, .levels-grid { grid-template-columns: 1fr; }
+    .contact-wrapper { grid-template-columns: 1fr; }
+    .footer-grid { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 600px) {
+    .header-container { padding: 12px 20px; }
+    .hero-section { padding: 100px 20px 50px; }
+    .hero-title { font-size: 32px; }
+    .hero-btns { flex-direction: column; }
+    .hero-stats { flex-direction: column; gap: 20px; }
+    .section-header h2 { font-size: 28px; }
+    .footer-grid { grid-template-columns: 1fr; }
+}
+</style>
 {% endblock %}
