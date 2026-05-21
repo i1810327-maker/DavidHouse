@@ -3,42 +3,91 @@
 
 {% block content %}
 <div class="card" style="max-width: 600px; margin: 0 auto;">
-    <h2> Cambiar Contraseña</h2>
+    <h2>🔒 Cambiar Contraseña</h2>
     <p style="color: #666; margin-bottom: 25px;">
-        Por favor, verifica tu contraseña actual y establece una nueva contraseña segura.
+        Verifica tu contraseña actual y establece una nueva segura.
     </p>
     <div class="divider"></div>
 
-    <form method="POST">
+    <form method="POST" id="cambiarClaveForm">
         <div class="form-group">
-            <label for="actual"> Contraseña Actual *</label>
-            <input type="password" id="actual" name="actual" placeholder="Ingresa tu contraseña actual" required>
+            <label for="actual">🔑 Contraseña Actual *</label>
+            <input type="password" id="actual" name="actual" placeholder="Ingresa tu contraseña actual" required autocomplete="current-password">
         </div>
 
         <div class="form-group">
-            <label for="nueva"> Nueva Contraseña *</label>
-            <input type="password" id="nueva" name="nueva" placeholder="Ingresa tu nueva contraseña" required>
+            <label for="nueva">🆕 Nueva Contraseña *</label>
+            <input type="password" id="nueva" name="nueva" placeholder="Ingresa tu nueva contraseña" required autocomplete="new-password" oninput="validarPassword()">
+            <div id="password-strength" style="margin-top: 8px; height: 6px; background: #eee; border-radius: 3px; overflow: hidden;">
+                <div id="strength-bar" style="height: 100%; width: 0%; transition: all 0.3s;"></div>
+            </div>
+            <div id="password-requirements" style="margin-top: 10px; font-size: 12px;"></div>
         </div>
 
         <div class="form-group">
-            <label for="confirmar"> Confirmar Contraseña *</label>
-            <input type="password" id="confirmar" name="confirmar" placeholder="Confirma tu nueva contraseña" required>
+            <label for="confirmar">✅ Confirmar Contraseña *</label>
+            <input type="password" id="confirmar" name="confirmar" placeholder="Confirma tu nueva contraseña" required autocomplete="new-password" oninput="validarConfirmacion()">
+            <span id="confirm-msg" style="font-size: 12px;"></span>
         </div>
 
-        <div style="background: #fff3cd; border-left: 4px solid #ff9800; padding: 15px; border-radius: 4px; margin: 20px 0;">
-            <strong> Requisitos de seguridad:</strong>
-            <ul style="list-style: none; padding: 8px 0; font-size: 13px;">
-                <li>✓ Mínimo 8 caracteres</li>
-                <li>✓ Incluye letras mayúsculas y minúsculas</li>
-                <li>✓ Incluye números y símbolos especiales</li>
-                <li>✓ Evita información personal (DNI, fecha de nacimiento)</li>
+        <div style="background: linear-gradient(135deg, #fff3cd 0%, #fff8e1 100%); border-left: 4px solid #ff9800; padding: 18px; border-radius: 8px; margin: 20px 0;">
+            <strong>📋 Requisitos de seguridad:</strong>
+            <ul style="list-style: none; padding: 8px 0; font-size: 13px; margin: 0;">
+                <li id="req-length">✗ Mínimo 8 caracteres (máx. 50)</li>
+                <li id="req-upper">✗ Incluye mayúsculas</li>
+                <li id="req-lower">✗ Incluye minúsculas</li>
+                <li id="req-number">✗ Incluye números</li>
+                <li id="req-symbol">✗ Incluye símbolos especiales</li>
+                <li id="req-personal">✗ Evita DNI o nombres</li>
             </ul>
         </div>
 
         <div class="btn-group" style="margin-top: 25px;">
-            <button type="submit" class="btn"> Cambiar Contraseña</button>
+            <button type="submit" class="btn" id="btn-submit">🔄 Cambiar Contraseña</button>
             <a href="javascript:history.back()" class="btn btn-secondary"> Cancelar</a>
         </div>
     </form>
 </div>
+
+<style>
+#password-strength { margin-top: 8px; }
+#strength-bar { border-radius: 3px; }
+</style>
+
+<script>
+function validarPassword() {
+    const clave = document.getElementById('nueva').value;
+    const reqs = {
+        length: clave.length >= 8 && clave.length <= 50,
+        upper: /[A-Z]/.test(clave),
+        lower: /[a-z]/.test(clave),
+        number: /\d/.test(clave),
+        symbol: /[!@#$%^&*(),.?":{}|<>_\-+=]/.test(clave)
+    };
+
+    document.getElementById('req-length').innerHTML = (reqs.length ? '✅' : '✗') + ' Mínimo 8 caracteres (máx. 50)';
+    document.getElementById('req-upper').innerHTML = (reqs.upper ? '✅' : '✗') + ' Incluye mayúsculas';
+    document.getElementById('req-lower').innerHTML = (reqs.lower ? '✅' : '✗') + ' Incluye minúsculas';
+    document.getElementById('req-number').innerHTML = (reqs.number ? '✅' : '✗') + ' Incluye números';
+    document.getElementById('req-symbol').innerHTML = (reqs.symbol ? '✅' : '✗') + ' Incluye símbolos especiales';
+    document.getElementById('req-personal').innerHTML = (reqs.length && clave.length > 0 ? '✅' : '✗') + ' Evita DNI o nombres';
+
+    const cumplidos = Object.values(reqs).filter(Boolean).length;
+    const bar = document.getElementById('strength-bar');
+    const pct = (cumplidos / 5) * 100;
+    bar.style.width = pct + '%';
+    if (pct < 40) { bar.style.background = '#dc3545'; }
+    else if (pct < 80) { bar.style.background = '#ff9800'; }
+    else { bar.style.background = '#28a745'; }
+}
+
+function validarConfirmacion() {
+    const nueva = document.getElementById('nueva').value;
+    const confirmar = document.getElementById('confirmar').value;
+    const msg = document.getElementById('confirm-msg');
+    if (!confirmar) { msg.textContent = ''; return; }
+    msg.textContent = nueva === confirmar ? '✅ Coinciden' : '❌ No coinciden';
+    msg.style.color = nueva === confirmar ? '#28a745' : '#dc3545';
+}
+</script>
 {% endblock %}

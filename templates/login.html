@@ -327,6 +327,13 @@
             this.textContent = '👁️';
         }
     });
+
+    // Limpiar campos si hay mensajes flash (login fallido)
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            document.getElementById('clave').value = '';
+        {% endif %}
+    {% endwith %}
 </script>
 </body>
 </html>

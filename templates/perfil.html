@@ -1,45 +1,153 @@
 {% extends "base.html" %}
-{% block title %}Perfil{% endblock %}
+{% block title %}Mi Perfil - ColegioSys{% endblock %}
 
 {% block content %}
-<div class="card card-highlight">
-    <h2>Mi Perfil</h2>
-    <p>Revisa y actualiza tu información personal desde este panel.</p>
-</div>
-
-<div class="profile-grid">
-    <div class="card profile-card">
-        <h3>Datos personales</h3>
-        <div class="profile-row"><span>DNI:</span> {{ usuario.dni }}</div>
-        <div class="profile-row"><span>Nombre completo:</span> {{ usuario.nombre_completo }}</div>
-        <div class="profile-row"><span>Correo:</span> {{ usuario.correo }}</div>
-        <div class="profile-row"><span>Rol:</span> {{ usuario.rol|title }}</div>
-        <div class="profile-row"><span>Estado:</span> {{ 'Activo' if usuario.activo else 'Inactivo' }}</div>
-        <div class="profile-row"><span>Registrado:</span> {{ usuario.fecha_registro.strftime('%d/%m/%Y') }}</div>
+<div class="profile-wrapper">
+    <div class="profile-header-card">
+        <div class="profile-avatar">
+            <span class="avatar-icon">
+                {% if usuario.rol == 'directora' %}👩‍💼
+                {% elif usuario.rol == 'docente' %}👩‍🏫
+                {% else %}👨‍🎓{% endif %}
+            </span>
+        </div>
+        <h2>{{ usuario.nombre_completo }}</h2>
+        <span class="profile-role-badge">{{ usuario.rol|title }}</span>
+        <p class="profile-status">📍 {{ 'Activo' if usuario.activo else 'Inactivo' }} • Registrado {{ usuario.fecha_registro.strftime('%d/%m/%Y') }}</p>
     </div>
 
-    <div class="card profile-card">
-        <h3>Detalles adicionales</h3>
-        {% if usuario.rol == 'alumno' %}
-            <div class="profile-row"><span>Grado:</span> {{ usuario.grado_rel.nombre if usuario.grado_rel else 'No asignado' }}</div>
-            <div class="profile-row"><span>Sección:</span> {{ usuario.seccion_rel.nombre if usuario.seccion_rel else 'No asignada' }}</div>
-        {% elif usuario.rol == 'docente' %}
-            <div class="profile-row"><span>Profesión:</span> {{ usuario.profesion or 'No especificada' }}</div>
-            <div class="profile-row"><span>Especialidad:</span> {{ usuario.descripcion_especialidad if usuario.tiene_especialidad else 'No tiene especialidad' }}</div>
-            <div class="profile-row"><span>Sección asignada:</span> {{ usuario.seccion_rel.nombre if usuario.seccion_rel else 'No asignada' }}</div>
-        {% else %}
-            <div class="profile-row"><span>Tipo de acceso:</span> Administración</div>
-        {% endif %}
+    <div class="profile-grid">
+        <div class="profile-card">
+            <div class="card-head">
+                <span class="card-head-icon">📋</span>
+                <h3>Datos personales</h3>
+            </div>
+            <div class="profile-table">
+                <div class="profile-row"><span class="label">DNI</span><span class="value">{{ usuario.dni }}</span></div>
+                <div class="profile-row"><span class="label">Nombres</span><span class="value">{{ usuario.nombres }}</span></div>
+                <div class="profile-row"><span class="label">Apellido Paterno</span><span class="value">{{ usuario.apellido_paterno }}</span></div>
+                <div class="profile-row"><span class="label">Apellido Materno</span><span class="value">{{ usuario.apellido_materno }}</span></div>
+                <div class="profile-row"><span class="label">Correo</span><span class="value">{{ usuario.correo }}</span></div>
+                <div class="profile-row"><span class="label">Rol</span><span class="value">{{ usuario.rol|title }}</span></div>
+            </div>
+        </div>
 
-        <div class="profile-actions">
-            {% if usuario.rol == 'directora' %}
-                <a href="{{ url_for('directora_cambiar_clave') }}" class="btn btn-primary">Cambiar contraseña</a>
-            {% elif usuario.rol == 'docente' %}
-                <a href="{{ url_for('docente_cambiar_clave') }}" class="btn btn-primary">Cambiar contraseña</a>
-            {% elif usuario.rol == 'alumno' %}
-                <a href="{{ url_for('alumno_cambiar_clave') }}" class="btn btn-primary">Cambiar contraseña</a>
-            {% endif %}
+        <div class="profile-card">
+            <div class="card-head">
+                <span class="card-head-icon">📌</span>
+                <h3>Detalles adicionales</h3>
+            </div>
+            <div class="profile-table">
+                {% if usuario.rol == 'alumno' %}
+                    <div class="profile-row"><span class="label">Grado</span><span class="value">{{ usuario.grado_rel.nombre if usuario.grado_rel else 'No asignado' }}</span></div>
+                    <div class="profile-row"><span class="label">Sección</span><span class="value">{{ usuario.seccion_rel.nombre if usuario.seccion_rel else 'No asignada' }}</span></div>
+                {% elif usuario.rol == 'docente' %}
+                    <div class="profile-row"><span class="label">Profesión</span><span class="value">{{ usuario.profesion or 'No especificada' }}</span></div>
+                    <div class="profile-row"><span class="label">Especialidad</span><span class="value">{{ usuario.descripcion_especialidad if usuario.tiene_especialidad else 'No tiene' }}</span></div>
+                    <div class="profile-row"><span class="label">Sección</span><span class="value">{{ usuario.seccion_rel.nombre if usuario.seccion_rel else 'No asignada' }}</span></div>
+                {% else %}
+                    <div class="profile-row"><span class="label">Tipo de acceso</span><span class="value">Administración</span></div>
+                {% endif %}
+            </div>
         </div>
     </div>
+
+    <div class="profile-actions">
+        {% if usuario.rol == 'directora' %}
+            <a href="{{ url_for('directora_cambiar_clave') }}" class="btn-profile">🔑 Cambiar contraseña</a>
+        {% elif usuario.rol == 'docente' %}
+            <a href="{{ url_for('docente_cambiar_clave') }}" class="btn-profile">🔑 Cambiar contraseña</a>
+        {% elif usuario.rol == 'alumno' %}
+            <a href="{{ url_for('alumno_cambiar_clave') }}" class="btn-profile">🔑 Cambiar contraseña</a>
+        {% endif %}
+    </div>
 </div>
+
+<style>
+.profile-wrapper { max-width: 800px; margin: 0 auto; }
+
+.profile-header-card {
+    background: linear-gradient(135deg, #003D82 0%, #0066CC 100%);
+    border-radius: 20px;
+    padding: 40px 30px;
+    text-align: center;
+    color: white;
+    margin-bottom: 30px;
+    box-shadow: 0 15px 40px rgba(0,61,130,0.2);
+}
+
+.profile-avatar {
+    width: 100px; height: 100px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+    font-size: 48px;
+    backdrop-filter: blur(10px);
+    border: 3px solid rgba(255,255,255,0.3);
+}
+
+.profile-header-card h2 { font-size: 28px; margin-bottom: 8px; }
+
+.profile-role-badge {
+    display: inline-block;
+    padding: 6px 20px;
+    background: rgba(255,152,0,0.3);
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.profile-status { font-size: 13px; opacity: 0.7; }
+
+.profile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; }
+
+.profile-card {
+    background: white;
+    border-radius: 16px;
+    padding: 25px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+}
+
+.card-head { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+.card-head-icon { font-size: 24px; }
+.card-head h3 { font-size: 18px; color: #003D82; }
+
+.profile-table { display: flex; flex-direction: column; gap: 0; }
+
+.profile-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid #f0f1f2;
+}
+.profile-row:last-child { border-bottom: none; }
+
+.profile-row .label { color: #666; font-size: 14px; font-weight: 500; }
+.profile-row .value { color: #333; font-size: 14px; font-weight: 600; text-align: right; }
+
+.profile-actions { text-align: center; }
+
+.btn-profile {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 32px;
+    background: linear-gradient(135deg, #ff9800 0%, #ff7700 100%);
+    color: white;
+    text-decoration: none;
+    border-radius: 12px;
+    font-weight: 600;
+    transition: 0.3s;
+    box-shadow: 0 4px 15px rgba(255,152,0,0.3);
+}
+.btn-profile:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(255,152,0,0.4); }
+
+@media (max-width: 600px) {
+    .profile-grid { grid-template-columns: 1fr; }
+}
+</style>
 {% endblock %}

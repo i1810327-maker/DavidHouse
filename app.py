@@ -10,10 +10,10 @@ from functools import wraps       # Para crear decoradores
 from datetime import datetime, timezone, timedelta
 from sqlalchemy.exc import SQLAlchemyError
 import logging
+import re
 
 from db import db, init_db        # Configuración de base de datos
 from models import Usuario, Grado, Seccion, Curso, LogAcceso, Apoderado, IntentoLogin, Baneo  # Modelos ORM
-from datetime import datetime, timedelta
 
 # Configurar logging
 logging.basicConfig(level=logging.DEBUG)
@@ -27,6 +27,28 @@ app.secret_key = "clave_super_segura_2026_ColegioSys"  # Clave para sesiones Fla
 MAX_INTENTOS_USUARIO = 3  # Intentos fallidos antes de banear usuario
 TIEMPO_BANEO_MINUTOS = 5  # Tiempo de baneo en minutos
 VENTANA_TIEMPO_MINUTOS = 5  # Ventana de tiempo para contar intentos
+
+def validar_clave(clave, usuario=None):
+    """Valida que la contraseña cumpla con los requisitos de seguridad"""
+    errores = []
+    if len(clave) < 8:
+        errores.append('Mínimo 8 caracteres')
+    if len(clave) > 50:
+        errores.append('Máximo 50 caracteres')
+    if not re.search(r'[A-Z]', clave):
+        errores.append('Debe incluir mayúsculas')
+    if not re.search(r'[a-z]', clave):
+        errores.append('Debe incluir minúsculas')
+    if not re.search(r'\d', clave):
+        errores.append('Debe incluir números')
+    if not re.search(r'[!@#$%^&*(),.?":{}|<>_\-+=]', clave):
+        errores.append('Debe incluir símbolos especiales')
+    if usuario:
+        if usuario.dni and usuario.dni in clave:
+            errores.append('No debe contener el DNI')
+        if usuario.nombres and usuario.nombres.lower() in clave.lower():
+            errores.append('No debe contener nombres personales')
+    return errores
 
 def obtener_ip():
     """Obtiene la IP del cliente, considerando proxies"""
@@ -138,14 +160,23 @@ def verificar_permisos(f):
 # Parámetros: form_data (datos del formulario), rol (directora, docente, alumno)
 def crear_usuario_desde_form(form_data, rol):
     """Crea un objeto Usuario desde datos de formulario"""
+    telefono_principal = form_data.get('telefono_principal') if rol == 'docente' else None
+    telefono_secundario = form_data.get('telefono_secundario') if rol == 'docente' else None
+    
+    # Validar que teléfonos no contengan correos electrónicos
+    if telefono_principal and '@' in telefono_principal:
+        telefono_principal = None
+    if telefono_secundario and '@' in telefono_secundario:
+        telefono_secundario = None
+        
     return Usuario(
         dni=form_data.get('dni'),
         nombres=form_data.get('nombres'),
         apellido_paterno=form_data.get('apellido_paterno'),
         apellido_materno=form_data.get('apellido_materno'),
         correo=form_data.get('correo'),
-        telefono_principal=form_data.get('telefono_principal') if rol == 'docente' else None,
-        telefono_secundario=form_data.get('telefono_secundario') if rol == 'docente' else None,
+        telefono_principal=telefono_principal,
+        telefono_secundario=telefono_secundario,
         clave=bcrypt.generate_password_hash(form_data.get('clave')).decode('utf-8'),
         rol=rol,
         grado_id=form_data.get('grado_id') if rol == 'alumno' else None,
@@ -699,9 +730,19 @@ def directora_cambiar_clave():
         if not bcrypt.check_password_hash(usuario.clave, actual):
             flash('Contraseña actual incorrecta', 'danger')
             return redirect(url_for('directora_cambiar_clave'))
+        
+        if actual == nueva:
+            flash('La nueva contraseña debe ser diferente a la actual', 'danger')
+            return redirect(url_for('directora_cambiar_clave'))
 
         if nueva != confirmar:
             flash('Las contraseñas no coinciden', 'danger')
+            return redirect(url_for('directora_cambiar_clave'))
+
+        errores = validar_clave(nueva, usuario)
+        if errores:
+            for error in errores:
+                flash(f'❌ {error}', 'danger')
             return redirect(url_for('directora_cambiar_clave'))
 
         usuario.clave = bcrypt.generate_password_hash(nueva).decode('utf-8')
@@ -781,9 +822,19 @@ def docente_cambiar_clave():
         if not bcrypt.check_password_hash(usuario.clave, actual):
             flash('Contraseña actual incorrecta', 'danger')
             return redirect(url_for('docente_cambiar_clave'))
+        
+        if actual == nueva:
+            flash('La nueva contraseña debe ser diferente a la actual', 'danger')
+            return redirect(url_for('docente_cambiar_clave'))
 
         if nueva != confirmar:
             flash('Las contraseñas no coinciden', 'danger')
+            return redirect(url_for('docente_cambiar_clave'))
+
+        errores = validar_clave(nueva, usuario)
+        if errores:
+            for error in errores:
+                flash(f'❌ {error}', 'danger')
             return redirect(url_for('docente_cambiar_clave'))
 
         usuario.clave = bcrypt.generate_password_hash(nueva).decode('utf-8')
@@ -868,9 +919,19 @@ def alumno_cambiar_clave():
         if not bcrypt.check_password_hash(usuario.clave, actual):
             flash('Contraseña actual incorrecta', 'danger')
             return redirect(url_for('alumno_cambiar_clave'))
+        
+        if actual == nueva:
+            flash('La nueva contraseña debe ser diferente a la actual', 'danger')
+            return redirect(url_for('alumno_cambiar_clave'))
 
         if nueva != confirmar:
             flash('Las contraseñas no coinciden', 'danger')
+            return redirect(url_for('alumno_cambiar_clave'))
+
+        errores = validar_clave(nueva, usuario)
+        if errores:
+            for error in errores:
+                flash(f'❌ {error}', 'danger')
             return redirect(url_for('alumno_cambiar_clave'))
 
         usuario.clave = bcrypt.generate_password_hash(nueva).decode('utf-8')
