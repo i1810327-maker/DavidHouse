@@ -30,11 +30,6 @@
             </div>
 
             <div class="form-group">
-                <label for="correo">* Correo Electrónico *</label>
-                <input type="email" id="correo" name="correo" placeholder="docente@colegio.edu.pe" required maxlength="100" oninput="validarCorreo(this)">
-            </div>
-
-            <div class="form-group">
                 <label for="telefono_principal"> Teléfono Principal</label>
                 <input type="text" id="telefono_principal" name="telefono_principal" placeholder="987654321" maxlength="12" oninput="validarTelefono(this, 'Teléfono Principal')">
             </div>
@@ -45,13 +40,18 @@
             </div>
 
             <div class="form-group">
-                <label for="profesion">* Profesión *</label>
-                <input type="text" id="profesion" name="profesion" placeholder="Licenciado en Educación" required maxlength="100" pattern="[A-Za-zÁÉÍÓÚáéíóúÑñ\s\-\']*" oninput="validarNombre(this)">
+                <label for="correo">* Correo Electrónico *</label>
+                <input type="email" id="correo" name="correo" placeholder="docente@colegio.edu.pe" required maxlength="100" oninput="validarCorreo(this)">
             </div>
 
             <div class="form-group">
                 <label for="clave">* Contraseña *</label>
                 <input type="password" id="clave" name="clave" placeholder="Contraseña segura" required maxlength="50" oninput="validarClaveInput(this)">
+            </div>
+
+            <div class="form-group">
+                <label for="profesion">* Profesión *</label>
+                <input type="text" id="profesion" name="profesion" placeholder="Licenciado en Educación" required maxlength="100" pattern="[A-Za-zÁÉÍÓÚáéíóúÑñ\s\-\']*" oninput="validarNombre(this)">
             </div>
 
             <div class="form-group" style="display: flex; align-items: flex-end;">
