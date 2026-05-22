@@ -523,6 +523,7 @@ input[type="submit"]:active {
 
 .btn-primary {
     background: linear-gradient(135deg, #ff9800 0%, #fb8c00 100%);
+    box-shadow: 0 4px 10px rgba(220, 53, 69, 0.2);
 }
 
 .btn-secondary {
@@ -1275,6 +1276,7 @@ form button {
     }
 }
 
+.selector {
     margin-top: 10px;
 }
 
@@ -1302,4 +1304,45 @@ a:hover {
     .main-content {
         margin-left: 0;
     }
+}
+
+/* ===== SPINNER / LOADING ===== */
+.btn-loading {
+    position: relative;
+    pointer-events: none;
+    opacity: 0.8;
+}
+
+.btn-loading::after {
+    content: '';
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spinner-rotate 0.6s linear infinite;
+    margin-left: 8px;
+    vertical-align: middle;
+}
+
+.btn-loading:disabled {
+    cursor: not-allowed;
+}
+
+@keyframes spinner-rotate {
+    to { transform: rotate(360deg); }
+}
+
+/* Spinner genérico para indicadores de carga */
+.spinner {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(0,0,0,0.15);
+    border-top-color: #003D82;
+    border-radius: 50%;
+    animation: spinner-rotate 0.6s linear infinite;
+    margin-right: 6px;
+    vertical-align: middle;
 }

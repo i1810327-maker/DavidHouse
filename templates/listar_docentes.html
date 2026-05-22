@@ -43,10 +43,12 @@
                     {% endif %}
                 </td>
                 <td>
-                    <a href="{{ url_for('editar_docente', id=docente.id) }}" class="btn btn-sm btn-primary">Editar</a>
-                    <form method="POST" action="{{ url_for('eliminar_docente', id=docente.id) }}" style="display: inline;" onsubmit="return confirm('¿Estás seguro de eliminar este docente?')">
-                        <button type="submit" class="btn btn-sm btn-danger">Eliminar</button>
-                    </form>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <a href="{{ url_for('editar_docente', id=docente.id) }}" class="btn btn-sm btn-primary" style="text-align: center; min-width: 80px;">Editar</a>
+                        <form method="POST" action="{{ url_for('eliminar_docente', id=docente.id) }}" style="display: inline;" onsubmit="return confirm('¿Estás seguro de eliminar este docente?') && disableSubmitButton(this)">
+                            <button type="submit" class="btn btn-sm btn-danger" style="min-width: 80px;">Eliminar</button>
+                        </form>
+                    </div>
                 </td>
             </tr>
             {% endfor %}

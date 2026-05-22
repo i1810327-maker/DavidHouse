@@ -9,7 +9,7 @@
     </p>
     <div class="divider"></div>
 
-    <form method="POST" id="cambiarClaveForm">
+    <form method="POST" id="cambiarClaveForm" onsubmit="return disableSubmitButton(this)">
         <div class="form-group">
             <label for="actual">🔑 Contraseña Actual *</label>
             <input type="password" id="actual" name="actual" placeholder="Ingresa tu contraseña actual" required autocomplete="current-password">

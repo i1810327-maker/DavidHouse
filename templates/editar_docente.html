@@ -9,51 +9,51 @@
     </p>
     <div class="divider"></div>
 
-    <form method="POST">
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-            <!-- Fila 1 -->
-            <div class="form-group">
-                <label for="dni">* DNI *</label>
-                <input type="text" id="dni" name="dni" value="{{ docente.dni }}" placeholder="12345678" required>
-            </div>
+     <form method="POST" onsubmit="return disableSubmitButton(this)">
+         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+             <!-- Fila 1 -->
+             <div class="form-group">
+                 <label for="dni">* DNI *</label>
+                 <input type="text" id="dni" name="dni" value="{{ docente.dni }}" placeholder="12345678" required maxlength="9" pattern="[0-9]*" oninput="validarDni(this)">
+             </div>
 
-            <div class="form-group">
-                <label for="nombres">* Nombres *</label>
-                <input type="text" id="nombres" name="nombres" value="{{ docente.nombres }}" placeholder="Juan" required>
-            </div>
+             <div class="form-group">
+                 <label for="nombres">* Nombres *</label>
+                 <input type="text" id="nombres" name="nombres" value="{{ docente.nombres }}" placeholder="Juan" required maxlength="60" pattern="[A-Za-zÁÉÍÓÚáéíóúÑñ\s]*" oninput="validarNombre(this)">
+             </div>
 
-            <!-- Fila 2 -->
-            <div class="form-group">
-                <label for="apellido_paterno">* Apellido Paterno *</label>
-                <input type="text" id="apellido_paterno" name="apellido_paterno" value="{{ docente.apellido_paterno }}" placeholder="García" required>
-            </div>
+             <!-- Fila 2 -->
+             <div class="form-group">
+                 <label for="apellido_paterno">* Apellido Paterno *</label>
+                 <input type="text" id="apellido_paterno" name="apellido_paterno" value="{{ docente.apellido_paterno }}" placeholder="García" required maxlength="40" pattern="[A-Za-zÁÉÍÓÚáéíóúÑñ\s]*" oninput="validarNombre(this)">
+             </div>
 
-            <div class="form-group">
-                <label for="apellido_materno">* Apellido Materno *</label>
-                <input type="text" id="apellido_materno" name="apellido_materno" value="{{ docente.apellido_materno }}" placeholder="López" required>
-            </div>
+             <div class="form-group">
+                 <label for="apellido_materno">* Apellido Materno *</label>
+                 <input type="text" id="apellido_materno" name="apellido_materno" value="{{ docente.apellido_materno }}" placeholder="López" required maxlength="40" pattern="[A-Za-zÁÉÍÓÚáéíóúÑñ\s]*" oninput="validarNombre(this)">
+             </div>
 
-            <!-- Fila 3 -->
-            <div class="form-group">
-                <label for="correo">* Correo Electrónico *</label>
-                <input type="email" id="correo" name="correo" value="{{ docente.correo }}" placeholder="docente@colegio.edu.pe" required>
-            </div>
+             <!-- Fila 3 -->
+             <div class="form-group">
+                 <label for="correo">* Correo Electrónico *</label>
+                 <input type="email" id="correo" name="correo" value="{{ docente.correo }}" placeholder="docente@colegio.edu.pe" required maxlength="100" oninput="validarCorreo(this)">
+             </div>
 
-            <div class="form-group">
-                <label for="telefono_principal"> Teléfono Principal</label>
-                <input type="text" id="telefono_principal" name="telefono_principal" value="{{ docente.telefono_principal or '' }}" placeholder="987654321" maxlength="20">
-            </div>
+             <div class="form-group">
+                 <label for="telefono_principal"> Teléfono Principal</label>
+                 <input type="text" id="telefono_principal" name="telefono_principal" value="{{ docente.telefono_principal or '' }}" placeholder="987654321" maxlength="12" oninput="validarTelefono(this, 'Teléfono Principal')">
+             </div>
 
-            <!-- Fila 4 -->
-            <div class="form-group">
-                <label for="telefono_secundario"> Teléfono Secundario</label>
-                <input type="text" id="telefono_secundario" name="telefono_secundario" value="{{ docente.telefono_secundario or '' }}" placeholder="912345678" maxlength="20" autocomplete="off">
-            </div>
+             <!-- Fila 4 -->
+             <div class="form-group">
+                 <label for="telefono_secundario"> Teléfono Secundario</label>
+                 <input type="text" id="telefono_secundario" name="telefono_secundario" value="{{ docente.telefono_secundario or '' }}" placeholder="912345678" maxlength="12" oninput="validarTelefono(this, 'Teléfono Secundario')" autocomplete="off">
+             </div>
 
-            <div class="form-group">
-                <label for="profesion">* Profesión *</label>
-                <input type="text" id="profesion" name="profesion" value="{{ docente.profesion or '' }}" placeholder="Licenciado en Educación" required>
-            </div>
+             <div class="form-group">
+                 <label for="profesion">* Profesión *</label>
+                 <input type="text" id="profesion" name="profesion" value="{{ docente.profesion or '' }}" placeholder="Licenciado en Educación" required maxlength="100" pattern="[A-Za-zÁÉÍÓÚáéíóúÑñ\s\-\']*" oninput="validarNombre(this)">
+             </div>
 
             <!-- Fila 5 -->
             <div class="form-group" style="display: flex; align-items: flex-end;">
@@ -191,9 +191,69 @@
         }
     }
 
-    // Inicializar selects al cargar la página
-    window.addEventListener('DOMContentLoaded', function() {
-        filtrarGradosDocente();
-    });
-</script>
+     // Inicializar selects al cargar la página
+     window.addEventListener('DOMContentLoaded', function() {
+         filtrarGradosDocente();
+     });
+     
+     // Funciones de validación en tiempo real
+     function validarDni(input) {
+         const errorElement = input.nextElementSibling;
+         if (input.value && !/^\d*$/.test(input.value)) {
+             input.setCustomValidity('El DNI debe contener solo números');
+             input.reportValidity();
+         } else if (input.value && input.value.length > 9) {
+             input.setCustomValidity('El DNI debe tener máximo 9 caracteres');
+             input.reportValidity();
+         } else {
+             input.setCustomValidity('');
+         }
+     }
+     
+     function validarNombre(input) {
+         const errorElement = input.nextElementSibling;
+         if (input.value && !/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s\-\']*$/.test(input.value)) {
+             input.setCustomValidity('Este campo debe contener solo letras y espacios');
+             input.reportValidity();
+         } else {
+             input.setCustomValidity('');
+         }
+     }
+     
+     function validarCorreo(input) {
+         const errorElement = input.nextElementSibling;
+         if (input.value && input.value.length > 100) {
+             input.setCustomValidity('El correo debe tener máximo 100 caracteres');
+             input.reportValidity();
+         } else if (input.value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input.value)) {
+             input.setCustomValidity('Ingrese un correo electrónico válido');
+             input.reportValidity();
+         } else {
+             input.setCustomValidity('');
+         }
+     }
+     
+     function validarClaveInput(input) {
+         const errorElement = input.nextElementSibling;
+         if (input.value && input.value.length > 50) {
+             input.setCustomValidity('La contraseña debe tener máximo 50 caracteres');
+             input.reportValidity();
+         } else {
+             input.setCustomValidity('');
+         }
+     }
+     
+     function validarTelefono(input, campo) {
+         const errorElement = input.nextElementSibling;
+         if (input.value && !/^\d*$/.test(input.value)) {
+             input.setCustomValidity(campo + ' debe contener solo números');
+             input.reportValidity();
+         } else if (input.value && input.value.length > 12) {
+             input.setCustomValidity(campo + ' debe tener máximo 12 caracteres');
+             input.reportValidity();
+         } else {
+             input.setCustomValidity('');
+         }
+     }
+ </script>
 {% endblock %}

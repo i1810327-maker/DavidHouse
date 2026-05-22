@@ -266,7 +266,7 @@
         <div class="login-card">
             <div class="login-header">
                 <div class="logo-icon">
-                    <span>🏫</span>
+                    <span></span>
                 </div>
                 <h2>David House</h2>
                 <p class="subtitle">Sistema de Gestión Escolar</p>
@@ -284,7 +284,7 @@
                     {% endif %}
                 {% endwith %}
 
-                <form method="POST" action="{{ url_for('login') }}">
+                <form method="POST" action="{{ url_for('login') }}" onsubmit="return disableSubmitButton(this)">
                     <div class="form-group">
                         <label for="correo">Correo Electrónico <span>*</span></label>
                         <input type="email" id="correo" name="correo" placeholder="tu_correo@colegio.edu.pe" required autocomplete="email">
@@ -300,8 +300,8 @@
                         </div>
                     </div>
 
-                    <button type="submit" class="btn-login">
-                        🚀 Iniciar Sesión
+                    <button type="submit" class="btn-login" data-loading-text="Iniciando sesión…">
+                        Iniciar Sesión
                     </button>
                 </form>
 
@@ -317,23 +317,26 @@
     </div>
 
 <script>
-    document.getElementById('toggleClave').addEventListener('click', function() {
-        const claveInput = document.getElementById('clave');
-        if (claveInput.type === 'password') {
-            claveInput.type = 'text';
-            this.textContent = '🙈';
-        } else {
-            claveInput.type = 'password';
-            this.textContent = '👁️';
+function disableSubmitButton(form) {
+    var btn = form.querySelector('button[type="submit"]');
+    if (btn) {
+        btn.disabled = true;
+        btn.classList.add('btn-loading');
+        if (btn.hasAttribute('data-loading-text')) {
+            btn.innerHTML = btn.getAttribute('data-loading-text');
         }
-    });
+    }
+    return true;
+}
 
-    // Limpiar campos si hay mensajes flash (login fallido)
-    {% with messages = get_flashed_messages() %}
-        {% if messages %}
-            document.getElementById('clave').value = '';
-        {% endif %}
-    {% endwith %}
+document.getElementById('toggleClave').onclick = function() {
+    var inp = document.getElementById('clave');
+    if (inp) inp.type = inp.type === 'password' ? 'text' : 'password';
+};
+if (document.querySelector('.alert-danger')) {
+    var inp = document.getElementById('clave');
+    if (inp) inp.value = '';
+}
 </script>
 </body>
 </html>

@@ -28,6 +28,8 @@ MAX_INTENTOS_USUARIO = 3  # Intentos fallidos antes de banear usuario
 TIEMPO_BANEO_MINUTOS = 5  # Tiempo de baneo en minutos
 VENTANA_TIEMPO_MINUTOS = 5  # Ventana de tiempo para contar intentos
 
+FECHA_PERMANENTE = datetime(2100, 1, 1)  # Fecha lejana para baneos permanentes
+
 def validar_clave(clave, usuario=None):
     """Valida que la contraseña cumpla con los requisitos de seguridad"""
     errores = []
@@ -48,6 +50,76 @@ def validar_clave(clave, usuario=None):
             errores.append('No debe contener el DNI')
         if usuario.nombres and usuario.nombres.lower() in clave.lower():
             errores.append('No debe contener nombres personales')
+        if usuario.apellido_paterno and usuario.apellido_paterno.lower() in clave.lower():
+            errores.append('No debe contener apellidos personales')
+        if usuario.apellido_materno and usuario.apellido_materno.lower() in clave.lower():
+            errores.append('No debe contener apellidos personales')
+    return errores
+
+
+def validar_dni(dni):
+    """Valida que el DNI solo contenga números y tenga máximo 9 caracteres"""
+    errores = []
+    if not dni:
+        errores.append('DNI es requerido')
+        return errores
+    if not dni.isdigit():
+        errores.append('DNI debe contener solo números')
+    if len(dni) > 9:
+        errores.append('DNI debe tener máximo 9 caracteres')
+    return errores
+
+
+def validar_nombre(nombre, campo='Nombre'):
+    """Valida que el nombre solo contenga letras y espacios"""
+    errores = []
+    if not nombre:
+        errores.append(f'{campo} es requerido')
+        return errores
+    # Permite letras, espacios, guiones y apostrofes (para nombres como María-José, O'Connor)
+    if not re.match(r'^[A-Za-zÁÉÍÓÚáéíóúÑñ\s\-\']+$', nombre.strip()):
+        errores.append(f'{campo} debe contener solo letras y espacios')
+    return errores
+
+
+def validar_correo(correo):
+    """Valida formato básico de correo electrónico"""
+    errores = []
+    if not correo:
+        errores.append('Correo es requerido')
+        return errores
+    if len(correo) > 100:
+        errores.append('Correo debe tener máximo 100 caracteres')
+    # Expresión regular básica para validar formato de correo
+    patron = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    if not re.match(patron, correo):
+        errores.append('Correo electrónico no válido')
+    return errores
+
+
+def validar_telefono(telefono, campo='Teléfono'):
+    """Valida que el teléfono solo contenga números y tenga máximo 12 caracteres"""
+    errores = []
+    # Teléfono es opcional, pero si se proporciona debe ser válido
+    if telefono and telefono.strip():
+        if not telefono.isdigit():
+            errores.append(f'{campo} debe contener solo números')
+        if len(telefono) > 12:
+            errores.append(f'{campo} debe tener máximo 12 caracteres')
+    return errores
+
+
+def validar_profesion(profesion):
+    """Valida que la profesión solo contenga letras y espacios"""
+    errores = []
+    if not profesion:
+        errores.append('Profesión es requerida')
+        return errores
+    # Permite letras, espacios, guiones y apostrofes
+    if not re.match(r'^[A-Za-zÁÉÍÓÚáéíóúÑñ\s\-\']+$', profesion.strip()):
+        errores.append('Profesión debe contener solo letras y espacios')
+    if len(profesion) > 100:
+        errores.append('Profesión debe tener máximo 100 caracteres')
     return errores
 
 def obtener_ip():
@@ -57,8 +129,8 @@ def obtener_ip():
     return request.remote_addr
 
 def obtener_tiempo_actual():
-    """Obtiene el tiempo actual (sin timezone para compatibilidad con la BD)"""
-    return datetime.now()
+    """Obtiene el tiempo actual en UTC para compatibilidad con los campos de la BD"""
+    return datetime.utcnow()
 
 def limpiar_intentos_vencidos():
     """Limpia intentos y baneos vencidos para permitir nuevos intentos"""
@@ -224,8 +296,7 @@ def login():
         ).first()
         
         if baneo_ip:
-            tiempo_restante = int((baneo_ip.fecha_fin - obtener_tiempo_actual()).total_seconds() / 60)
-            flash(f'IP bloqueada temporalmente. Intenta en {max(1, tiempo_restante)} minutos.', 'danger')
+            flash('⚠️ Tu IP está bloqueada permanentemente.', 'danger')
             return render_template('login.html')
         
         # Consultar usuario
@@ -305,20 +376,18 @@ def login():
                 ).first()
                 
                 if not ip_ya_baneada:
-                    fecha_fin = obtener_tiempo_actual() + timedelta(minutes=TIEMPO_BANEO_MINUTOS * 2)
                     baneo = Baneo(
                         tipo_baneo='ip',
                         identificador=ip_address,
-                        motivo=f'{usuarios_baneados_ip} usuarios baneados desde esta IP',
-                        fecha_fin=fecha_fin
+                        motivo=f'{usuarios_baneados_ip} usuarios baneados desde esta IP — baneo permanente',
+                        fecha_fin=FECHA_PERMANENTE
                     )
                     db.session.add(baneo)
                     db.session.commit()
-                    flash(f'⚠️ Tu IP ha sido bloqueada por seguridad. 2 usuarios ya fueron bloqueados desde esta dirección. Intenta en {TIEMPO_BANEO_MINUTOS * 2} minutos.', 'danger')
+                    flash(f'⚠️ Tu IP ha sido bloqueada permanentemente. 2 usuarios fueron bloqueados desde esta dirección.', 'danger')
                     return render_template('login.html')
                 else:
-                    tiempo_restante = int((ip_ya_baneada.fecha_fin - obtener_tiempo_actual()).total_seconds() / 60)
-                    flash(f'⚠️ Tu IP está bloqueada. Intenta en {max(1, tiempo_restante)} minutos.', 'danger')
+                    flash(f'⚠️ Tu IP está bloqueada permanentemente.', 'danger')
                     return render_template('login.html')
             
             # Si el usuario existe, contar sus intentos

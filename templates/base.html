@@ -66,5 +66,20 @@
         {% block content %}{% endblock %}
     </div>
 
+<script>
+function disableSubmitButton(form) {
+    var btn = form.querySelector('button[type="submit"], input[type="submit"]');
+    if (btn) {
+        if (btn.hasAttribute('data-loading-text')) {
+            btn.dataset.originalText = btn.innerHTML;
+            btn.innerHTML = btn.getAttribute('data-loading-text');
+        }
+        btn.disabled = true;
+        btn.classList.add('btn-loading');
+    }
+    return true;
+}
+</script>
+
 </body>
 </html>

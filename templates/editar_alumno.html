@@ -9,39 +9,39 @@
 </div>
 
 <div class="card">
-    <form method="POST">
-        <!-- SECCIÓN APODERADO -->
-        <div style="background: #e8f5e9; border-left: 4px solid #4caf50; padding: 20px; margin-bottom: 30px; border-radius: 8px;">
-            <h3 style="color: #2e7d32; margin-bottom: 15px;"> Información del Apoderado</h3>
-            
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                <!-- Fila 1 Apoderado -->
-                <div class="form-group">
-                    <label for="apoderado_nombres">* Nombres *</label>
-                    <input type="text" id="apoderado_nombres" name="apoderado_nombres" value="{{ apoderado.nombres if apoderado else '' }}" placeholder="Juan" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="apoderado_apellido_paterno">* Apellido Paterno *</label>
-                    <input type="text" id="apoderado_apellido_paterno" name="apoderado_apellido_paterno" value="{{ apoderado.apellido_paterno if apoderado else '' }}" placeholder="García" required>
-                </div>
-
-                <!-- Fila 2 Apoderado -->
-                <div class="form-group">
-                    <label for="apoderado_apellido_materno">* Apellido Materno *</label>
-                    <input type="text" id="apoderado_apellido_materno" name="apoderado_apellido_materno" value="{{ apoderado.apellido_materno if apoderado else '' }}" placeholder="López" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="apoderado_telefono_principal">* Teléfono Principal</label>
-                    <input type="text" id="apoderado_telefono_principal" name="apoderado_telefono_principal" value="{{ apoderado.telefono_principal if apoderado else '' }}" placeholder="987654321" maxlength="20">
-                </div>
-
-                <!-- Fila 3 Apoderado -->
-                <div class="form-group">
-                    <label for="apoderado_telefono_secundario">* Teléfono Secundario</label>
-                    <input type="text" id="apoderado_telefono_secundario" name="apoderado_telefono_secundario" value="{{ apoderado.telefono_secundario if apoderado else '' }}" placeholder="912345678" maxlength="20">
-                </div>
+     <form method="POST" onsubmit="return disableSubmitButton(this)">
+         <!-- SECCIÓN APODERADO -->
+         <div style="background: #e8f5e9; border-left: 4px solid #4caf50; padding: 20px; margin-bottom: 30px; border-radius: 8px;">
+             <h3 style="color: #2e7d32; margin-bottom: 15px;"> Información del Apoderado</h3>
+             
+             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                 <!-- Fila 1 Apoderado -->
+                 <div class="form-group">
+                     <label for="apoderado_nombres">* Nombres *</label>
+                     <input type="text" id="apoderado_nombres" name="apoderado_nombres" value="{{ apoderado.nombres if apoderado else '' }}" placeholder="Juan" required maxlength="60" pattern="[A-Za-zÁÉÍÓÚáéíóúÑñ\s]*" oninput="validarNombre(this)">
+                 </div>
+ 
+                 <div class="form-group">
+                     <label for="apoderado_apellido_paterno">* Apellido Paterno *</label>
+                     <input type="text" id="apoderado_apellido_paterno" name="apoderado_apellido_paterno" value="{{ apoderado.apellido_paterno if apoderado else '' }}" placeholder="García" required maxlength="40" pattern="[A-Za-zÁÉÍÓÚáéíóúÑñ\s]*" oninput="validarNombre(this)">
+                 </div>
+ 
+                 <!-- Fila 2 Apoderado -->
+                 <div class="form-group">
+                     <label for="apoderado_apellido_materno">* Apellido Materno *</label>
+                     <input type="text" id="apoderado_apellido_materno" name="apoderado_apellido_materno" value="{{ apoderado.apellido_materno if apoderado else '' }}" placeholder="López" required maxlength="40" pattern="[A-Za-zÁÉÍÓÚáéíóúÑñ\s]*" oninput="validarNombre(this)">
+                 </div>
+ 
+                 <div class="form-group">
+                     <label for="apoderado_telefono_principal">* Teléfono Principal</label>
+                     <input type="text" id="apoderado_telefono_principal" name="apoderado_telefono_principal" value="{{ apoderado.telefono_principal if apoderado else '' }}" placeholder="987654321" maxlength="12" oninput="validarTelefono(this, 'Teléfono Principal')">
+                 </div>
+ 
+                 <!-- Fila 3 Apoderado -->
+                 <div class="form-group">
+                     <label for="apoderado_telefono_secundario">* Teléfono Secundario</label>
+                     <input type="text" id="apoderado_telefono_secundario" name="apoderado_telefono_secundario" value="{{ apoderado.telefono_secundario if apoderado else '' }}" placeholder="912345678" maxlength="12" oninput="validarTelefono(this, 'Teléfono Secundario')">
+                 </div>
 
                 <div class="form-group" style="display: flex; align-items: flex-end;">
                     <label style="margin: 0; display: flex; align-items: center; cursor: pointer;">
@@ -53,38 +53,38 @@
             </div>
         </div>
 
-        <!-- SECCIÓN ALUMNO -->
-        <div style="background: #fff3e0; border-left: 4px solid #ff9800; padding: 20px; margin-bottom: 30px; border-radius: 8px;">
-            <h3 style="color: #f57c00; margin-bottom: 15px;"> Información del Alumno</h3>
-            
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                <!-- Fila 1 -->
-                <div class="form-group">
-                    <label for="dni">* DNI *</label>
-                    <input type="text" id="dni" name="dni" value="{{ alumno.dni }}" placeholder="12345678" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="nombres">* Nombres *</label>
-                    <input type="text" id="nombres" name="nombres" value="{{ alumno.nombres }}" placeholder="Juan" required>
-                </div>
-
-                <!-- Fila 2 -->
-                <div class="form-group">
-                    <label for="apellido_paterno">* Apellido Paterno *</label>
-                    <input type="text" id="apellido_paterno" name="apellido_paterno" value="{{ alumno.apellido_paterno }}" placeholder="García" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="apellido_materno">* Apellido Materno *</label>
-                    <input type="text" id="apellido_materno" name="apellido_materno" value="{{ alumno.apellido_materno }}" placeholder="López" required>
-                </div>
-
-                <!-- Fila 3 -->
-                <div class="form-group">
-                    <label for="correo">* Correo Electrónico *</label>
-                    <input type="email" id="correo" name="correo" value="{{ alumno.correo }}" placeholder="alumno@colegio.edu.pe" required>
-                </div>
+             <!-- SECCIÓN ALUMNO -->
+             <div style="background: #fff3e0; border-left: 4px solid #ff9800; padding: 20px; margin-bottom: 30px; border-radius: 8px;">
+                 <h3 style="color: #f57c00; margin-bottom: 15px;"> Información del Alumno</h3>
+                 
+                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                     <!-- Fila 1 -->
+                     <div class="form-group">
+                         <label for="dni">* DNI *</label>
+                         <input type="text" id="dni" name="dni" value="{{ alumno.dni }}" placeholder="12345678" required maxlength="9" pattern="[0-9]*" oninput="validarDni(this)">
+                     </div>
+ 
+                     <div class="form-group">
+                         <label for="nombres">* Nombres *</label>
+                         <input type="text" id="nombres" name="nombres" value="{{ alumno.nombres }}" placeholder="Juan" required maxlength="60" pattern="[A-Za-zÁÉÍÓÚáéíóúÑñ\s]*" oninput="validarNombre(this)">
+                     </div>
+ 
+                     <!-- Fila 2 -->
+                     <div class="form-group">
+                         <label for="apellido_paterno">* Apellido Paterno *</label>
+                         <input type="text" id="apellido_paterno" name="apellido_paterno" value="{{ alumno.apellido_paterno }}" placeholder="García" required maxlength="40" pattern="[A-Za-zÁÉÍÓÚáéíóúÑñ\s]*" oninput="validarNombre(this)">
+                     </div>
+ 
+                     <div class="form-group">
+                         <label for="apellido_materno">* Apellido Materno *</label>
+                         <input type="text" id="apellido_materno" name="apellido_materno" value="{{ alumno.apellido_materno }}" placeholder="López" required maxlength="40" pattern="[A-Za-zÁÉÍÓÚáéíóúÑñ\s]*" oninput="validarNombre(this)">
+                     </div>
+ 
+                     <!-- Fila 3 -->
+                     <div class="form-group">
+                         <label for="correo">* Correo Electrónico *</label>
+                         <input type="email" id="correo" name="correo" value="{{ alumno.correo }}" placeholder="alumno@colegio.edu.pe" required maxlength="100" oninput="validarCorreo(this)">
+                     </div>
 
 
                 <!-- Fila 4: Nivel, Grado y Sección -->
@@ -112,7 +112,7 @@
                 </div>
 
                 <div class="form-group" style="grid-column: 1 / -1;">
-                    <label>📖 Grado</label>
+                    <label></label>
                 </div>
             </div>
         </div>
@@ -202,7 +202,6 @@
         filtrarGrados();
     });
 </script>
-{% endblock %}
 
         <div style="background: #f0f7ff; border-left: 4px solid #0066CC; padding: 15px; border-radius: 4px; margin: 20px 0;">
             <strong> Nota:</strong> El apoderado es la persona responsable del alumno. El grado se asigna automáticamente según la sección seleccionada.

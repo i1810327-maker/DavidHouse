@@ -104,7 +104,7 @@ class Usuario(db.Model):
     correo = db.Column(db.String(120), unique=True, nullable=False)  # Correo único
     telefono_principal = db.Column(db.String(20))           # Teléfono principal
     telefono_secundario = db.Column(db.String(20))          # Teléfono secundario
-    clave = db.Column(db.String(255), nullable=False)       # Contraseña encriptada
+    clave = db.Column(db.String(255), nullable=False)       # Contraseña encriptada (bcrypt hash = 60 chars)
     rol = db.Column(db.Enum('directora', 'docente', 'alumno'), nullable=False)  # Rol en el sistema
     profesion = db.Column(db.String(100))                   # Profesión (solo docentes)
     tiene_especialidad = db.Column(db.Boolean, default=False)  # Si tiene especialidad
