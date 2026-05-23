@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Mi Asistencia{% endblock %}
+{% block content %}
+<div class="module-header"><h2><i class="fas fa-calendar-check"></i> Mi Asistencia</h2></div>
+<div class="card">
+    <form class="filter-form" method="GET">
+        <div class="filter-group"><label>Bimestre</label>
+            <select name="bimestre_id" onchange="this.form.submit()">
+                {% for b in bimestres %}
+                <option value="{{ b.id }}" {{ 'selected' if b.id == bimestre_id }}>{{ b.nombre }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </form>
+</div>
+<div class="card mt-1">
+    <table class="table">
+        <tr><th>Fecha</th><th>Curso</th><th>Estado</th><th>Justificación</th></tr>
+        {% for a in asistencias %}
+        <tr>
+            <td>{{ a.fecha }}</td><td>{{ a.curso.nombre }}</td>
+            <td><span class="badge badge-{{ 'success' if a.estado == 'presente' else 'warning' if a.estado == 'tarde' else 'danger' if a.estado == 'falta' else 'info' }}">{{ a.estado|title }}</span></td>
+            <td>
+                {% if a.estado == 'falta' and a.id not in justificadas %}
+                <form method="POST" action="{{ url_for('estudiante_asistencia') }}" style="display:inline">
+                    <input type="hidden" name="asistencia_id" value="{{ a.id }}">
+                    <input type="text" name="motivo" placeholder="Motivo" required size="20">
+                    <button class="btn btn-sm btn-primary"><i class="fas fa-paper-plane"></i> Justificar</button>
+                </form>
+                {% elif a.id in justificadas %}
+                <span class="badge badge-info">Justificado</span>
+                {% else %}-{% endif %}
+            </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="4" class="text-center">Sin registros</td></tr>
+        {% endfor %}
+    </table>
+</div>
+{% endblock %}

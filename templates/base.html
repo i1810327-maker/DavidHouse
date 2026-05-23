@@ -1,26 +1,12 @@
-<!DOCTYPE html>
-<!-- ========================================== -->
-<!-- PLANTILLA BASE - ESTRUCTURA COMÚN DEL SISTEMA -->
-<!-- ========================================== -->
-<!-- Esta es la plantilla principal que heredan todas las demás.
-     Contiene:
-     - Estructura HTML básica
-     - Barra de navegación (header) con usuario y logout
-     - Mensajes flash (alertas de éxito/error)
-     - Menú de navegación según el rol
-     - Bloques para contenido específico (title, content)
-     - Scripts comunes
--->
-
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}David House - Camino de Vida{% endblock %}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 <body>
-    <!-- HEADER: Barra superior con título y usuario -->
     <header>
         {% block header %}
         <div class="default-header-content">
@@ -28,8 +14,7 @@
                 <h1>David House - Camino de Vida</h1>
             </div>
             {% if session.get('usuario_id') %}
-            <div class="header-right">
-                <!-- Muestra el nombre y rol del usuario autenticado -->
+            <nav class="header-right" aria-label="Navegación principal">
                 <div class="user-info">
                     <div class="user-text">
                         <span class="user-name">{{ session.nombres }}</span>
@@ -37,34 +22,36 @@
                     </div>
                 </div>
                 <div class="header-actions">
-                    <a href="{{ url_for('perfil') }}" class="btn btn-perfil">
-                        <span class="icon"></span> Perfil
-                    </a>
-                    <a href="{{ url_for('logout') }}" class="btn btn-logout">
-                        <span class="icon"></span> Cerrar sesión
-                    </a>
+                    {% if session.rol == 'directora' %}
+                    <a href="{{ url_for('directora_dashboard') }}" class="btn btn-perfil" aria-label="Inicio"><i class="fas fa-home"></i> Inicio</a>
+                    {% elif session.rol == 'docente' %}
+                    <a href="{{ url_for('docente_dashboard') }}" class="btn btn-perfil" aria-label="Inicio"><i class="fas fa-home"></i> Inicio</a>
+                    {% elif session.rol == 'alumno' %}
+                    <a href="{{ url_for('estudiante_dashboard') }}" class="btn btn-perfil" aria-label="Inicio"><i class="fas fa-home"></i> Inicio</a>
+                    {% endif %}
+                    <a href="{{ url_for('perfil') }}" class="btn btn-perfil" aria-label="Perfil de usuario"><i class="fas fa-user"></i> Perfil</a>
+                    <a href="{{ url_for('logout') }}" class="btn btn-logout" aria-label="Cerrar sesión"><i class="fas fa-sign-out-alt"></i> Salir</a>
                 </div>
-            </div>
+            </nav>
             {% endif %}
         </div>
         {% endblock %}
     </header>
 
-    <!-- CONTENIDO PRINCIPAL -->
+    <main>
     <div class="container">
-        <!-- MENSAJES FLASH: Alertas de éxito/error -->
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
                     <div class="alert alert-{{ category }}">
-                        ✓ {{ message }}
+                        <i class="fas fa-check-circle"></i> {{ message }}
                     </div>
                 {% endfor %}
             {% endif %}
         {% endwith %}
-
         {% block content %}{% endblock %}
     </div>
+    </main>
 
 <script>
 function disableSubmitButton(form) {
@@ -80,6 +67,5 @@ function disableSubmitButton(form) {
     return true;
 }
 </script>
-
 </body>
 </html>

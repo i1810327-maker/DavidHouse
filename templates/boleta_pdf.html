@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="UTF-8"><title>Boleta de Notas</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', sans-serif; padding: 40px; max-width: 1100px; margin: auto; }
+    .header { text-align: center; margin-bottom: 30px; border-bottom: 3px solid #003D82; padding-bottom: 20px; }
+    .header h1 { color: #003D82; font-size: 24px; }
+    .header p { color: #666; }
+    .info { display: flex; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+    .info-item { background: #f5f7fa; padding: 8px 16px; border-radius: 8px; font-size: 14px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th { background: #003D82; color: white; padding: 10px 8px; text-align: left; font-size: 13px; }
+    td { padding: 8px; border-bottom: 1px solid #e0e0e0; font-size: 13px; }
+    tr:nth-child(even) { background: #f9f9f9; }
+    .letra { font-weight: bold; padding: 4px 10px; border-radius: 12px; font-size: 12px; }
+    .ad { background: #1565c0; color: white; }
+    .a { background: #28a745; color: white; }
+    .b { background: #ff9800; color: white; }
+    .c { background: #dc3545; color: white; }
+    .footer { margin-top: 30px; text-align: center; color: #999; font-size: 12px; border-top: 1px solid #eee; padding-top: 15px; }
+    @media print { body { padding: 20px; } .no-print { display: none; } }
+    .no-print { margin-bottom: 20px; }
+</style>
+</head>
+<body>
+<div class="no-print">
+    <button onclick="window.print()" class="btn btn-primary"><i class="fas fa-print"></i> Imprimir</button>
+    <button onclick="window.close()" class="btn btn-secondary">Cerrar</button>
+</div>
+
+<div class="header">
+    <h1>David House - Camino de Vida</h1>
+    <p>Boleta de Notas - {{ bimestre.nombre }} {{ bimestre.periodo_rel.nombre }}</p>
+</div>
+
+<div class="info">
+    <div class="info-item"><strong>Sección:</strong> {{ seccion.grado.nombre }} {{ seccion.nombre }}</div>
+    <div class="info-item"><strong>Nivel:</strong> {{ seccion.grado.nivel_rel.nombre if seccion.grado.nivel_rel else '-' }}</div>
+    <div class="info-item"><strong>Total Estudiantes:</strong> {{ estudiantes|length }}</div>
+</div>
+
+<table>
+    <tr>
+        <th>#</th>
+        <th>Apellidos y Nombres</th>
+        {% for c in cursos %}
+        <th>{{ c.nombre }}</th>
+        {% endfor %}
+        <th>Prom. General</th>
+    </tr>
+    {% for e in estudiantes %}
+    <tr>
+        <td>{{ loop.index }}</td>
+        <td>{{ e.apellido_paterno }} {{ e.apellido_materno }}, {{ e.nombres }}</td>
+        {% set ns = namespace(sum=0, count=0) %}
+        {% for c in cursos %}
+            {% set n = notas[e.id].get(c.id, {}) %}
+            <td>
+                {% if n %}
+                    {% set ns.sum = ns.sum + n.promedio %}
+                    {% set ns.count = ns.count + 1 %}
+                    <span class="letra {{ 'ad' if n.letra == 'AD' else 'a' if n.letra == 'A' else 'b' if n.letra == 'B' else 'c' }}">
+                        {{ n.letra }}
+                    </span>
+                    <small style="display:block;font-size:10px;color:#666;">{{ n.promedio }}</small>
+                {% else %}
+                    -
+                {% endif %}
+            </td>
+        {% endfor %}
+        <td>
+            {% if ns.count > 0 %}
+                {% set pg = ns.sum / ns.count %}
+                <span class="letra {{ 'ad' if pg >= 18 else 'a' if pg >= 16 else 'b' if pg >= 12 else 'c' }}">
+                    {{ nota_a_letra(pg) }}
+                </span>
+                <small style="display:block;font-size:10px;color:#666;">{{ '%.2f'|format(pg) }}</small>
+            {% else %}-{% endif %}
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+
+<div class="footer">
+    <p>David House - Camino de Vida | Generado el {{ ahora() }}</p>
+</div>
+</body>
+</html>

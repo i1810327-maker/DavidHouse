@@ -1,153 +1,124 @@
 {% extends "base.html" %}
-{% block title %}Mi Perfil - ColegioSys{% endblock %}
-
+{% block title %}Perfil{% endblock %}
 {% block content %}
 <div class="profile-wrapper">
     <div class="profile-header-card">
         <div class="profile-avatar">
             <span class="avatar-icon">
-                {% if usuario.rol == 'directora' %}👩‍💼
-                {% elif usuario.rol == 'docente' %}👩‍🏫
-                {% else %}👨‍🎓{% endif %}
+                {% if viewed_rol == 'directora' %}<i class="fas fa-user-tie"></i>
+                {% elif viewed_rol == 'docente' %}<i class="fas fa-chalkboard-teacher"></i>
+                {% elif viewed_rol == 'alumno' %}<i class="fas fa-user-graduate"></i>
+                {% else %}<i class="fas fa-users"></i>{% endif %}
             </span>
         </div>
         <h2>{{ usuario.nombre_completo }}</h2>
-        <span class="profile-role-badge">{{ usuario.rol|title }}</span>
-        <p class="profile-status">📍 {{ 'Activo' if usuario.activo else 'Inactivo' }} • Registrado {{ usuario.fecha_registro.strftime('%d/%m/%Y') }}</p>
+        <span class="profile-role-badge">{{ viewed_rol|title }}</span>
     </div>
-
     <div class="profile-grid">
         <div class="profile-card">
-            <div class="card-head">
-                <span class="card-head-icon">📋</span>
-                <h3>Datos personales</h3>
-            </div>
+            <div class="card-head"><h3><i class="fas fa-clipboard-list"></i> Datos personales</h3></div>
             <div class="profile-table">
-                <div class="profile-row"><span class="label">DNI</span><span class="value">{{ usuario.dni }}</span></div>
+                <div class="profile-row"><span class="label">DNI</span><span class="value">{{ usuario.dni if usuario.dni else '-' }}</span></div>
                 <div class="profile-row"><span class="label">Nombres</span><span class="value">{{ usuario.nombres }}</span></div>
-                <div class="profile-row"><span class="label">Apellido Paterno</span><span class="value">{{ usuario.apellido_paterno }}</span></div>
-                <div class="profile-row"><span class="label">Apellido Materno</span><span class="value">{{ usuario.apellido_materno }}</span></div>
+                <div class="profile-row"><span class="label">Apellidos</span><span class="value">{{ usuario.apellido_paterno }} {{ usuario.apellido_materno }}</span></div>
                 <div class="profile-row"><span class="label">Correo</span><span class="value">{{ usuario.correo }}</span></div>
-                <div class="profile-row"><span class="label">Rol</span><span class="value">{{ usuario.rol|title }}</span></div>
             </div>
         </div>
-
         <div class="profile-card">
-            <div class="card-head">
-                <span class="card-head-icon">📌</span>
-                <h3>Detalles adicionales</h3>
-            </div>
+            <div class="card-head"><h3><i class="fas fa-thumbtack"></i> Detalles</h3></div>
             <div class="profile-table">
-                {% if usuario.rol == 'alumno' %}
-                    <div class="profile-row"><span class="label">Grado</span><span class="value">{{ usuario.grado_rel.nombre if usuario.grado_rel else 'No asignado' }}</span></div>
-                    <div class="profile-row"><span class="label">Sección</span><span class="value">{{ usuario.seccion_rel.nombre if usuario.seccion_rel else 'No asignada' }}</span></div>
-                {% elif usuario.rol == 'docente' %}
-                    <div class="profile-row"><span class="label">Profesión</span><span class="value">{{ usuario.profesion or 'No especificada' }}</span></div>
-                    <div class="profile-row"><span class="label">Especialidad</span><span class="value">{{ usuario.descripcion_especialidad if usuario.tiene_especialidad else 'No tiene' }}</span></div>
-                    <div class="profile-row"><span class="label">Sección</span><span class="value">{{ usuario.seccion_rel.nombre if usuario.seccion_rel else 'No asignada' }}</span></div>
-                {% else %}
-                    <div class="profile-row"><span class="label">Tipo de acceso</span><span class="value">Administración</span></div>
+                {% if viewed_rol == 'alumno' %}
+                    <div class="profile-row"><span class="label">Grado</span><span class="value">{{ usuario.grado_rel.nombre if usuario.grado_rel else '-' }}</span></div>
+                    <div class="profile-row"><span class="label">Sección</span><span class="value">{{ usuario.seccion_rel.nombre if usuario.seccion_rel else '-' }}</span></div>
+                {% elif viewed_rol == 'docente' %}
+                    <div class="profile-row"><span class="label">Profesión</span><span class="value">{{ usuario.profesion or '-' }}</span></div>
+                    <div class="profile-row"><span class="label">Especialidad</span><span class="value">{{ usuario.descripcion_especialidad if usuario.tiene_especialidad else '-' }}</span></div>
                 {% endif %}
+                <div class="profile-row"><span class="label">Rol</span><span class="value">{{ viewed_rol|title }}</span></div>
             </div>
         </div>
     </div>
-
     <div class="profile-actions">
-        {% if usuario.rol == 'directora' %}
-            <a href="{{ url_for('directora_cambiar_clave') }}" class="btn-profile">🔑 Cambiar contraseña</a>
-        {% elif usuario.rol == 'docente' %}
-            <a href="{{ url_for('docente_cambiar_clave') }}" class="btn-profile">🔑 Cambiar contraseña</a>
-        {% elif usuario.rol == 'alumno' %}
-            <a href="{{ url_for('alumno_cambiar_clave') }}" class="btn-profile">🔑 Cambiar contraseña</a>
+        {% if session.rol == 'directora' %}
+            <a href="{{ url_for('directora_dashboard') }}" class="btn btn-primary"><i class="fas fa-home"></i> Volver al inicio</a>
+        {% elif session.rol == 'docente' %}
+            <a href="{{ url_for('docente_dashboard') }}" class="btn btn-primary"><i class="fas fa-home"></i> Volver al inicio</a>
+        {% elif session.rol == 'alumno' %}
+            <a href="{{ url_for('estudiante_dashboard') }}" class="btn btn-primary"><i class="fas fa-home"></i> Volver al inicio</a>
         {% endif %}
+        <button class="btn btn-secondary" onclick="document.getElementById('form-cambiar-clave').style.display='block'"><i class="fas fa-key"></i> Cambiar Contraseña</button>
+    </div>
+    <div id="form-cambiar-clave" class="card mt-1" style="display:none">
+        <div class="card-head"><h3>Cambiar Contraseña</h3></div>
+        <form method="POST" action="{{ url_for('cambiar_clave') }}" onsubmit="return validarCambioClave()">
+            <div class="filter-form">
+                <div class="filter-group"><label>Contraseña actual</label><input type="password" id="clave_actual" name="clave_actual" required class="form-input"></div>
+            </div>
+            <div class="filter-form">
+                <div class="filter-group"><label>Nueva contraseña</label><input type="password" id="clave_nueva" name="clave_nueva" required class="form-input" minlength="8" onkeyup="medirSeguridad()"></div>
+                <div class="filter-group"><label>Confirmar nueva</label><input type="password" id="clave_confirmar" name="clave_confirmar" required class="form-input" minlength="8" onkeyup="medirSeguridad()"></div>
+            </div>
+            <div id="password-strength" class="mt-1" style="display:none">
+                <div class="strength-bar" id="strength-bar" style="height:6px;border-radius:4px;transition:all 0.3s"></div>
+                <div id="strength-text" style="font-size:12px;margin-top:4px"></div>
+            </div>
+            <div id="password-reqs" class="mt-1" style="font-size:12px;color:#666">
+                <div id="req-len">✗ Mínimo 8 caracteres</div>
+                <div id="req-may">✗ Al menos 1 mayúscula</div>
+                <div id="req-min">✗ Al menos 1 minúscula</div>
+                <div id="req-num">✗ Al menos 1 número</div>
+                <div id="req-sym">✗ Al menos 1 símbolo (!@#$%^&amp;*(),.?":{}|&lt;&gt;</div>
+                <div id="req-match">✗ Contraseñas coinciden</div>
+            </div>
+            <div id="password-match" class="mt-1" style="font-size:12px;color:#666"></div>
+            <button class="btn btn-primary btn-sm mt-1"><i class="fas fa-save"></i> Guardar</button>
+        </form>
     </div>
 </div>
-
-<style>
-.profile-wrapper { max-width: 800px; margin: 0 auto; }
-
-.profile-header-card {
-    background: linear-gradient(135deg, #003D82 0%, #0066CC 100%);
-    border-radius: 20px;
-    padding: 40px 30px;
-    text-align: center;
-    color: white;
-    margin-bottom: 30px;
-    box-shadow: 0 15px 40px rgba(0,61,130,0.2);
+<script>
+function medirSeguridad() {
+    var pwd = document.getElementById('clave_nueva').value;
+    var conf = document.getElementById('clave_confirmar').value;
+    var bar = document.getElementById('strength-bar');
+    var txt = document.getElementById('strength-text');
+    var div = document.getElementById('password-strength');
+    if (!pwd) { div.style.display = 'none'; return; }
+    div.style.display = 'block';
+    var score = 0;
+    if (pwd.length >= 8) score += 20;
+    if (/[A-Z]/.test(pwd)) score += 20;
+    if (/[a-z]/.test(pwd)) score += 20;
+    if (/\d/.test(pwd)) score += 20;
+    if (/[!@#$%^&*(),.?":{}|<>_\-+=]/.test(pwd)) score += 20;
+    var col = score <= 40 ? '#dc3545' : score <= 60 ? '#ff9800' : score <= 80 ? '#28a745' : '#1565c0';
+    var label = score <= 40 ? 'Débil' : score <= 60 ? 'Regular' : score <= 80 ? 'Buena' : 'Muy segura';
+    bar.style.width = score + '%';
+    bar.style.background = col;
+    txt.innerHTML = '<strong style="color:'+col+'">' + label + '</strong> (' + score + '/100)';
+    // Requisitos
+    document.getElementById('req-len').innerHTML = (pwd.length >= 8 ? '✓' : '✗') + ' Mínimo 8 caracteres';
+    document.getElementById('req-may').innerHTML = (/[A-Z]/.test(pwd) ? '✓' : '✗') + ' Al menos 1 mayúscula';
+    document.getElementById('req-min').innerHTML = (/[a-z]/.test(pwd) ? '✓' : '✗') + ' Al menos 1 minúscula';
+    document.getElementById('req-num').innerHTML = (/\d/.test(pwd) ? '✓' : '✗') + ' Al menos 1 número';
+    document.getElementById('req-sym').innerHTML = (/[!@#$%^&*(),.?":{}|<>_\-+=]/.test(pwd) ? '✓' : '✗') + ' Al menos 1 símbolo';
+    document.getElementById('req-match').innerHTML = (pwd && pwd === conf ? '✓' : '✗') + ' Contraseñas coinciden';
+    document.getElementById('req-len').style.color = pwd.length >= 8 ? '#28a745' : '#dc3545';
+    document.getElementById('req-may').style.color = /[A-Z]/.test(pwd) ? '#28a745' : '#dc3545';
+    document.getElementById('req-min').style.color = /[a-z]/.test(pwd) ? '#28a745' : '#dc3545';
+    document.getElementById('req-num').style.color = /\d/.test(pwd) ? '#28a745' : '#dc3545';
+    document.getElementById('req-sym').style.color = /[!@#$%^&*(),.?":{}|<>_\-+=]/.test(pwd) ? '#28a745' : '#dc3545';
+    document.getElementById('req-match').style.color = (pwd && pwd === conf) ? '#28a745' : '#dc3545';
 }
-
-.profile-avatar {
-    width: 100px; height: 100px;
-    background: rgba(255,255,255,0.2);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 20px;
-    font-size: 48px;
-    backdrop-filter: blur(10px);
-    border: 3px solid rgba(255,255,255,0.3);
+function validarCambioClave() {
+    var pwd = document.getElementById('clave_nueva').value;
+    var conf = document.getElementById('clave_confirmar').value;
+    if (pwd !== conf) { alert('Las contraseñas nuevas no coinciden'); return false; }
+    if (pwd.length < 8) { alert('La contraseña debe tener al menos 8 caracteres'); return false; }
+    if (!/[A-Z]/.test(pwd)) { alert('Debe incluir al menos una mayúscula'); return false; }
+    if (!/[a-z]/.test(pwd)) { alert('Debe incluir al menos una minúscula'); return false; }
+    if (!/\d/.test(pwd)) { alert('Debe incluir al menos un número'); return false; }
+    if (!/[!@#$%^&*(),.?":{}|<>_\-+=]/.test(pwd)) { alert('Debe incluir al menos un símbolo'); return false; }
+    return true;
 }
-
-.profile-header-card h2 { font-size: 28px; margin-bottom: 8px; }
-
-.profile-role-badge {
-    display: inline-block;
-    padding: 6px 20px;
-    background: rgba(255,152,0,0.3);
-    border-radius: 20px;
-    font-size: 13px;
-    font-weight: 600;
-    margin-bottom: 8px;
-}
-
-.profile-status { font-size: 13px; opacity: 0.7; }
-
-.profile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; }
-
-.profile-card {
-    background: white;
-    border-radius: 16px;
-    padding: 25px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-}
-
-.card-head { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
-.card-head-icon { font-size: 24px; }
-.card-head h3 { font-size: 18px; color: #003D82; }
-
-.profile-table { display: flex; flex-direction: column; gap: 0; }
-
-.profile-row {
-    display: flex;
-    justify-content: space-between;
-    padding: 12px 0;
-    border-bottom: 1px solid #f0f1f2;
-}
-.profile-row:last-child { border-bottom: none; }
-
-.profile-row .label { color: #666; font-size: 14px; font-weight: 500; }
-.profile-row .value { color: #333; font-size: 14px; font-weight: 600; text-align: right; }
-
-.profile-actions { text-align: center; }
-
-.btn-profile {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    padding: 16px 32px;
-    background: linear-gradient(135deg, #ff9800 0%, #ff7700 100%);
-    color: white;
-    text-decoration: none;
-    border-radius: 12px;
-    font-weight: 600;
-    transition: 0.3s;
-    box-shadow: 0 4px 15px rgba(255,152,0,0.3);
-}
-.btn-profile:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(255,152,0,0.4); }
-
-@media (max-width: 600px) {
-    .profile-grid { grid-template-columns: 1fr; }
-}
-</style>
+</script>
 {% endblock %}

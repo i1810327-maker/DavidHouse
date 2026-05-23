@@ -1,1032 +1,1550 @@
-# ==========================================
-# APLICACIÓN PRINCIPAL - SISTEMA DE GESTIÓN ESCOLAR
-# ==========================================
-# Este archivo contiene todas las rutas, configuración y lógica del servidor Flask
-
-# --- IMPORTACIONES ---
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
-from flask_bcrypt import Bcrypt  # Para encriptar contraseñas
-from functools import wraps       # Para crear decoradores
-from datetime import datetime, timezone, timedelta
-from sqlalchemy.exc import SQLAlchemyError
-import logging
+from flask_bcrypt import Bcrypt
+from functools import wraps
+from datetime import datetime, timedelta
+from sqlalchemy import or_
+from sqlalchemy.orm import joinedload
+import os
 import re
+from db import db, init_db
+from models import (
+    Nivel, PeriodoAcademico, Bimestre, Grado, Seccion,
+    Colaborador, Estudiante, Apoderado,
+    Curso, Inscripcion, Horario, Evaluacion, Asistencia,
+    Justificacion, Comentario, PagoPlan, PagoRealizado,
+    CarpetaDocente, DocumentoDocente, LogAcceso, IntentoLogin, Baneo
+)
 
-from db import db, init_db        # Configuración de base de datos
-from models import Usuario, Grado, Seccion, Curso, LogAcceso, Apoderado, IntentoLogin, Baneo  # Modelos ORM
+import logging
+try:
+    import openpyxl
+    HAS_OPENPYXL = True
+except ImportError:
+    HAS_OPENPYXL = False
 
-# Configurar logging
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
-# ====================== CONFIGURACIÓN ======================
+# ====================== CONFIG ======================
 app = Flask(__name__)
-app.secret_key = "clave_super_segura_2026_ColegioSys"  # Clave para sesiones Flask
+app.secret_key = "clave_super_segura_2026_ColegioSys"
 
-# Configuración de baneo
-MAX_INTENTOS_USUARIO = 3  # Intentos fallidos antes de banear usuario
-TIEMPO_BANEO_MINUTOS = 5  # Tiempo de baneo en minutos
-VENTANA_TIEMPO_MINUTOS = 5  # Ventana de tiempo para contar intentos
+MAX_INTENTOS_USUARIO = 3
+TIEMPO_BANEO_MINUTOS = 5
+VENTANA_TIEMPO_MINUTOS = 5
+FECHA_PERMANENTE = datetime(2100, 1, 1)
+PESOS_EVALUACION = {'cuaderno': 0.10, 'libro': 0.10, 'practicas': 0.20, 'exposiciones': 0.10, 'examen': 0.50}
 
-FECHA_PERMANENTE = datetime(2100, 1, 1)  # Fecha lejana para baneos permanentes
+def sincronizar_estado_pagos(estudiante_id=None):
+    query = PagoRealizado.query.options(joinedload(PagoRealizado.plan))
+    if estudiante_id:
+        query = query.filter_by(estudiante_id=estudiante_id)
+    pagos = query.filter(PagoRealizado.estado != 'pagado').all()
+    ahora = datetime.utcnow().date()
+    for p in pagos:
+        if p.plan and p.plan.fecha_vencimiento < ahora:
+            p.estado = 'atrasado'
+    db.session.commit()
 
+init_db(app)
+bcrypt = Bcrypt(app)
+UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'static', 'uploads')
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+ALLOWED_EXTENSIONS = {'pdf', 'doc', 'docx', 'xls', 'xlsx', 'jpg', 'jpeg', 'png', 'gif', 'txt'}
+MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
+app.config['MAX_CONTENT_LENGTH'] = MAX_FILE_SIZE
+
+def extension_permitida(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def validar_archivo(archivo):
+    if not archivo or not archivo.filename:
+        return False, 'No se seleccionó ningún archivo'
+    if not extension_permitida(archivo.filename):
+        return False, 'Tipo de archivo no permitido. Extensiones: pdf, doc, docx, xls, xlsx, jpg, png, gif, txt'
+    archivo.seek(0, os.SEEK_END)
+    size = archivo.tell()
+    archivo.seek(0)
+    if size > MAX_FILE_SIZE:
+        return False, 'El archivo excede el tamaño máximo de 10MB'
+    return True, None
+
+# ====================== VALIDACIONES ======================
 def validar_clave(clave, usuario=None):
-    """Valida que la contraseña cumpla con los requisitos de seguridad"""
     errores = []
-    if len(clave) < 8:
-        errores.append('Mínimo 8 caracteres')
-    if len(clave) > 50:
-        errores.append('Máximo 50 caracteres')
-    if not re.search(r'[A-Z]', clave):
-        errores.append('Debe incluir mayúsculas')
-    if not re.search(r'[a-z]', clave):
-        errores.append('Debe incluir minúsculas')
-    if not re.search(r'\d', clave):
-        errores.append('Debe incluir números')
-    if not re.search(r'[!@#$%^&*(),.?":{}|<>_\-+=]', clave):
-        errores.append('Debe incluir símbolos especiales')
+    if len(clave) < 8: errores.append('Mínimo 8 caracteres')
+    if len(clave) > 50: errores.append('Máximo 50 caracteres')
+    if not re.search(r'[A-Z]', clave): errores.append('Debe incluir mayúsculas')
+    if not re.search(r'[a-z]', clave): errores.append('Debe incluir minúsculas')
+    if not re.search(r'\d', clave): errores.append('Debe incluir números')
+    if not re.search(r'[!@#$%^&*(),.?":{}|<>_\-+=]', clave): errores.append('Debe incluir símbolos')
     if usuario:
-        if usuario.dni and usuario.dni in clave:
-            errores.append('No debe contener el DNI')
-        if usuario.nombres and usuario.nombres.lower() in clave.lower():
-            errores.append('No debe contener nombres personales')
-        if usuario.apellido_paterno and usuario.apellido_paterno.lower() in clave.lower():
-            errores.append('No debe contener apellidos personales')
-        if usuario.apellido_materno and usuario.apellido_materno.lower() in clave.lower():
-            errores.append('No debe contener apellidos personales')
-    return errores
-
-
-def validar_dni(dni):
-    """Valida que el DNI solo contenga números y tenga máximo 9 caracteres"""
-    errores = []
-    if not dni:
-        errores.append('DNI es requerido')
-        return errores
-    if not dni.isdigit():
-        errores.append('DNI debe contener solo números')
-    if len(dni) > 9:
-        errores.append('DNI debe tener máximo 9 caracteres')
-    return errores
-
-
-def validar_nombre(nombre, campo='Nombre'):
-    """Valida que el nombre solo contenga letras y espacios"""
-    errores = []
-    if not nombre:
-        errores.append(f'{campo} es requerido')
-        return errores
-    # Permite letras, espacios, guiones y apostrofes (para nombres como María-José, O'Connor)
-    if not re.match(r'^[A-Za-zÁÉÍÓÚáéíóúÑñ\s\-\']+$', nombre.strip()):
-        errores.append(f'{campo} debe contener solo letras y espacios')
-    return errores
-
-
-def validar_correo(correo):
-    """Valida formato básico de correo electrónico"""
-    errores = []
-    if not correo:
-        errores.append('Correo es requerido')
-        return errores
-    if len(correo) > 100:
-        errores.append('Correo debe tener máximo 100 caracteres')
-    # Expresión regular básica para validar formato de correo
-    patron = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
-    if not re.match(patron, correo):
-        errores.append('Correo electrónico no válido')
-    return errores
-
-
-def validar_telefono(telefono, campo='Teléfono'):
-    """Valida que el teléfono solo contenga números y tenga máximo 12 caracteres"""
-    errores = []
-    # Teléfono es opcional, pero si se proporciona debe ser válido
-    if telefono and telefono.strip():
-        if not telefono.isdigit():
-            errores.append(f'{campo} debe contener solo números')
-        if len(telefono) > 12:
-            errores.append(f'{campo} debe tener máximo 12 caracteres')
-    return errores
-
-
-def validar_profesion(profesion):
-    """Valida que la profesión solo contenga letras y espacios"""
-    errores = []
-    if not profesion:
-        errores.append('Profesión es requerida')
-        return errores
-    # Permite letras, espacios, guiones y apostrofes
-    if not re.match(r'^[A-Za-zÁÉÍÓÚáéíóúÑñ\s\-\']+$', profesion.strip()):
-        errores.append('Profesión debe contener solo letras y espacios')
-    if len(profesion) > 100:
-        errores.append('Profesión debe tener máximo 100 caracteres')
+        for campo in ['dni', 'nombres', 'apellido_paterno', 'apellido_materno']:
+            val = getattr(usuario, campo, '')
+            if val and val.lower() in clave.lower():
+                errores.append(f'No debe contener {campo.replace("_", " ")}')
     return errores
 
 def obtener_ip():
-    """Obtiene la IP del cliente, considerando proxies"""
     if request.headers.get('X-Forwarded-For'):
         return request.headers.get('X-Forwarded-For').split(',')[0].strip()
     return request.remote_addr
 
-def obtener_tiempo_actual():
-    """Obtiene el tiempo actual en UTC para compatibilidad con los campos de la BD"""
+def tiempo_actual():
     return datetime.utcnow()
 
-def limpiar_intentos_vencidos():
-    """Limpia intentos y baneos vencidos para permitir nuevos intentos"""
-    try:
-        tiempo_limite = obtener_tiempo_actual() - timedelta(minutes=VENTANA_TIEMPO_MINUTOS + 5)
-        IntentoLogin.query.filter(IntentoLogin.fecha_intento < tiempo_limite).delete()
-        db.session.commit()
-    except Exception as e:
-        logger.error(f"Error al limpiar intentos vencidos: {e}")
-        db.session.rollback()
-
-# Inicializar conexión a base de datos (Alwaysdata o local)
-init_db(app)
-
-bcrypt = Bcrypt(app)  # Inicializar encriptador de contraseñas
-
-# ====================== DECORADORES (CONTROL DE ACCESO) ======================
-
-# --- login_required ---
-# Función: Obliga a iniciar sesión para acceder a una ruta protegida
-# Uso: @login_required antes de una función de ruta
+# ====================== DECORADORES ======================
 def login_required(f):
     @wraps(f)
-    def decorated_function(*args, **kwargs):
+    def decorated(*args, **kwargs):
         if 'usuario_id' not in session:
             flash('Debes iniciar sesión primero', 'danger')
             return redirect(url_for('login'))
         return f(*args, **kwargs)
-    return decorated_function
+    return decorated
 
-# --- usuario_activo ---
-# Función: Verifica que el usuario no esté desactivado
-# Uso: @usuario_activo antes de una función de ruta
-def usuario_activo(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        usuario = Usuario.query.get(session.get('usuario_id'))
-        if not usuario or not usuario.activo:
-            session.clear()
-            flash('El usuario ha sido desactivado', 'danger')
-            return redirect(url_for('login'))
-        return f(*args, **kwargs)
-    return decorated_function
-
-# --- role_required ---
-# Función: Limita el acceso según el rol del usuario (directora, docente, alumno)
-# Uso: @role_required('directora', 'docente')
 def role_required(*roles):
     def decorator(f):
         @wraps(f)
-        def decorated_function(*args, **kwargs):
+        def decorated(*args, **kwargs):
             if session.get('rol') not in roles:
                 flash('No tienes permisos para acceder aquí', 'danger')
                 return redirect(url_for('login'))
             return f(*args, **kwargs)
-        return decorated_function
+        return decorated
     return decorator
 
-# --- log_accion ---
-# Función: Registra cada acción del usuario en la tabla LogAcceso (auditoría)
-# Uso: @log_accion('Crear usuario')
 def log_accion(accion):
     def decorator(f):
         @wraps(f)
-        def decorated_function(*args, **kwargs):
+        def decorated(*args, **kwargs):
             resultado = f(*args, **kwargs)
-            usuario_id = session.get('usuario_id')
-            if usuario_id:
-                log = LogAcceso(usuario_id=usuario_id, accion=accion)
+            try:
+                log = LogAcceso(
+                    colaborador_id=session.get('usuario_id') if session.get('tipo') == 'colaborador' else None,
+                    estudiante_id=session.get('usuario_id') if session.get('tipo') == 'estudiante' else None,
+                    accion=accion
+                )
                 db.session.add(log)
                 db.session.commit()
+            except:
+                db.session.rollback()
             return resultado
-        return decorated_function
+        return decorated
     return decorator
 
-# --- verificar_permisos ---
-# Función: Decorador que combina login_required + usuario_activo
-# Uso: @verificar_permisos antes de una función de ruta
-def verificar_permisos(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if 'usuario_id' not in session:
-            flash('Debes iniciar sesión', 'danger')
-            return redirect(url_for('login'))
-        
-        usuario = Usuario.query.get(session.get('usuario_id'))
-        if not usuario or not usuario.activo:
-            session.clear()
-            flash('Usuario no válido', 'danger')
-            return redirect(url_for('login'))
-        
-        return f(*args, **kwargs)
-    return decorated_function
-
-# ====================== FUNCIONES AUXILIARES ======================
-
-# --- crear_usuario_desde_form ---
-# Función: Crea un objeto Usuario desde datos de formulario
-# Parámetros: form_data (datos del formulario), rol (directora, docente, alumno)
-def crear_usuario_desde_form(form_data, rol):
-    """Crea un objeto Usuario desde datos de formulario"""
-    telefono_principal = form_data.get('telefono_principal') if rol == 'docente' else None
-    telefono_secundario = form_data.get('telefono_secundario') if rol == 'docente' else None
-    
-    # Validar que teléfonos no contengan correos electrónicos
-    if telefono_principal and '@' in telefono_principal:
-        telefono_principal = None
-    if telefono_secundario and '@' in telefono_secundario:
-        telefono_secundario = None
-        
-    return Usuario(
-        dni=form_data.get('dni'),
-        nombres=form_data.get('nombres'),
-        apellido_paterno=form_data.get('apellido_paterno'),
-        apellido_materno=form_data.get('apellido_materno'),
-        correo=form_data.get('correo'),
-        telefono_principal=telefono_principal,
-        telefono_secundario=telefono_secundario,
-        clave=bcrypt.generate_password_hash(form_data.get('clave')).decode('utf-8'),
-        rol=rol,
-        grado_id=form_data.get('grado_id') if rol == 'alumno' else None,
-        seccion_id=form_data.get('seccion_id') if rol == 'alumno' else None,
-        profesion=form_data.get('profesion') if rol == 'docente' else None,
-        tiene_especialidad=bool(form_data.get('tiene_especialidad')) if rol == 'docente' else False,
-        descripcion_especialidad=form_data.get('descripcion_especialidad') if rol == 'docente' and form_data.get('tiene_especialidad') else None
-    )
-
-# ====================== RUTAS PÚBLICAS ======================
-# Rutas accesibles sin autenticación
-
-# --- / (raíz) ---
-# Redirige al dashboard según el rol del usuario o muestra la página principal pública
+# ====================== AUTH ======================
 @app.route('/')
 def index():
     if 'usuario_id' in session:
-        rol = session.get('rol')
-        if rol == 'directora':
-            return redirect(url_for('directora_dashboard'))
-        elif rol == 'docente':
-            return redirect(url_for('docente_dashboard'))
-        elif rol == 'alumno':
-            return redirect(url_for('alumno_dashboard'))
+        r = session.get('rol')
+        if r == 'directora': return redirect(url_for('directora_dashboard'))
+        if r == 'docente': return redirect(url_for('docente_dashboard'))
+        if r == 'alumno': return redirect(url_for('estudiante_dashboard'))
     return render_template('home.html')
 
-# --- /login ---
-# Formulario de inicio de sesión. Verifica credenciales y crea sesión.
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
         correo = request.form.get('correo', '').strip()
         clave = request.form.get('clave', '')
-        ip_address = obtener_ip()
-        
-        # Limpiar intentos y baneos vencidos
-        limpiar_intentos_vencidos()
-        
-        # Verificar baneo de IP
-        baneo_ip = db.session.query(Baneo).filter(
-            Baneo.tipo_baneo == 'ip',
-            Baneo.identificador == ip_address,
-            Baneo.activo == True,
-            Baneo.fecha_fin > obtener_tiempo_actual()
+        ip = obtener_ip()
+        ahora = datetime.utcnow()
+
+        # Verificar baneos
+        baneo = Baneo.query.filter(
+            db.or_(
+                db.and_(Baneo.tipo_baneo == 'usuario', Baneo.identificador == correo),
+                db.and_(Baneo.tipo_baneo == 'ip', Baneo.ip_address == ip)
+            ),
+            Baneo.activo == True, Baneo.fecha_fin > ahora
         ).first()
-        
-        if baneo_ip:
-            flash('⚠️ Tu IP está bloqueada permanentemente.', 'danger')
-            return render_template('login.html')
-        
-        # Consultar usuario
-        try:
-            usuario = db.session.query(Usuario).filter(Usuario.correo == correo).first()
-        except Exception as e:
-            logger.error(f"Error en login: {str(e)}")
-            flash('Error interno. Intenta nuevamente.', 'danger')
+        if baneo:
+            flash('Cuenta temporalmente bloqueada. Intente más tarde.', 'danger')
             return render_template('login.html')
 
-        # Verificar baneo de usuario
-        if usuario:
-            baneo_usuario = db.session.query(Baneo).filter(
-                Baneo.tipo_baneo == 'usuario',
-                Baneo.identificador == correo,
-                Baneo.activo == True,
-                Baneo.fecha_fin > obtener_tiempo_actual()
-            ).first()
-            
-            if baneo_usuario:
-                tiempo_restante = int((baneo_usuario.fecha_fin - obtener_tiempo_actual()).total_seconds() / 60)
-                flash(f'Usuario bloqueado temporalmente. Intenta en {max(1, tiempo_restante)} minutos.', 'danger')
-                return render_template('login.html')
+        usuario = Colaborador.query.filter_by(correo=correo).first()
+        tipo = 'colaborador'
+        if not usuario:
+            usuario = Estudiante.query.filter_by(correo=correo).first()
+            tipo = 'estudiante'
 
-        # Verificar credenciales
         if usuario and bcrypt.check_password_hash(usuario.clave, clave):
             if not usuario.activo:
                 flash('Usuario inactivo', 'danger')
-                return redirect(url_for('login'))
-            
+                return render_template('login.html')
+            # Limpiar intentos previos
+            IntentoLogin.query.filter_by(correo=correo).delete()
+            session.clear()
             session['usuario_id'] = usuario.id
-            session['rol'] = usuario.rol
+            session['tipo'] = tipo
             session['nombres'] = usuario.nombres
-            
-            # Registrar acceso
-            log = LogAcceso(usuario_id=usuario.id, accion='Inicio de sesión')
-            db.session.add(log)
-            db.session.commit()
-
-            # Redirigir según rol
-            if usuario.rol == 'directora':
-                return redirect(url_for('directora_dashboard'))
-            elif usuario.rol == 'docente':
+            if tipo == 'colaborador':
+                session['rol'] = usuario.rol
+                if usuario.rol == 'directora': return redirect(url_for('directora_dashboard'))
                 return redirect(url_for('docente_dashboard'))
-            elif usuario.rol == 'alumno':
-                return redirect(url_for('alumno_dashboard'))
-        else:
-            # Login fallido - registrar intento
-            try:
-                intento = IntentoLogin(correo=correo, ip_address=ip_address)
-                db.session.add(intento)
-                db.session.commit()
-                logger.info(f"Intento guardado: correo={correo}, ip={ip_address}")
-            except Exception as e:
-                logger.error(f"Error al guardar intento: {e}")
-                db.session.rollback()
-            
-            # Calcular ventana de tiempo
-            tiempo_inicio = obtener_tiempo_actual() - timedelta(minutes=VENTANA_TIEMPO_MINUTOS)
-            
-            # Contar usuarios baneados desde esta IP usando el campo ip_address
-            usuarios_baneados_ip = db.session.query(db.func.count(Baneo.id)).filter(
-                Baneo.tipo_baneo == 'usuario',
-                Baneo.ip_address == ip_address,
-                Baneo.activo == True,
-                Baneo.fecha_fin > obtener_tiempo_actual()
-            ).scalar() or 0
-            
-            # Si ya hay 2+ usuarios baneados de esta IP, el nuevo usuario NO puede intentar → banear IP
-            if usuarios_baneados_ip >= 2:
-                # Verificar si la IP ya está baneada para no duplicar
-                ip_ya_baneada = db.session.query(Baneo).filter(
-                    Baneo.tipo_baneo == 'ip',
-                    Baneo.identificador == ip_address,
-                    Baneo.activo == True,
-                    Baneo.fecha_fin > obtener_tiempo_actual()
-                ).first()
-                
-                if not ip_ya_baneada:
-                    baneo = Baneo(
-                        tipo_baneo='ip',
-                        identificador=ip_address,
-                        motivo=f'{usuarios_baneados_ip} usuarios baneados desde esta IP — baneo permanente',
-                        fecha_fin=FECHA_PERMANENTE
-                    )
-                    db.session.add(baneo)
-                    db.session.commit()
-                    flash(f'⚠️ Tu IP ha sido bloqueada permanentemente. 2 usuarios fueron bloqueados desde esta dirección.', 'danger')
-                    return render_template('login.html')
-                else:
-                    flash(f'⚠️ Tu IP está bloqueada permanentemente.', 'danger')
-                    return render_template('login.html')
-            
-            # Si el usuario existe, contar sus intentos
-            if usuario:
-                intentos_usuario = db.session.query(db.func.count(IntentoLogin.id)).filter(
-                    IntentoLogin.correo == correo,
-                    IntentoLogin.fecha_intento >= tiempo_inicio
-                ).scalar() or 0
-                
-                # Si el usuario falla 3+ veces → baneo ese usuario (guardando su IP)
-                if intentos_usuario >= MAX_INTENTOS_USUARIO:
-                    fecha_fin = obtener_tiempo_actual() + timedelta(minutes=TIEMPO_BANEO_MINUTOS)
-                    baneo = Baneo(
-                        tipo_baneo='usuario',
-                        identificador=correo,
-                        ip_address=ip_address,  # Guardar la IP del usuario baneado
-                        motivo=f'Demasiados intentos fallidos ({intentos_usuario})',
-                        fecha_fin=fecha_fin
-                    )
-                    db.session.add(baneo)
-                    db.session.commit()
-                    logger.info(f"Usuario baneado: {correo}, IP: {ip_address}")
-                    flash(f'🔒 Tu usuario ha sido bloqueado por {TIEMPO_BANEO_MINUTOS} minutos. Demasiados intentos fallidos. Intenta más tarde.', 'danger')
-                    return render_template('login.html')
-            
-            flash('Usuario o Contraseña incorrecta', 'danger')
-    
+            else:
+                session['rol'] = 'alumno'
+                return redirect(url_for('estudiante_dashboard'))
+
+        # Registrar intento fallido
+        intento = IntentoLogin(correo=correo, ip_address=ip, tipo_usuario=tipo if usuario else 'colaborador')
+        db.session.add(intento)
+        db.session.commit()
+
+        # Verificar si excede el límite
+        desde = ahora - timedelta(minutes=VENTANA_TIEMPO_MINUTOS)
+        intentos_recientes = IntentoLogin.query.filter(
+            IntentoLogin.correo == correo,
+            IntentoLogin.fecha_intento > desde
+        ).count()
+        if intentos_recientes >= MAX_INTENTOS_USUARIO:
+            ban = Baneo(
+                tipo_baneo='usuario', identificador=correo, ip_address=ip,
+                fecha_fin=ahora + timedelta(minutes=TIEMPO_BANEO_MINUTOS)
+            )
+            db.session.add(ban)
+            db.session.commit()
+            flash('Demasiados intentos. Cuenta bloqueada por 5 minutos.', 'danger')
+            return render_template('login.html')
+
+        flash('Correo o Contraseña incorrecta', 'danger')
+        return render_template('login.html')
     return render_template('login.html')
 
-# --- /logout ---
-# Cierra la sesión del usuario y registra el cierre en logs
 @app.route('/logout')
-@login_required
 def logout():
-    usuario_id = session.get('usuario_id')
-    if usuario_id:
-        log = LogAcceso(usuario_id=usuario_id, accion='Cierre de sesión')
-        db.session.add(log)
-        db.session.commit()
-    
     session.clear()
-    flash('Sesión cerrada correctamente', 'success')
+    flash('Sesión cerrada', 'success')
     return redirect(url_for('login'))
 
-# --- /api/consultar-dni ---
-# API para consultar datos de una persona por su DNI (RENIEC)
-@app.route('/api/consultar-dni/<dni>', methods=['GET'])
-def api_consultar_dni(dni):
-    """
-    Endpoint JSON que consulta datos por DNI usando la API de RENIEC
-    
-    Parámetro: dni (8 dígitos)
-    Retorna: JSON con nombres, apellido_paterno, apellido_materno o error
-    """
-    """
-    try:
-        # Consultar datos mediante el módulo ConsultaAPI
-        resultado = ConsultaAPI.consultar_dni(dni)
-        return jsonify(resultado)
-    
-    except Exception as e:
-        return jsonify({
-            'error': f'Error al procesar la solicitud: {str(e)}',
-            'nombres': '',
-            'apellido_paterno': '',
-            'apellido_materno': ''
-        }), 500
-"""
-# --- /perfil ---
-# Muestra el perfil del usuario autenticado
+@app.route('/recuperar_contrasena')
+def recuperar_contrasena():
+    return render_template('recuperar_contrasena.html')
+
+# ====================== PERFIL ======================
 @app.route('/perfil')
 @login_required
 def perfil():
-    usuario = Usuario.query.get(session.get('usuario_id'))
-    return render_template('perfil.html', usuario=usuario)
+    uid = request.args.get('id', type=int) or session.get('usuario_id')
+    t = session.get('tipo')
+    r = session.get('rol')
 
-# --- /directora/colaboradores ---
-# Lista todos los docentes del sistema (solo директор)
-@app.route('/directora/colaboradores')
-@verificar_permisos
-@role_required('directora')
-def colaboradores():
-    docentes = Usuario.query.filter_by(rol='docente').all()
-    return render_template('colaboradores.html', docentes=docentes)
+    # Si se pide un perfil distinto al propio, verificar permisos
+    if uid != session.get('usuario_id'):
+        if r not in ('directora', 'docente'):
+            flash('No tienes permiso para ver este perfil', 'danger')
+            return redirect(url_for('login'))
+        # Buscar en colaboradores primero, luego estudiantes
+        usuario = Colaborador.query.get(uid)
+        if not usuario:
+            usuario = Estudiante.query.get(uid)
+    else:
+        if t == 'colaborador': usuario = Colaborador.query.get(uid)
+        elif t == 'estudiante': usuario = Estudiante.query.get(uid)
+        else: return redirect(url_for('logout'))
+    if not usuario:
+        flash('Usuario no encontrado', 'danger')
+        return redirect(url_for('directora_dashboard' if r == 'directora' else 'docente_dashboard'))
+    # Determinar rol del usuario visto
+    if hasattr(usuario, 'rol'):
+        viewed_rol = usuario.rol
+    else:
+        viewed_rol = 'alumno'
+    return render_template('perfil.html', usuario=usuario, viewed_rol=viewed_rol)
 
-# --- /directora/estudiantes ---
-# Lista todos los alumnos del sistema (solo директор)
-@app.route('/directora/estudiantes')
-@verificar_permisos
-@role_required('directora')
-def estudiantes():
-    alumnos = Usuario.query.filter_by(rol='alumno').all()
-    return render_template('estudiantes.html', alumnos=alumnos)
+@app.route('/cambiar_clave', methods=['POST'])
+@login_required
+def cambiar_clave():
+    actual = request.form.get('clave_actual')
+    nueva = request.form.get('clave_nueva')
+    confirmar = request.form.get('clave_confirmar')
+    if nueva != confirmar:
+        flash('Las contraseñas nuevas no coinciden', 'danger')
+        return redirect(url_for('perfil'))
+    uid = session.get('usuario_id')
+    t = session.get('tipo')
+    usuario = None
+    if t == 'colaborador': usuario = Colaborador.query.get(uid)
+    elif t == 'estudiante': usuario = Estudiante.query.get(uid)
+    if not usuario or not bcrypt.check_password_hash(usuario.clave, actual):
+        flash('Contraseña actual incorrecta', 'danger')
+        return redirect(url_for('perfil'))
+    errores = validar_clave(nueva, usuario)
+    if errores:
+        for e in errores: flash(e, 'danger')
+        return redirect(url_for('perfil'))
+    usuario.clave = bcrypt.generate_password_hash(nueva).decode('utf-8')
+    db.session.commit()
+    flash('Contraseña cambiada exitosamente', 'success')
+    return redirect(url_for('perfil'))
+
+# ====================== HELPERS ======================
+def obtener_bimestre_actual():
+    hoy = datetime.now().date()
+    return Bimestre.query.filter(
+        Bimestre.fecha_inicio <= hoy,
+        Bimestre.fecha_fin >= hoy
+    ).first()
+
+def calcular_promedio_bimestre(estudiante_id, curso_id, bimestre_id):
+    evals = Evaluacion.query.filter_by(
+        estudiante_id=estudiante_id, curso_id=curso_id, bimestre_id=bimestre_id
+    ).all()
+    asistencias = Asistencia.query.filter_by(
+        estudiante_id=estudiante_id, curso_id=curso_id, bimestre_id=bimestre_id
+    ).all()
+    return _calcular_promedio_desde_datos(evals, asistencias)
+
+def nota_a_letra(nota):
+    if nota is None: return '-'
+    if nota >= 18: return 'AD'
+    if nota >= 16: return 'A'
+    if nota >= 12: return 'B'
+    return 'C'
+
+def _calcular_promedio_desde_datos(evals, asistencias, pesos=None):
+    if not evals:
+        return None, 0, 0
+    if pesos is None:
+        pesos = {'cuaderno': 0.10, 'libro': 0.10, 'practicas': 0.20, 'exposiciones': 0.10, 'examen': 0.50}
+    notas_por_tipo = {}
+    for e in evals:
+        notas_por_tipo.setdefault(e.tipo, []).append(float(e.calificacion))
+    suma_ponderada = 0
+    for tipo, peso in pesos.items():
+        if tipo in notas_por_tipo and notas_por_tipo[tipo]:
+            suma_ponderada += (sum(notas_por_tipo[tipo]) / len(notas_por_tipo[tipo])) * peso
+    total_asistencias = len(asistencias)
+    faltas = sum(1 for a in asistencias if a.estado == 'falta')
+    pct_asistencia = 0
+    if total_asistencias > 0:
+        pct_asistencia = ((total_asistencias - faltas) / total_asistencias) * 100
+        if faltas / total_asistencias >= 0.3:
+            return 0, round(pct_asistencia, 1), total_asistencias
+        if pct_asistencia == 100:
+            suma_ponderada += 1
+    return round(min(suma_ponderada, 20), 2), round(pct_asistencia, 1), total_asistencias
+
+# Registrar helpers como globales de Jinja
+app.jinja_env.globals.update(calcular_promedio_bimestre=calcular_promedio_bimestre)
+app.jinja_env.globals.update(nota_a_letra=nota_a_letra)
+app.jinja_env.globals.update(obtener_bimestre_actual=obtener_bimestre_actual)
+app.jinja_env.globals.update(ahora=lambda: datetime.now().strftime('%d/%m/%Y %H:%M'))
 
 # ====================== RUTAS DIRECTORA ======================
-# Rutas exclusivas para la директор (administradora)
 
-# --- /directora/dashboard ---
-# Panel principal de la директор: muestra estadísticas de alumnos y docentes
 @app.route('/directora/dashboard')
-@verificar_permisos
+@login_required
 @role_required('directora')
 def directora_dashboard():
-    alumnos = Usuario.query.filter_by(rol='alumno').count()
-    docentes_list = Usuario.query.filter_by(rol='docente').all()
-    docentes = len(docentes_list)
-    
-    return render_template('dashboard_directora.html', 
-                         usuarios_totales=alumnos + docentes,
-                         alumnos=alumnos,
-                         docentes=docentes_list,
-                         docentes_count=docentes)
+    colaboradores_count = Colaborador.query.count()
+    estudiantes_count = Estudiante.query.count()
+    docentes = Colaborador.query.filter_by(rol='docente').all()
+    alumnos = Estudiante.query.all()
+    grados = Grado.query.all()
+    secciones = Seccion.query.all()
+    niveles = Nivel.query.all()
+    periodos = PeriodoAcademico.query.all()
+    cursos = Curso.query.options(
+        joinedload(Curso.docente), joinedload(Curso.grado_rel), joinedload(Curso.seccion_rel), joinedload(Curso.periodo)
+    ).all()
+    bimestres = Bimestre.query.all()
+    horarios_list = Horario.query.options(
+        joinedload(Horario.curso), joinedload(Horario.seccion), joinedload(Horario.docente), joinedload(Horario.bimestre)
+    ).all()
+    planes = PagoPlan.query.filter_by(activo=True).all()
+    estudiantes = alumnos
+    documentos = DocumentoDocente.query.options(
+        joinedload(DocumentoDocente.carpeta), joinedload(DocumentoDocente.docente)
+    ).filter(DocumentoDocente.estado == 'pendiente').order_by(DocumentoDocente.fecha_subida.desc()).all()
+    justificaciones_pendientes = Justificacion.query.options(
+        joinedload(Justificacion.asistencia), joinedload(Justificacion.estudiante)
+    ).filter_by(estado='pendiente').order_by(Justificacion.fecha_envio.desc()).all()
 
-# --- /directora/registrar_alumno ---
-# Formulario para registrar un nuevo alumno con su apoderado
-@app.route('/directora/registrar_alumno', methods=['GET', 'POST'])
-@verificar_permisos
+    # Docentes con conteo de cursos y estudiantes
+    docentes_data = []
+    for d in docentes:
+        cursos_docente = [c for c in cursos if c.docente_id == d.id]
+        seccion_ids = set(c.seccion_id for c in cursos_docente if c.seccion_id)
+        total_est = Estudiante.query.filter(Estudiante.seccion_id.in_(seccion_ids)).count() if seccion_ids else 0
+        iniciales = (d.nombres[0] if d.nombres else '') + (d.apellido_paterno[0] if d.apellido_paterno else '')
+        materia = cursos_docente[0].nombre if cursos_docente else (d.profesion or 'Sin asignar')
+        docentes_data.append(dict(id=d.id, dni=d.dni, nombres=d.nombres,
+            apellido_paterno=d.apellido_paterno, apellido_materno=d.apellido_materno,
+            nombre_completo=d.nombre_completo, correo=d.correo, rol=d.rol,
+            profesion=d.profesion, activo=d.activo,
+            telefono_principal=d.telefono_principal,
+            tiene_especialidad=d.tiene_especialidad,
+            descripcion_especialidad=d.descripcion_especialidad,
+            cursos_count=len(cursos_docente), estudiantes_count=total_est,
+            iniciales=iniciales, materia=materia))
+
+    return render_template('dashboard_directora.html',
+        colaboradores_count=colaboradores_count,
+        estudiantes_count=estudiantes_count,
+        docentes=docentes, docentes_data=docentes_data,
+        alumnos=alumnos,
+        grados=grados, secciones=secciones,
+        niveles=niveles, periodos=periodos,
+        cursos=cursos, bimestres=bimestres,
+        horarios=horarios_list, planes=planes,
+        estudiantes=estudiantes, documentos=documentos,
+        justificaciones=justificaciones_pendientes)
+
+# ----- CRUD NIVELES -----
+@app.route('/directora/niveles', methods=['GET', 'POST'])
+@login_required
 @role_required('directora')
-@log_accion('Registrar alumno')
-def registrar_alumno():
+def niveles_crud():
     if request.method == 'POST':
-        try:
-            nuevo_alumno = crear_usuario_desde_form(request.form, 'alumno')
-            if nuevo_alumno.seccion_id:
-                seccion = Seccion.query.get(nuevo_alumno.seccion_id)
-                nuevo_alumno.grado_id = seccion.grado_id if seccion else None
-            db.session.add(nuevo_alumno)
-            db.session.flush()
-            
-            # Crear apoderado linked al alumno
-            nuevo_apoderado = Apoderado(
-                alumno_id=nuevo_alumno.id,
-                nombres=request.form.get('apoderado_nombres'),
-                apellido_paterno=request.form.get('apoderado_apellido_paterno'),
-                apellido_materno=request.form.get('apoderado_apellido_materno'),
-                telefono_principal=request.form.get('apoderado_telefono_principal'),
-                telefono_secundario=request.form.get('apoderado_telefono_secundario'),
-                es_apoderado=bool(request.form.get('es_apoderado'))
-            )
-            db.session.add(nuevo_apoderado)
-            
-            db.session.commit()
-            flash(f'Alumno {nuevo_alumno.nombres} y su apoderado registrados exitosamente', 'success')
-            return redirect(url_for('directora_dashboard'))
-        except Exception as e:
-            db.session.rollback()
-            flash(f'Error al registrar: {str(e)}', 'danger')
-    
-    secciones = Seccion.query.filter_by(activo=True).all()
-    grados = Grado.query.filter_by(activo=True).all()
-    
-    # Convertir grados a JSON para JavaScript (selects dinámicos)
-    grados_data = []
-    for grado in grados:
-        grado_dict = {
-            'id': grado.id,
-            'nombre': grado.nombre,
-            'nivel': grado.nivel,
-            'secciones': [{'id': s.id, 'nombre': s.nombre} for s in grado.secciones]
-        }
-        grados_data.append(grado_dict)
-    
-    return render_template('usuarios_form.html', 
-                           secciones=secciones, 
-                           grados=grados,
-                           grados_data=grados_data)
+        accion = request.form.get('accion')
+        if accion == 'crear':
+            n = Nivel(nombre=request.form.get('nombre'))
+            db.session.add(n); db.session.commit()
+            flash('Nivel creado', 'success')
+        elif accion == 'editar':
+            n = Nivel.query.get(int(request.form.get('id')))
+            if n: n.nombre = request.form.get('nombre'); db.session.commit()
+            flash('Nivel actualizado', 'success')
+        elif accion == 'toggle':
+            n = Nivel.query.get(int(request.form.get('id')))
+            if n: n.activo = not n.activo; db.session.commit()
+    return redirect(url_for('directora_dashboard'))
 
-# --- /directora/registrar_docente ---
-# Formulario para registrar un nuevo docente
-@app.route('/directora/registrar_docente', methods=['GET', 'POST'])
-@verificar_permisos
+# ----- CRUD GRADOS -----
+@app.route('/directora/grados', methods=['POST'])
+@login_required
 @role_required('directora')
-@log_accion('Registrar docente')
+def grados_crud():
+    accion = request.form.get('accion')
+    if accion == 'crear':
+        g = Grado(nombre=request.form.get('nombre'), nivel_id=int(request.form.get('nivel_id')), activo=True)
+        db.session.add(g); db.session.commit()
+        flash('Grado creado', 'success')
+    elif accion == 'editar':
+        g = Grado.query.get(int(request.form.get('id')))
+        if g:
+            g.nombre = request.form.get('nombre')
+            g.nivel_id = int(request.form.get('nivel_id'))
+            db.session.commit()
+            flash('Grado actualizado', 'success')
+    elif accion == 'toggle':
+        g = Grado.query.get(int(request.form.get('id')))
+        if g: g.activo = not g.activo; db.session.commit()
+    return redirect(url_for('directora_dashboard'))
+
+# ----- CRUD SECCIONES -----
+@app.route('/directora/secciones', methods=['POST'])
+@login_required
+@role_required('directora')
+def secciones_crud():
+    accion = request.form.get('accion')
+    if accion == 'crear':
+        s = Seccion(nombre=request.form.get('nombre'), grado_id=int(request.form.get('grado_id')), activo=True)
+        db.session.add(s); db.session.commit()
+        flash('Sección creada', 'success')
+    elif accion == 'editar':
+        s = Seccion.query.get(int(request.form.get('id')))
+        if s:
+            s.nombre = request.form.get('nombre')
+            s.grado_id = int(request.form.get('grado_id'))
+            db.session.commit()
+            flash('Sección actualizada', 'success')
+    elif accion == 'toggle':
+        s = Seccion.query.get(int(request.form.get('id')))
+        if s: s.activo = not s.activo; db.session.commit()
+    return redirect(url_for('directora_dashboard'))
+
+# ----- CRUD PERIODOS -----
+@app.route('/directora/periodos', methods=['POST'])
+@login_required
+@role_required('directora')
+def periodos_crud():
+    accion = request.form.get('accion')
+    if accion == 'crear':
+        p = PeriodoAcademico(
+            nombre=request.form.get('nombre'),
+            fecha_inicio=datetime.strptime(request.form.get('fecha_inicio'), '%Y-%m-%d'),
+            fecha_fin=datetime.strptime(request.form.get('fecha_fin'), '%Y-%m-%d')
+        )
+        db.session.add(p); db.session.commit()
+        flash('Periodo creado', 'success')
+    elif accion == 'editar':
+        p = PeriodoAcademico.query.get(int(request.form.get('id')))
+        if p:
+            p.nombre = request.form.get('nombre')
+            p.fecha_inicio = datetime.strptime(request.form.get('fecha_inicio'), '%Y-%m-%d')
+            p.fecha_fin = datetime.strptime(request.form.get('fecha_fin'), '%Y-%m-%d')
+            db.session.commit()
+            flash('Periodo actualizado', 'success')
+    elif accion == 'toggle':
+        p = PeriodoAcademico.query.get(int(request.form.get('id')))
+        if p: p.activo = not p.activo; db.session.commit()
+    return redirect(url_for('directora_dashboard'))
+
+# ----- CRUD BIMESTRES -----
+@app.route('/directora/bimestres', methods=['POST'])
+@login_required
+@role_required('directora')
+def bimestres_crud():
+    accion = request.form.get('accion')
+    if accion == 'crear':
+        b = Bimestre(
+            periodo_academico_id=int(request.form.get('periodo_academico_id')),
+            nombre=request.form.get('nombre'),
+            numero=int(request.form.get('numero')),
+            fecha_inicio=datetime.strptime(request.form.get('fecha_inicio'), '%Y-%m-%d'),
+            fecha_fin=datetime.strptime(request.form.get('fecha_fin'), '%Y-%m-%d')
+        )
+        db.session.add(b); db.session.commit()
+        flash('Bimestre creado', 'success')
+    elif accion == 'editar':
+        b = Bimestre.query.get(int(request.form.get('id')))
+        if b:
+            for campo in ['nombre', 'numero', 'periodo_academico_id']:
+                val = request.form.get(campo)
+                if val: setattr(b, campo, int(val) if campo in ('numero', 'periodo_academico_id') else val)
+            for campo in ['fecha_inicio', 'fecha_fin']:
+                val = request.form.get(campo)
+                if val: setattr(b, campo, datetime.strptime(val, '%Y-%m-%d'))
+            db.session.commit()
+            flash('Bimestre actualizado', 'success')
+    elif accion == 'toggle':
+        b = Bimestre.query.get(int(request.form.get('id')))
+        # No tiene activo, así que simplemente lo eliminamos lógicamente
+        flash('Usa el periodo para activar/desactivar', 'info')
+    return redirect(url_for('directora_dashboard'))
+
+# ----- CRUD CURSOS -----
+@app.route('/directora/cursos', methods=['GET', 'POST'])
+@login_required
+@role_required('directora')
+def cursos_crud():
+    if request.method == 'POST':
+        accion = request.form.get('accion', 'crear')
+        if accion == 'crear':
+            c = Curso(
+                nombre=request.form.get('nombre'),
+                codigo=request.form.get('codigo'),
+                descripcion=request.form.get('descripcion', ''),
+                docente_id=int(request.form.get('docente_id')),
+                grado_id=int(request.form.get('grado_id')),
+                seccion_id=int(request.form.get('seccion_id')),
+                periodo_academico_id=int(request.form.get('periodo_academico_id'))
+            )
+            db.session.add(c); db.session.commit()
+            flash('Curso creado', 'success')
+        elif accion == 'editar':
+            c = Curso.query.get(int(request.form.get('id')))
+            if c:
+                c.nombre = request.form.get('nombre')
+                c.codigo = request.form.get('codigo')
+                c.descripcion = request.form.get('descripcion', '')
+                c.docente_id = int(request.form.get('docente_id'))
+                c.grado_id = int(request.form.get('grado_id'))
+                c.seccion_id = int(request.form.get('seccion_id'))
+                c.periodo_academico_id = int(request.form.get('periodo_academico_id'))
+                db.session.commit()
+                flash('Curso actualizado', 'success')
+        elif accion == 'toggle':
+            c = Curso.query.get(int(request.form.get('id')))
+            if c: c.activo = not c.activo; db.session.commit()
+    return redirect(url_for('directora_dashboard'))
+
+# ----- API: dropdowns dinámicos -----
+@app.route('/directora/api/grados/<int:nivel_id>')
+@login_required
+@role_required('directora')
+def api_grados_por_nivel(nivel_id):
+    grados = Grado.query.filter_by(nivel_id=nivel_id, activo=True).all()
+    return jsonify([{'id': g.id, 'nombre': g.nombre} for g in grados])
+
+@app.route('/directora/api/secciones/<int:grado_id>')
+@login_required
+@role_required('directora')
+def api_secciones_por_grado(grado_id):
+    secciones = Seccion.query.filter_by(grado_id=grado_id, activo=True).all()
+    return jsonify([{'id': s.id, 'nombre': s.nombre} for s in secciones])
+
+@app.route('/api/estudiantes_por_curso/<int:curso_id>')
+@login_required
+@role_required('directora', 'docente')
+def api_estudiantes_por_curso(curso_id):
+    curso = Curso.query.get_or_404(curso_id)
+    inscripciones = Inscripcion.query.filter_by(curso_id=curso_id).all()
+    estudiantes = [{'id': ins.alumno.id, 'nombre': ins.alumno.nombre_completo} for ins in inscripciones]
+    return jsonify(estudiantes)
+
+# ----- CRUD HORARIOS -----
+@app.route('/directora/horarios', methods=['POST'])
+@login_required
+@role_required('directora')
+def horarios_crud():
+    accion = request.form.get('accion', 'crear')
+    if accion == 'crear':
+        h = Horario(
+            curso_id=int(request.form.get('curso_id')),
+            seccion_id=int(request.form.get('seccion_id')),
+            docente_id=int(request.form.get('docente_id')),
+            dia_semana=int(request.form.get('dia_semana')),
+            hora_inicio=datetime.strptime(request.form.get('hora_inicio'), '%H:%M').time(),
+            hora_fin=datetime.strptime(request.form.get('hora_fin'), '%H:%M').time(),
+            bimestre_id=int(request.form.get('bimestre_id')) if request.form.get('bimestre_id') else None
+        )
+        db.session.add(h); db.session.commit()
+        flash('Horario creado', 'success')
+    elif accion == 'eliminar':
+        h = Horario.query.get(int(request.form.get('id')))
+        if h: db.session.delete(h); db.session.commit()
+        flash('Horario eliminado', 'success')
+    return redirect(url_for('directora_dashboard'))
+
+# ----- COLABORADORES (CRUD completo) -----
+@app.route('/directora/colaboradores')
+@login_required
+@role_required('directora')
+def listar_colaboradores():
+    return redirect(url_for('directora_dashboard'))
+
+@app.route('/directora/colaboradores/crear', methods=['POST'])
+@login_required
+@role_required('directora')
+def crear_colaborador():
+    dni = request.form.get('dni')
+    if Colaborador.query.filter_by(dni=dni).first():
+        flash('El DNI ya existe', 'danger')
+        return redirect(url_for('directora_dashboard'))
+    correo = request.form.get('correo')
+    if Colaborador.query.filter_by(correo=correo).first():
+        flash('El correo ya existe', 'danger')
+        return redirect(url_for('directora_dashboard'))
+    clave = request.form.get('clave')
+    errores = validar_clave(clave)
+    if errores:
+        for e in errores: flash(e, 'danger')
+        return redirect(url_for('directora_dashboard'))
+    c = Colaborador(
+        dni=dni,
+        nombres=request.form.get('nombres'),
+        apellido_paterno=request.form.get('apellido_paterno'),
+        apellido_materno=request.form.get('apellido_materno'),
+        correo=correo,
+        clave=bcrypt.generate_password_hash(clave).decode('utf-8'),
+        rol=request.form.get('rol'),
+        profesion=request.form.get('profesion', ''),
+        tiene_especialidad='tiene_especialidad' in request.form,
+        descripcion_especialidad=request.form.get('descripcion_especialidad', ''),
+        telefono_principal=request.form.get('telefono_principal', ''),
+        telefono_secundario=request.form.get('telefono_secundario', ''),
+        seccion_id=int(request.form.get('seccion_id')) if request.form.get('seccion_id') else None
+    )
+    db.session.add(c); db.session.commit()
+    flash(f'Colaborador {c.nombre_completo} creado', 'success')
+    return redirect(url_for('directora_dashboard'))
+
+@app.route('/directora/colaboradores/editar/<int:id>', methods=['POST'])
+@login_required
+@role_required('directora')
+def editar_colaborador(id):
+    c = Colaborador.query.get_or_404(id)
+    dni = request.form.get('dni')
+    if dni != c.dni and Colaborador.query.filter_by(dni=dni).first():
+        flash('El DNI ya existe', 'danger')
+        return redirect(url_for('directora_dashboard'))
+    c.dni = dni
+    c.nombres = request.form.get('nombres')
+    c.apellido_paterno = request.form.get('apellido_paterno')
+    c.apellido_materno = request.form.get('apellido_materno')
+    c.correo = request.form.get('correo')
+    c.rol = request.form.get('rol')
+    c.profesion = request.form.get('profesion', '')
+    c.tiene_especialidad = 'tiene_especialidad' in request.form
+    c.descripcion_especialidad = request.form.get('descripcion_especialidad', '')
+    c.telefono_principal = request.form.get('telefono_principal', '')
+    c.telefono_secundario = request.form.get('telefono_secundario', '')
+    c.seccion_id = int(request.form.get('seccion_id')) if request.form.get('seccion_id') else None
+    clave = request.form.get('clave')
+    if clave:
+        errores = validar_clave(clave, c)
+        if errores:
+            for e in errores: flash(e, 'danger')
+            return redirect(url_for('directora_dashboard'))
+        c.clave = bcrypt.generate_password_hash(clave).decode('utf-8')
+    db.session.commit()
+    flash('Colaborador actualizado', 'success')
+    return redirect(url_for('directora_dashboard'))
+
+@app.route('/directora/colaboradores/toggle/<int:id>', methods=['POST'])
+@login_required
+@role_required('directora')
+def toggle_colaborador(id):
+    c = Colaborador.query.get_or_404(id)
+    c.activo = not c.activo
+    db.session.commit()
+    flash(f'Colaborador {"activado" if c.activo else "desactivado"}', 'success')
+    return redirect(url_for('directora_dashboard'))
+
+@app.route('/directora/colaboradores/eliminar/<int:id>', methods=['POST'])
+@login_required
+@role_required('directora')
+def eliminar_colaborador(id):
+    c = Colaborador.query.get_or_404(id)
+    Horario.query.filter_by(docente_id=c.id).delete()
+    db.session.delete(c); db.session.commit()
+    flash('Colaborador eliminado', 'success')
+    return redirect(url_for('directora_dashboard'))
+
+# ----- FORMULARIOS COMPLETOS (separados) -----
+@app.route('/directora/registrar_docente', methods=['GET', 'POST'])
+@login_required
+@role_required('directora')
 def registrar_docente():
     if request.method == 'POST':
-        try:
-            nuevo_docente = crear_usuario_desde_form(request.form, 'docente')
-            db.session.add(nuevo_docente)
-            db.session.flush()
-            
-            # Asignar docente como tutor de la sección seleccionada
-            seccion_id = request.form.get('seccion_docente_id')
-            if seccion_id:
-                seccion = Seccion.query.get(seccion_id)
-                if seccion:
-                    seccion.docente_id = nuevo_docente.id
-            
-            db.session.commit()
-            flash(f'Docente {nuevo_docente.nombres} registrado exitosamente', 'success')
-            return redirect(url_for('directora_dashboard'))
-        except Exception as e:
-            db.session.rollback()
-            flash(f'Error al registrar: {str(e)}', 'danger')
-    
-    # Obtener grados para el formulario
+        dni = request.form.get('dni')
+        if Colaborador.query.filter_by(dni=dni).first():
+            flash('El DNI ya existe', 'danger')
+            return redirect(url_for('registrar_docente'))
+        correo = request.form.get('correo')
+        if Colaborador.query.filter_by(correo=correo).first():
+            flash('El correo ya existe', 'danger')
+            return redirect(url_for('registrar_docente'))
+        clave = request.form.get('clave')
+        errores = validar_clave(clave)
+        if errores:
+            for e in errores: flash(e, 'danger')
+            return redirect(url_for('registrar_docente'))
+        c = Colaborador(
+            dni=dni,
+            nombres=request.form.get('nombres'),
+            apellido_paterno=request.form.get('apellido_paterno'),
+            apellido_materno=request.form.get('apellido_materno'),
+            correo=correo,
+            clave=bcrypt.generate_password_hash(clave).decode('utf-8'),
+            rol='docente',
+            profesion=request.form.get('profesion', ''),
+            tiene_especialidad='tiene_especialidad' in request.form,
+            descripcion_especialidad=request.form.get('descripcion_especialidad', ''),
+            telefono_principal=request.form.get('telefono_principal', ''),
+            telefono_secundario=request.form.get('telefono_secundario', '')
+        )
+        db.session.add(c); db.session.commit()
+        seccion_id = request.form.get('seccion_docente_id')
+        if seccion_id:
+            s = Seccion.query.get(int(seccion_id))
+            if s: s.docente_id = c.id; db.session.commit()
+        flash(f'Docente {c.nombre_completo} registrado', 'success')
+        return redirect(url_for('listar_docentes'))
     grados = Grado.query.filter_by(activo=True).all()
     grados_data = []
     for grado in grados:
         grado_dict = {
-            'id': grado.id,
-            'nombre': grado.nombre,
-            'nivel': grado.nivel,
+            'id': grado.id, 'nombre': grado.nombre, 'nivel': grado.nivel,
             'secciones': [{'id': s.id, 'nombre': s.nombre} for s in grado.secciones if s.activo]
         }
         grados_data.append(grado_dict)
-    
     return render_template('docentes_form.html', grados_data=grados_data)
 
-# --- /directora/listar_alumnos ---
-# Lista todos los alumnos registrados (solo директор)
-@app.route('/directora/listar_alumnos')
-@verificar_permisos
-@role_required('directora')
-def listar_alumnos():
-    alumnos = Usuario.query.filter_by(rol='alumno').all()
-    return render_template('listar_alumnos.html', alumnos=alumnos)
-
-# --- /directora/listar_docentes ---
-# Lista todos los docentes registrados (solo директор)
 @app.route('/directora/listar_docentes')
-@verificar_permisos
+@login_required
 @role_required('directora')
 def listar_docentes():
-    docentes = Usuario.query.filter_by(rol='docente').all()
+    docentes = Colaborador.query.filter_by(rol='docente').all()
     return render_template('listar_docentes.html', docentes=docentes)
 
-# --- /directora/editar_alumno/<id> ---
-# Formulario para editar los datos de un alumno y su apoderado
-@app.route('/directora/editar_alumno/<int:id>', methods=['GET', 'POST'])
-@verificar_permisos
+@app.route('/directora/listar_alumnos')
+@login_required
 @role_required('directora')
-@log_accion('Editar alumno')
-def editar_alumno(id):
-    alumno = Usuario.query.get_or_404(id)
-    if alumno.rol != 'alumno':
-        flash('Usuario no es alumno', 'danger')
-        return redirect(url_for('listar_alumnos'))
-    
+def listar_alumnos():
+    alumnos = Estudiante.query.all()
+    return render_template('listar_alumnos.html', alumnos=alumnos)
+
+@app.route('/directora/registrar_alumno', methods=['GET', 'POST'])
+@login_required
+@role_required('directora')
+def registrar_alumno():
     if request.method == 'POST':
-        try:
-            # Actualizar datos del alumno
-            alumno.dni = request.form.get('dni')
-            alumno.nombres = request.form.get('nombres')
-            alumno.apellido_paterno = request.form.get('apellido_paterno')
-            alumno.apellido_materno = request.form.get('apellido_materno')
-            alumno.correo = request.form.get('correo')
-            alumno.seccion_id = request.form.get('seccion_id')
-            if alumno.seccion_id:
-                seccion = Seccion.query.get(alumno.seccion_id)
-                alumno.grado_id = seccion.grado_id if seccion else None
-            
-            # Actualizar o crear apoderado linked al alumno
-            apodera = Apoderado.query.filter_by(alumno_id=alumno.id).first()
-            if apodera:
-                apodera.nombres = request.form.get('apoderado_nombres')
-                apodera.apellido_paterno = request.form.get('apoderado_apellido_paterno')
-                apodera.apellido_materno = request.form.get('apoderado_apellido_materno')
-                apodera.telefono_principal = request.form.get('apoderado_telefono_principal')
-                apodera.telefono_secundario = request.form.get('apoderado_telefono_secundario')
-                apodera.es_apoderado = bool(request.form.get('es_apoderado'))
-            else:
-                nuevo_apoderado = Apoderado(
-                    alumno_id=alumno.id,
-                    nombres=request.form.get('apoderado_nombres'),
-                    apellido_paterno=request.form.get('apoderado_apellido_paterno'),
-                    apellido_materno=request.form.get('apoderado_apellido_materno'),
-                    telefono_principal=request.form.get('apoderado_telefono_principal'),
-                    telefono_secundario=request.form.get('apoderado_telefono_secundario'),
-                    es_apoderado=bool(request.form.get('es_apoderado'))
-                )
-                db.session.add(nuevo_apoderado)
-            
-            db.session.commit()
-            flash('Alumno y apoderado actualizados exitosamente', 'success')
-            return redirect(url_for('listar_alumnos'))
-        except Exception as e:
-            db.session.rollback()
-            flash(f'Error al actualizar: {str(e)}', 'danger')
-    
+        dni = request.form.get('dni')
+        if Estudiante.query.filter_by(dni=dni).first():
+            flash('El DNI ya existe', 'danger')
+            return redirect(url_for('registrar_alumno'))
+        correo = request.form.get('correo')
+        if Estudiante.query.filter_by(correo=correo).first():
+            flash('El correo ya existe', 'danger')
+            return redirect(url_for('registrar_alumno'))
+        clave = request.form.get('clave')
+        errores = validar_clave(clave)
+        if errores:
+            for e in errores: flash(e, 'danger')
+            return redirect(url_for('registrar_alumno'))
+        a = Estudiante(
+            dni=dni,
+            nombres=request.form.get('nombres'),
+            apellido_paterno=request.form.get('apellido_paterno'),
+            apellido_materno=request.form.get('apellido_materno'),
+            correo=correo,
+            clave=bcrypt.generate_password_hash(clave).decode('utf-8'),
+            grado_id=int(request.form.get('grado_id')) if request.form.get('grado_id') else None,
+            seccion_id=int(request.form.get('seccion_id')) if request.form.get('seccion_id') else None
+        )
+        db.session.add(a); db.session.commit()
+        ap_nombres = request.form.get('apoderado_nombres')
+        if ap_nombres:
+            ap = Apoderado(
+                nombres=ap_nombres,
+                apellido_paterno=request.form.get('apoderado_apellido_paterno', ''),
+                apellido_materno=request.form.get('apoderado_apellido_materno', ''),
+                telefono_principal=request.form.get('apoderado_telefono_principal', ''),
+                telefono_secundario=request.form.get('apoderado_telefono_secundario', ''),
+                alumno_id=a.id
+            )
+            db.session.add(ap); db.session.commit()
+        flash(f'Estudiante {a.nombre_completo} registrado', 'success')
+        return redirect(url_for('listar_alumnos'))
     grados = Grado.query.filter_by(activo=True).all()
-    secciones = Seccion.query.filter_by(activo=True).all()
-    apoderado = Apoderado.query.filter_by(alumno_id=alumno.id).first()
     grados_data = []
     for grado in grados:
         grado_dict = {
-            'id': grado.id,
-            'nombre': grado.nombre,
-            'nivel': grado.nivel,
+            'id': grado.id, 'nombre': grado.nombre, 'nivel': grado.nivel,
             'secciones': [{'id': s.id, 'nombre': s.nombre} for s in grado.secciones if s.activo]
         }
         grados_data.append(grado_dict)
-    return render_template('editar_alumno.html', alumno=alumno, grados=grados, secciones=secciones, apoderado=apoderado, grados_data=grados_data)
+    return render_template('registrar_alumno.html', grados_data=grados_data)
 
 @app.route('/directora/editar_docente/<int:id>', methods=['GET', 'POST'])
-@verificar_permisos
+@login_required
 @role_required('directora')
-@log_accion('Editar docente')
 def editar_docente(id):
-    """Editar docente"""
-    docente = Usuario.query.get_or_404(id)
-    if docente.rol != 'docente':
-        flash('Usuario no es docente', 'danger')
+    c = Colaborador.query.get_or_404(id)
+    if c.rol != 'docente':
+        flash('No es un docente', 'danger')
         return redirect(url_for('listar_docentes'))
-    
     if request.method == 'POST':
-        try:
-            docente.dni = request.form.get('dni')
-            docente.nombres = request.form.get('nombres')
-            docente.apellido_paterno = request.form.get('apellido_paterno')
-            docente.apellido_materno = request.form.get('apellido_materno')
-            docente.correo = request.form.get('correo')
-            docente.telefono_principal = request.form.get('telefono_principal')
-            docente.telefono_secundario = request.form.get('telefono_secundario')
-            docente.profesion = request.form.get('profesion')
-            docente.tiene_especialidad = bool(request.form.get('tiene_especialidad'))
-            docente.descripcion_especialidad = request.form.get('descripcion_especialidad') if request.form.get('tiene_especialidad') else None
-            
-            # Actualizar sección/tutoría del docente
-            seccion_id = request.form.get('seccion_docente_id')
-            if seccion_id:
-                seccion = Seccion.query.get(seccion_id)
-                if seccion:
-                    # Quitar al docente anterior de esa sección si existía
-                    if docente.seccion_id:
-                        seccion_anterior = Seccion.query.get(docente.seccion_id)
-                        if seccion_anterior and seccion_anterior.docente_id == docente.id:
-                            seccion_anterior.docente_id = None
-                    # Asignar nuevo tutor
-                    docente.seccion_id = seccion_id
-                    seccion.docente_id = docente.id
-            
-            db.session.commit()
-            flash('Docente actualizado exitosamente', 'success')
-            return redirect(url_for('listar_docentes'))
-        except Exception as e:
-            db.session.rollback()
-            flash(f'Error al actualizar: {str(e)}', 'danger')
-    
-    # Obtener grados para el formulario
+        dni = request.form.get('dni')
+        if dni != c.dni and Colaborador.query.filter_by(dni=dni).first():
+            flash('El DNI ya existe', 'danger')
+            return redirect(url_for('editar_docente', id=id))
+        c.dni = dni
+        c.nombres = request.form.get('nombres')
+        c.apellido_paterno = request.form.get('apellido_paterno')
+        c.apellido_materno = request.form.get('apellido_materno')
+        c.correo = request.form.get('correo')
+        c.profesion = request.form.get('profesion', '')
+        c.tiene_especialidad = 'tiene_especialidad' in request.form
+        c.descripcion_especialidad = request.form.get('descripcion_especialidad', '')
+        c.telefono_principal = request.form.get('telefono_principal', '')
+        c.telefono_secundario = request.form.get('telefono_secundario', '')
+        clave = request.form.get('clave')
+        if clave:
+            errores = validar_clave(clave, c)
+            if errores:
+                for e in errores: flash(e, 'danger')
+                return redirect(url_for('editar_docente', id=id))
+            c.clave = bcrypt.generate_password_hash(clave).decode('utf-8')
+        seccion_id = request.form.get('seccion_docente_id')
+        if seccion_id:
+            s = Seccion.query.get(int(seccion_id))
+            if s: s.docente_id = c.id
+        db.session.commit()
+        flash('Docente actualizado', 'success')
+        return redirect(url_for('listar_docentes'))
     grados = Grado.query.filter_by(activo=True).all()
     grados_data = []
     for grado in grados:
         grado_dict = {
-            'id': grado.id,
-            'nombre': grado.nombre,
-            'nivel': grado.nivel,
+            'id': grado.id, 'nombre': grado.nombre, 'nivel': grado.nivel,
             'secciones': [{'id': s.id, 'nombre': s.nombre} for s in grado.secciones if s.activo]
         }
         grados_data.append(grado_dict)
-    
-    return render_template('editar_docente.html', docente=docente, grados_data=grados_data)
+    return render_template('editar_docente.html', docente=c, grados_data=grados_data)
+
+@app.route('/directora/editar_alumno/<int:id>', methods=['GET', 'POST'])
+@login_required
+@role_required('directora')
+def editar_alumno(id):
+    a = Estudiante.query.get_or_404(id)
+    if request.method == 'POST':
+        dni = request.form.get('dni')
+        if dni != a.dni and Estudiante.query.filter_by(dni=dni).first():
+            flash('El DNI ya existe', 'danger')
+            return redirect(url_for('editar_alumno', id=id))
+        correo = request.form.get('correo')
+        if correo != a.correo and Estudiante.query.filter_by(correo=correo).first():
+            flash('El correo ya existe', 'danger')
+            return redirect(url_for('editar_alumno', id=id))
+        a.dni = dni
+        a.nombres = request.form.get('nombres')
+        a.apellido_paterno = request.form.get('apellido_paterno')
+        a.apellido_materno = request.form.get('apellido_materno')
+        a.correo = correo
+        a.grado_id = int(request.form.get('grado_id')) if request.form.get('grado_id') else None
+        a.seccion_id = int(request.form.get('seccion_id')) if request.form.get('seccion_id') else None
+        clave = request.form.get('clave')
+        if clave:
+            errores = validar_clave(clave)
+            if errores:
+                for e in errores: flash(e, 'danger')
+                return redirect(url_for('editar_alumno', id=id))
+            a.clave = bcrypt.generate_password_hash(clave).decode('utf-8')
+        db.session.commit()
+        flash('Estudiante actualizado', 'success')
+        return redirect(url_for('listar_alumnos'))
+    apoderado = Apoderado.query.filter_by(alumno_id=a.id).first()
+    grados = Grado.query.filter_by(activo=True).all()
+    grados_data = []
+    for grado in grados:
+        grado_dict = {
+            'id': grado.id, 'nombre': grado.nombre, 'nivel': grado.nivel,
+            'secciones': [{'id': s.id, 'nombre': s.nombre} for s in grado.secciones if s.activo]
+        }
+        grados_data.append(grado_dict)
+    return render_template('editar_alumno.html', alumno=a, apoderado=apoderado,
+                           grados=grados, grados_data=grados_data)
 
 @app.route('/directora/eliminar_alumno/<int:id>', methods=['POST'])
-@verificar_permisos
+@login_required
 @role_required('directora')
-@log_accion('Eliminar alumno')
 def eliminar_alumno(id):
-    """Eliminar alumno"""
-    alumno = Usuario.query.get_or_404(id)
-    if alumno.rol != 'alumno':
-        flash('Usuario no es alumno', 'danger')
-        return redirect(url_for('listar_alumnos'))
-    
-    try:
-        # Eliminar apoderados relacionados primero (por la foreign key)
-        Apoderado.query.filter_by(alumno_id=alumno.id).delete()
-        db.session.delete(alumno)
-        db.session.commit()
-        flash('Alumno y apoderado eliminados exitosamente', 'success')
-    except Exception as e:
-        db.session.rollback()
-        flash(f'Error al eliminar: {str(e)}', 'danger')
-    
+    a = Estudiante.query.get_or_404(id)
+    Apoderado.query.filter_by(alumno_id=a.id).delete()
+    Inscripcion.query.filter_by(alumno_id=a.id).delete()
+    Evaluacion.query.filter_by(estudiante_id=a.id).delete()
+    Asistencia.query.filter_by(estudiante_id=a.id).delete()
+    Comentario.query.filter_by(estudiante_id=a.id).delete()
+    PagoRealizado.query.filter_by(estudiante_id=a.id).delete()
+    db.session.delete(a); db.session.commit()
+    flash('Estudiante eliminado', 'success')
     return redirect(url_for('listar_alumnos'))
 
 @app.route('/directora/eliminar_docente/<int:id>', methods=['POST'])
-@verificar_permisos
+@login_required
 @role_required('directora')
-@log_accion('Eliminar docente')
 def eliminar_docente(id):
-    """Eliminar docente"""
-    docente = Usuario.query.get_or_400(id)
-    if docente.rol != 'docente':
-        flash('Usuario no es docente', 'danger')
-        return redirect(url_for('listar_docentes'))
-    
-    try:
-        db.session.delete(docente)
-        db.session.commit()
-        flash('Docente eliminado exitosamente', 'success')
-    except Exception as e:
-        db.session.rollback()
-        flash(f'Error al eliminar: {str(e)}', 'danger')
-    
+    c = Colaborador.query.get_or_404(id)
+    Horario.query.filter_by(docente_id=c.id).delete()
+    db.session.delete(c); db.session.commit()
+    flash('Docente eliminado', 'success')
     return redirect(url_for('listar_docentes'))
 
-@app.route('/directora/cambiar_clave', methods=['GET', 'POST'])
-@verificar_permisos
+# ----- ESTUDIANTES (CRUD completo) -----
+@app.route('/directora/estudiantes')
+@login_required
 @role_required('directora')
-def directora_cambiar_clave():
-    """Cambiar contraseña de directora"""
-    if request.method == 'POST':
-        nueva = request.form.get('nueva')
-        confirmar = request.form.get('confirmar')
-        actual = request.form.get('actual')
+def listar_estudiantes():
+    return redirect(url_for('directora_dashboard'))
 
-        usuario = Usuario.query.get(session['usuario_id'])
-
-        if not bcrypt.check_password_hash(usuario.clave, actual):
-            flash('Contraseña actual incorrecta', 'danger')
-            return redirect(url_for('directora_cambiar_clave'))
-        
-        if actual == nueva:
-            flash('La nueva contraseña debe ser diferente a la actual', 'danger')
-            return redirect(url_for('directora_cambiar_clave'))
-
-        if nueva != confirmar:
-            flash('Las contraseñas no coinciden', 'danger')
-            return redirect(url_for('directora_cambiar_clave'))
-
-        errores = validar_clave(nueva, usuario)
-        if errores:
-            for error in errores:
-                flash(f'❌ {error}', 'danger')
-            return redirect(url_for('directora_cambiar_clave'))
-
-        usuario.clave = bcrypt.generate_password_hash(nueva).decode('utf-8')
-        db.session.commit()
-        
-        log = LogAcceso(usuario_id=usuario.id, accion='Cambio de contraseña')
-        db.session.add(log)
-        db.session.commit()
-        
-        flash('Contraseña actualizada correctamente', 'success')
+@app.route('/directora/estudiantes/crear', methods=['POST'])
+@login_required
+@role_required('directora')
+def crear_estudiante():
+    dni = request.form.get('dni')
+    if Estudiante.query.filter_by(dni=dni).first():
+        flash('El DNI ya existe', 'danger')
         return redirect(url_for('directora_dashboard'))
-    
-    return render_template('cambiar_clave.html')
+    correo = request.form.get('correo')
+    if Estudiante.query.filter_by(correo=correo).first():
+        flash('El correo ya existe', 'danger')
+        return redirect(url_for('directora_dashboard'))
+    clave = request.form.get('clave')
+    errores = validar_clave(clave)
+    if errores:
+        for e in errores: flash(e, 'danger')
+        return redirect(url_for('directora_dashboard'))
+    e = Estudiante(
+        dni=dni,
+        nombres=request.form.get('nombres'),
+        apellido_paterno=request.form.get('apellido_paterno'),
+        apellido_materno=request.form.get('apellido_materno'),
+        correo=correo,
+        clave=bcrypt.generate_password_hash(clave).decode('utf-8'),
+        grado_id=int(request.form.get('grado_id')) if request.form.get('grado_id') else None,
+        seccion_id=int(request.form.get('seccion_id')) if request.form.get('seccion_id') else None
+    )
+    db.session.add(e); db.session.commit()
+    flash(f'Estudiante {e.nombre_completo} creado', 'success')
+    return redirect(url_for('directora_dashboard'))
+
+@app.route('/directora/estudiantes/editar/<int:id>', methods=['POST'])
+@login_required
+@role_required('directora')
+def editar_estudiante(id):
+    e = Estudiante.query.get_or_404(id)
+    dni = request.form.get('dni')
+    if dni != e.dni and Estudiante.query.filter_by(dni=dni).first():
+        flash('El DNI ya existe', 'danger')
+        return redirect(url_for('directora_dashboard'))
+    e.dni = dni
+    e.nombres = request.form.get('nombres')
+    e.apellido_paterno = request.form.get('apellido_paterno')
+    e.apellido_materno = request.form.get('apellido_materno')
+    e.correo = request.form.get('correo')
+    e.grado_id = int(request.form.get('grado_id')) if request.form.get('grado_id') else None
+    e.seccion_id = int(request.form.get('seccion_id')) if request.form.get('seccion_id') else None
+    clave = request.form.get('clave')
+    if clave:
+        errores = validar_clave(clave, e)
+        if errores:
+            for e2 in errores: flash(e2, 'danger')
+            return redirect(url_for('directora_dashboard'))
+        e.clave = bcrypt.generate_password_hash(clave).decode('utf-8')
+    db.session.commit()
+    flash('Estudiante actualizado', 'success')
+    return redirect(url_for('directora_dashboard'))
+
+@app.route('/directora/estudiantes/toggle/<int:id>', methods=['POST'])
+@login_required
+@role_required('directora')
+def toggle_estudiante(id):
+    e = Estudiante.query.get_or_404(id)
+    e.activo = not e.activo
+    db.session.commit()
+    flash(f'Estudiante {"activado" if e.activo else "desactivado"}', 'success')
+    return redirect(url_for('directora_dashboard'))
+
+@app.route('/directora/estudiantes/eliminar/<int:id>', methods=['POST'])
+@login_required
+@role_required('directora')
+def eliminar_estudiante(id):
+    e = Estudiante.query.get_or_404(id)
+    Apoderado.query.filter_by(alumno_id=e.id).delete()
+    Inscripcion.query.filter_by(alumno_id=e.id).delete()
+    Evaluacion.query.filter_by(estudiante_id=e.id).delete()
+    Asistencia.query.filter_by(estudiante_id=e.id).delete()
+    Comentario.query.filter_by(estudiante_id=e.id).delete()
+    PagoRealizado.query.filter_by(estudiante_id=e.id).delete()
+    db.session.delete(e); db.session.commit()
+    flash('Estudiante eliminado', 'success')
+    return redirect(url_for('directora_dashboard'))
+
+# ----- JUSTIFICACIONES (revisión directora) -----
+@app.route('/directora/justificaciones', methods=['GET', 'POST'])
+@login_required
+@role_required('directora')
+def justificaciones_revision():
+    if request.method == 'POST':
+        j = Justificacion.query.get(int(request.form.get('id')))
+        if j:
+            j.estado = request.form.get('estado')
+            j.comentario_revision = request.form.get('comentario_revision', '')
+            j.fecha_revision = tiempo_actual()
+            j.revisado_por = session['usuario_id']
+            # Si se aprueba, cambiar asistencia a justificado
+            if j.estado == 'aprobado' and j.asistencia:
+                j.asistencia.estado = 'justificado'
+            db.session.commit()
+            flash('Justificación revisada', 'success')
+        return redirect(url_for('directora_dashboard'))
+    justificaciones = Justificacion.query.options(
+        joinedload(Justificacion.asistencia), joinedload(Justificacion.estudiante)
+    ).order_by(Justificacion.fecha_envio.desc()).all()
+    return redirect(url_for('directora_dashboard'))
+
+# ----- BOLETA DE NOTAS -----
+@app.route('/directora/boletas')
+@login_required
+@role_required('directora')
+def boletas():
+    return redirect(url_for('directora_dashboard'))
+
+@app.route('/directora/boletas/generar', methods=['POST'])
+@login_required
+@role_required('directora')
+def generar_boleta():
+    seccion_id = int(request.form.get('seccion_id'))
+    bimestre_id = int(request.form.get('bimestre_id'))
+    estudiantes = Estudiante.query.filter_by(seccion_id=seccion_id, activo=True).order_by(Estudiante.apellido_paterno).all()
+    seccion = Seccion.query.get(seccion_id)
+    bimestre = Bimestre.query.get(bimestre_id)
+    cursos = Curso.query.filter_by(seccion_id=seccion_id, periodo_academico_id=bimestre.periodo_academico_id).all()
+    curso_ids = [c.id for c in cursos]
+    estudiante_ids = [e.id for e in estudiantes]
+
+    # Batch fetch all evaluations and asistencia for this section/bimestre
+    todas_evals = Evaluacion.query.filter(
+        Evaluacion.estudiante_id.in_(estudiante_ids),
+        Evaluacion.curso_id.in_(curso_ids),
+        Evaluacion.bimestre_id == bimestre_id
+    ).all()
+    todas_asistencias = Asistencia.query.filter(
+        Asistencia.estudiante_id.in_(estudiante_ids),
+        Asistencia.curso_id.in_(curso_ids),
+        Asistencia.bimestre_id == bimestre_id
+    ).all()
+
+    # Index by (estudiante_id, curso_id)
+    evals_idx = {}
+    for ev in todas_evals:
+        key = (ev.estudiante_id, ev.curso_id)
+        if key not in evals_idx:
+            evals_idx[key] = []
+        evals_idx[key].append(ev)
+
+    asistencias_idx = {}
+    for a in todas_asistencias:
+        key = (a.estudiante_id, a.curso_id)
+        if key not in asistencias_idx:
+            asistencias_idx[key] = []
+        asistencias_idx[key].append(a)
+
+    pesos = {'cuaderno': 0.10, 'libro': 0.10, 'practicas': 0.20, 'exposiciones': 0.10, 'examen': 0.50}
+
+    notas_data = {}
+    for estudiante in estudiantes:
+        notas_data[estudiante.id] = {}
+        for curso in cursos:
+            evals = evals_idx.get((estudiante.id, curso.id), [])
+            asistencias = asistencias_idx.get((estudiante.id, curso.id), [])
+
+            if not evals:
+                continue
+
+            prom_final, pct_asistencia, total_asistencias = _calcular_promedio_desde_datos(evals, asistencias, pesos)
+
+            notas_data[estudiante.id][curso.id] = {
+                'promedio': prom_final,
+                'letra': nota_a_letra(prom_final),
+                'asistencia': round(pct_asistencia, 1),
+                'total_asistencias': total_asistencias
+            }
+
+    return render_template('boleta_pdf.html',
+        estudiantes=estudiantes, cursos=cursos,
+        notas=notas_data, seccion=seccion, bimestre=bimestre)
+
+# ----- PAGOS -----
+@app.route('/directora/pagos', methods=['GET', 'POST'])
+@login_required
+@role_required('directora')
+def pagos_directora():
+    if request.method == 'POST':
+        accion = request.form.get('accion')
+        if accion == 'crear_plan':
+            p = PagoPlan(
+                periodo_academico_id=int(request.form.get('periodo_academico_id')),
+                nombre=request.form.get('nombre'),
+                monto=request.form.get('monto'),
+                nivel_id=int(request.form.get('nivel_id')) if request.form.get('nivel_id') else None,
+                grado_id=int(request.form.get('grado_id')) if request.form.get('grado_id') else None,
+                tipo=request.form.get('tipo'),
+                fecha_vencimiento=datetime.strptime(request.form.get('fecha_vencimiento'), '%Y-%m-%d')
+            )
+            db.session.add(p); db.session.commit()
+            flash('Plan de pago creado', 'success')
+        elif accion == 'registrar_pago':
+            r = PagoRealizado(
+                estudiante_id=int(request.form.get('estudiante_id')),
+                pago_plan_id=int(request.form.get('pago_plan_id')),
+                monto_pagado=request.form.get('monto_pagado'),
+                estado='pagado'
+            )
+            db.session.add(r); db.session.commit()
+            flash('Pago registrado', 'success')
+        return redirect(url_for('directora_dashboard'))
+    return redirect(url_for('directora_dashboard'))
+
+# ----- CARPETA DOCENTE (admin) -----
+@app.route('/directora/carpetas', methods=['GET', 'POST'])
+@login_required
+@role_required('directora')
+def carpetas_admin():
+    if request.method == 'POST':
+        accion = request.form.get('accion')
+        if accion == 'crear':
+            c = CarpetaDocente(
+                nombre=request.form.get('nombre'),
+                descripcion=request.form.get('descripcion', ''),
+                bimestre_id=int(request.form.get('bimestre_id')) if request.form.get('bimestre_id') else None,
+                fecha_inicio_entrega=datetime.strptime(request.form.get('fecha_inicio_entrega'), '%Y-%m-%dT%H:%M'),
+                fecha_fin_entrega=datetime.strptime(request.form.get('fecha_fin_entrega'), '%Y-%m-%dT%H:%M'),
+                creado_por=session['usuario_id']
+            )
+            db.session.add(c); db.session.commit()
+            flash('Carpeta creada', 'success')
+        elif accion == 'revisar':
+            doc = DocumentoDocente.query.get(int(request.form.get('id')))
+            if doc:
+                doc.estado = request.form.get('estado')
+                doc.comentario_revision = request.form.get('comentario_revision', '')
+                doc.fecha_revision = tiempo_actual()
+                db.session.commit()
+                flash('Documento revisado', 'success')
+        return redirect(url_for('directora_dashboard'))
+    return redirect(url_for('directora_dashboard'))
 
 # ====================== RUTAS DOCENTE ======================
 
 @app.route('/docente/dashboard')
-@verificar_permisos
+@login_required
 @role_required('docente')
 def docente_dashboard():
-    """Dashboard de docente"""
-    usuario = Usuario.query.get(session.get('usuario_id'))
-    cursos = Curso.query.filter_by(docente_id=usuario.id).all()
-    
-    estudiante_ids = set()
-    seccion_nombres = set()
-    estudiantes_por_seccion = {}
-    for curso in cursos:
-        if curso.seccion_rel:
-            seccion_nombres.add(curso.seccion_rel.nombre)
-            # Contar estudiantes por sección
-            seccion_id = curso.seccion_rel.id
-            if seccion_id not in estudiantes_por_seccion:
-                estudiantes_por_seccion[seccion_id] = {
-                    'nombre': curso.seccion_rel.nombre,
-                    'grado': curso.seccion_rel.grado.nombre if curso.seccion_rel.grado else 'N/A',
-                    'cantidad': 0
-                }
-            estudiantes_por_seccion[seccion_id]['cantidad'] += len(curso.inscripciones)
-        for ins in curso.inscripciones:
-            estudiante_ids.add(ins.alumno_id)
+    docente = Colaborador.query.get(session['usuario_id'])
+    cursos = Curso.query.options(
+        joinedload(Curso.grado_rel), joinedload(Curso.seccion_rel)
+    ).filter_by(docente_id=docente.id, activo=True).all()
+    return render_template('dashboard_docente.html', docente=docente, cursos=cursos)
 
-    estudiantes = Usuario.query.filter(Usuario.id.in_(list(estudiante_ids))).all() if estudiante_ids else []
-    total_estudiantes = len(estudiantes)
-    secciones = ', '.join(sorted(seccion_nombres)) if seccion_nombres else 'No asignado'
-
-    # Datos de sección donde el docente es tutor
-    seccion_tutor = Seccion.query.get(usuario.seccion_id) if usuario.seccion_id else None
-    seccion_tutor_nombre = seccion_tutor.nombre if seccion_tutor else 'No asignado'
-    seccion_tutor_grado = seccion_tutor.grado.nombre if seccion_tutor and seccion_tutor.grado else 'No asignado'
-    seccion_tutor_cantidad = len(seccion_tutor.usuarios) if seccion_tutor else 0
-
-    return render_template('dashboard_docente.html', 
-                         usuario=usuario,
-                         cursos=cursos,
-                         estudiantes=estudiantes,
-                         total_cursos=len(cursos),
-                         total_estudiantes=total_estudiantes,
-                         secciones=secciones,
-                         estudiantes_por_seccion=estudiantes_por_seccion,
-                         seccion_tutor_nombre=seccion_tutor_nombre,
-                         seccion_tutor_grado=seccion_tutor_grado,
-                         seccion_tutor_cantidad=seccion_tutor_cantidad)
-
-@app.route('/docente/cambiar_clave', methods=['GET', 'POST'])
-@verificar_permisos
+@app.route('/docente/cursos/<int:curso_id>/evaluaciones', methods=['GET', 'POST'])
+@login_required
 @role_required('docente')
-def docente_cambiar_clave():
-    """Cambiar contraseña de docente"""
-    if request.method == 'POST':
-        nueva = request.form.get('nueva')
-        confirmar = request.form.get('confirmar')
-        actual = request.form.get('actual')
-
-        usuario = Usuario.query.get(session['usuario_id'])
-
-        if not bcrypt.check_password_hash(usuario.clave, actual):
-            flash('Contraseña actual incorrecta', 'danger')
-            return redirect(url_for('docente_cambiar_clave'))
-        
-        if actual == nueva:
-            flash('La nueva contraseña debe ser diferente a la actual', 'danger')
-            return redirect(url_for('docente_cambiar_clave'))
-
-        if nueva != confirmar:
-            flash('Las contraseñas no coinciden', 'danger')
-            return redirect(url_for('docente_cambiar_clave'))
-
-        errores = validar_clave(nueva, usuario)
-        if errores:
-            for error in errores:
-                flash(f'❌ {error}', 'danger')
-            return redirect(url_for('docente_cambiar_clave'))
-
-        usuario.clave = bcrypt.generate_password_hash(nueva).decode('utf-8')
-        db.session.commit()
-        
-        log = LogAcceso(usuario_id=usuario.id, accion='Cambio de contraseña')
-        db.session.add(log)
-        db.session.commit()
-        
-        flash('Contraseña actualizada correctamente', 'success')
+def evaluaciones_curso(curso_id):
+    curso = Curso.query.get_or_404(curso_id)
+    if curso.docente_id != session['usuario_id']:
+        flash('No tienes permiso para este curso', 'danger')
         return redirect(url_for('docente_dashboard'))
-    
-    return render_template('cambiar_clave.html')
+    bimestre_id = request.args.get('bimestre_id', type=int) or (obtener_bimestre_actual().id if obtener_bimestre_actual() else None)
+    estudiantes = Estudiante.query.filter_by(
+        seccion_id=curso.seccion_id, activo=True
+    ).order_by(Estudiante.apellido_paterno).all()
+    bimestres = Bimestre.query.filter_by(periodo_academico_id=curso.periodo_academico_id).all()
 
-# ====================== RUTAS ALUMNO ======================
-
-@app.route('/alumno/dashboard')
-@verificar_permisos
-@role_required('alumno')
-def alumno_dashboard():
-    """Dashboard de alumno"""
-    usuario = Usuario.query.get(session.get('usuario_id'))
-    inscripciones = []  # Lista vacía ya que no se utiliza Inscripcion
-    calificaciones = [ins.calificacion for ins in inscripciones if ins.calificacion is not None]
-    promedio = sum(calificaciones) / len(calificaciones) if calificaciones else None
-    
-    # Calcular asistencia promedio
-    asistencia = [ins.asistencia for ins in inscripciones if ins.asistencia is not None]
-    asistencia_promedio = sum(asistencia) / len(asistencia) if asistencia else 0
-    
-    # Apoderado del alumno
-    apoderado = Apoderado.query.filter_by(alumno_id=usuario.id).first()
-
-    # Sección, docente tutor y compañeros de sección
-    # Usar relaciones definidas en models.py: usuario.seccion_rel -> Seccion
-    seccion = None
-    docente_seccion = None
-    cantidad_estudiantes_seccion = 0
-    seccion_nombre = None
-    grado_nombre = None
-    
-    if usuario.seccion_id:
-        seccion = Seccion.query.get(usuario.seccion_id)
-        if seccion:
-            seccion_nombre = seccion.nombre
-            if seccion.grado:
-                grado_nombre = seccion.grado.nombre
-            if seccion.docente:
-                docente_seccion = seccion.docente.nombres
-            # Contar estudiantes en la misma sección
-            cantidad_estudiantes_seccion = Usuario.query.filter_by(
-                seccion_id=seccion.id, 
-                rol='alumno',
-                activo=True
-            ).count()
-
-    return render_template('dashboard_alumno.html',
-                         usuario=usuario,
-                         inscripciones=inscripciones,
-                         total_cursos=len(inscripciones),
-                         promedio=promedio,
-                         asistencia_promedio=int(asistencia_promedio),
-                         apoderado=apoderado,
-                         docente_seccion=docente_seccion,
-                         cantidad_estudiantes_seccion=cantidad_estudiantes_seccion,
-                         seccion_nombre=seccion_nombre,
-                         grado_nombre=grado_nombre)
-
-
-@app.route('/alumno/cambiar_clave', methods=['GET', 'POST'])
-@verificar_permisos
-@role_required('alumno')
-def alumno_cambiar_clave():
-    """Cambiar contraseña de alumno"""
     if request.method == 'POST':
-        nueva = request.form.get('nueva')
-        confirmar = request.form.get('confirmar')
-        actual = request.form.get('actual')
+        accion = request.form.get('accion')
+        if accion == 'guardar':
+            estudiante_id = int(request.form.get('estudiante_id'))
+            tipo = request.form.get('tipo')
+            calificacion = float(request.form.get('calificacion'))
+            if 0 <= calificacion <= 20:
+                e = Evaluacion(
+                    curso_id=curso_id, estudiante_id=estudiante_id,
+                    bimestre_id=bimestre_id, tipo=tipo,
+                    calificacion=calificacion,
+                    fecha=datetime.now().date(),
+                    observaciones=request.form.get('observaciones', '')
+                )
+                db.session.add(e); db.session.commit()
+                flash('Calificación guardada', 'success')
+            else:
+                flash('La nota debe ser entre 0 y 20', 'danger')
+        elif accion == 'importar':
+            archivo = request.files.get('archivo')
+            valido, msg = validar_archivo(archivo)
+            if not valido or not archivo.filename.endswith('.xlsx'):
+                flash(msg or 'Sube un archivo .xlsx válido', 'danger')
+            elif not HAS_OPENPYXL:
+                flash('openpyxl no instalado. Ejecuta: pip install openpyxl', 'danger')
+            else:
+                try:
+                    wb = openpyxl.load_workbook(archivo)
+                    ws = wb.active
 
-        usuario = Usuario.query.get(session['usuario_id'])
+                    # Pre-fetch all students and existing evaluations for this course/bimestre
+                    dnis = []
+                    rows_data = []
+                    for row in ws.iter_rows(min_row=2, values_only=True):
+                        dni = str(row[2]) if row[2] is not None else ''
+                        if dni:
+                            dnis.append(dni)
+                            rows_data.append((dni, row[3], row[4], row[5], row[6], row[7]))
 
-        if not bcrypt.check_password_hash(usuario.clave, actual):
-            flash('Contraseña actual incorrecta', 'danger')
-            return redirect(url_for('alumno_cambiar_clave'))
-        
-        if actual == nueva:
-            flash('La nueva contraseña debe ser diferente a la actual', 'danger')
-            return redirect(url_for('alumno_cambiar_clave'))
+                    estudiantes_map = {}
+                    if dnis:
+                        for e in Estudiante.query.filter(Estudiante.dni.in_(dnis)).all():
+                            estudiantes_map[e.dni] = e
 
-        if nueva != confirmar:
-            flash('Las contraseñas no coinciden', 'danger')
-            return redirect(url_for('alumno_cambiar_clave'))
+                    existing_evals = Evaluacion.query.filter_by(
+                        curso_id=curso_id, bimestre_id=bimestre_id
+                    ).all()
+                    evals_key = {}
+                    for ev in existing_evals:
+                        evals_key[(ev.estudiante_id, ev.tipo)] = ev
 
-        errores = validar_clave(nueva, usuario)
-        if errores:
-            for error in errores:
-                flash(f'❌ {error}', 'danger')
-            return redirect(url_for('alumno_cambiar_clave'))
+                    for dni, cuaderno, libro, practicas, exposiciones, examen in rows_data:
+                        est = estudiantes_map.get(dni)
+                        if not est:
+                            continue
+                        for tipo, nota in [('cuaderno', cuaderno), ('libro', libro), ('practicas', practicas), ('exposiciones', exposiciones), ('examen', examen)]:
+                            if nota is not None:
+                                key = (est.id, tipo)
+                                if key in evals_key:
+                                    evals_key[key].calificacion = float(nota)
+                                else:
+                                    ev = Evaluacion(
+                                        curso_id=curso_id, estudiante_id=est.id,
+                                        bimestre_id=bimestre_id, tipo=tipo,
+                                        calificacion=float(nota), fecha=datetime.now().date()
+                                    )
+                                    db.session.add(ev)
+                    db.session.commit()
+                    flash('Notas importadas desde Excel', 'success')
+                except Exception as ex:
+                    flash(f'Error al importar: {str(ex)}', 'danger')
+        return redirect(url_for('evaluaciones_curso', curso_id=curso_id))
 
-        usuario.clave = bcrypt.generate_password_hash(nueva).decode('utf-8')
+    # Recuperar evaluaciones existentes para mostrarlas
+    evaluaciones = Evaluacion.query.filter_by(curso_id=curso_id, bimestre_id=bimestre_id).all()
+    evals_por_estudiante = {}
+    for ev in evaluaciones:
+        if ev.estudiante_id not in evals_por_estudiante:
+            evals_por_estudiante[ev.estudiante_id] = {}
+        if ev.tipo not in evals_por_estudiante[ev.estudiante_id]:
+            evals_por_estudiante[ev.estudiante_id][ev.tipo] = []
+        evals_por_estudiante[ev.estudiante_id][ev.tipo].append(float(ev.calificacion))
+
+    return render_template('evaluaciones.html',
+        curso=curso, estudiantes=estudiantes,
+        bimestre_id=bimestre_id, bimestres=bimestres,
+        evals=evals_por_estudiante)
+
+@app.route('/docente/cursos/<int:curso_id>/asistencia', methods=['GET', 'POST'])
+@login_required
+@role_required('docente')
+def asistencia_curso(curso_id):
+    curso = Curso.query.get_or_404(curso_id)
+    if curso.docente_id != session['usuario_id']:
+        flash('No tienes permiso para este curso', 'danger')
+        return redirect(url_for('docente_dashboard'))
+    bimestre_id = request.args.get('bimestre_id', type=int) or (obtener_bimestre_actual().id if obtener_bimestre_actual() else None)
+    estudiantes = Estudiante.query.filter_by(
+        seccion_id=curso.seccion_id, activo=True
+    ).order_by(Estudiante.apellido_paterno).all()
+
+    if request.method == 'POST':
+        fecha = datetime.strptime(request.form.get('fecha'), '%Y-%m-%d').date()
+        # Pre-fetch existing records for this date
+        existentes = Asistencia.query.filter_by(
+            curso_id=curso_id, fecha=fecha, bimestre_id=bimestre_id
+        ).all()
+        existentes_idx = {a.estudiante_id: a for a in existentes}
+        for est in estudiantes:
+            estado = request.form.get(f'estado_{est.id}', 'presente')
+            if est.id in existentes_idx:
+                existentes_idx[est.id].estado = estado
+            else:
+                a = Asistencia(curso_id=curso_id, estudiante_id=est.id,
+                    bimestre_id=bimestre_id, fecha=fecha,
+                    estado=estado, marcado_por=session['usuario_id'])
+                db.session.add(a)
         db.session.commit()
-        
-        log = LogAcceso(usuario_id=usuario.id, accion='Cambio de contraseña')
-        db.session.add(log)
-        db.session.commit()
-        
-        flash('Contraseña actualizada correctamente', 'success')
-        return redirect(url_for('alumno_dashboard'))
-    
-    return render_template('cambiar_clave.html')
+        flash('Asistencia guardada', 'success')
+        return redirect(url_for('asistencia_curso', curso_id=curso_id))
 
-# ====================== MANEJO DE ERRORES ======================
+    fecha_seleccionada = request.args.get('fecha', datetime.now().strftime('%Y-%m-%d'))
+    asistencias_hoy = {}
+    asis = Asistencia.query.filter_by(curso_id=curso_id, fecha=fecha_seleccionada, bimestre_id=bimestre_id).all()
+    for a in asis:
+        asistencias_hoy[a.estudiante_id] = a.estado
 
+    bimestres = Bimestre.query.filter_by(periodo_academico_id=curso.periodo_academico_id).all()
+    return render_template('asistencia.html',
+        curso=curso, estudiantes=estudiantes,
+        fecha=fecha_seleccionada, asistencias=asistencias_hoy,
+        bimestre_id=bimestre_id, bimestres=bimestres)
+
+@app.route('/docente/comentarios', methods=['GET', 'POST'])
+@login_required
+@role_required('docente')
+def comentarios_docente():
+    docente = Colaborador.query.get(session['usuario_id'])
+    cursos = Curso.query.options(joinedload(Curso.grado_rel), joinedload(Curso.seccion_rel)).filter_by(docente_id=docente.id).all()
+    if request.method == 'POST':
+        c = Comentario(
+            docente_id=docente.id,
+            estudiante_id=int(request.form.get('estudiante_id')),
+            tipo=request.form.get('tipo'),
+            contenido=request.form.get('contenido'),
+            bimestre_id=int(request.form.get('bimestre_id')) if request.form.get('bimestre_id') else None
+        )
+        db.session.add(c); db.session.commit()
+        flash('Comentario enviado', 'success')
+        return redirect(url_for('comentarios_docente'))
+    comentarios = Comentario.query.filter_by(docente_id=docente.id).order_by(Comentario.fecha_creacion.desc()).all()
+    return render_template('comentarios_docente.html', cursos=cursos, comentarios=comentarios, bimestres=Bimestre.query.all())
+
+@app.route('/docente/documentos', methods=['GET', 'POST'])
+@login_required
+@role_required('docente')
+def documentos_docente():
+    docente = Colaborador.query.get(session['usuario_id'])
+    if request.method == 'POST':
+        archivo = request.files.get('archivo')
+        valido, msg = validar_archivo(archivo)
+        if not valido:
+            flash(msg, 'danger')
+            return redirect(url_for('documentos_docente'))
+        from werkzeug.utils import secure_filename
+        filename = secure_filename(archivo.filename)
+        filepath = os.path.join(UPLOAD_FOLDER, filename)
+        archivo.save(filepath)
+        d = DocumentoDocente(
+            carpeta_id=int(request.form.get('carpeta_id')),
+            docente_id=docente.id,
+            titulo=request.form.get('titulo'),
+            descripcion=request.form.get('descripcion', ''),
+            archivo_nombre=filename,
+            archivo_ruta=f'uploads/{filename}'
+        )
+        db.session.add(d); db.session.commit()
+        flash('Documento subido', 'success')
+        return redirect(url_for('documentos_docente'))
+    carpetas = CarpetaDocente.query.filter_by(activo=True).all()
+    documentos = DocumentoDocente.query.filter_by(docente_id=docente.id).order_by(DocumentoDocente.fecha_subida.desc()).all()
+    return render_template('documentos_docente.html', carpetas=carpetas, documentos=documentos)
+
+# ====================== RUTAS ESTUDIANTE ======================
+
+@app.route('/estudiante/dashboard')
+@login_required
+@role_required('alumno')
+def estudiante_dashboard():
+    estudiante = Estudiante.query.get(session['usuario_id'])
+    bimestre = obtener_bimestre_actual()
+
+    # Cursos del estudiante
+    inscripciones = Inscripcion.query.filter_by(alumno_id=estudiante.id).all()
+    cursos = [i.curso for i in inscripciones]
+
+    # Promedios por curso - batch
+    promedios = {}
+    if bimestre and cursos:
+        curso_ids = [c.id for c in cursos]
+        todas_evals = Evaluacion.query.filter(
+            Evaluacion.estudiante_id == estudiante.id,
+            Evaluacion.curso_id.in_(curso_ids),
+            Evaluacion.bimestre_id == bimestre.id
+        ).all()
+        todas_asistencias = Asistencia.query.filter(
+            Asistencia.estudiante_id == estudiante.id,
+            Asistencia.curso_id.in_(curso_ids),
+            Asistencia.bimestre_id == bimestre.id
+        ).all()
+
+        evals_idx = {}
+        for ev in todas_evals:
+            evals_idx.setdefault(ev.curso_id, []).append(ev)
+        asistencias_idx = {}
+        for a in todas_asistencias:
+            asistencias_idx.setdefault(a.curso_id, []).append(a)
+
+        pesos = {'cuaderno': 0.10, 'libro': 0.10, 'practicas': 0.20, 'exposiciones': 0.10, 'examen': 0.50}
+        for curso in cursos:
+            prom, asist, total = _calcular_promedio_desde_datos(
+                evals_idx.get(curso.id, []), asistencias_idx.get(curso.id, []), pesos
+            )
+            if prom is not None:
+                promedios[curso.id] = {'promedio': prom, 'letra': nota_a_letra(prom), 'asistencia': asist, 'total_asistencias': total}
+
+    # Pagos pendientes
+    sincronizar_estado_pagos(estudiante.id)
+    pagos_pendientes = PagoRealizado.query.filter_by(
+        estudiante_id=estudiante.id, estado='pendiente'
+    ).count()
+    pagos_atrasados = PagoRealizado.query.filter_by(
+        estudiante_id=estudiante.id, estado='atrasado'
+    ).count()
+
+    return render_template('dashboard_estudiante.html',
+        estudiante=estudiante, cursos=cursos,
+        promedios=promedios, bimestre=bimestre,
+        pagos_pendientes=pagos_pendientes, pagos_atrasados=pagos_atrasados)
+
+@app.route('/estudiante/horario')
+@login_required
+@role_required('alumno')
+def estudiante_horario():
+    estudiante = Estudiante.query.get(session['usuario_id'])
+    bimestre = obtener_bimestre_actual()
+    horarios = Horario.query.options(
+        joinedload(Horario.curso), joinedload(Horario.docente)
+    ).filter_by(seccion_id=estudiante.seccion_id).all()
+    return render_template('estudiante_horario.html', horarios=horarios, dias=['Lunes','Martes','Miércoles','Jueves','Viernes'])
+
+@app.route('/estudiante/notas')
+@login_required
+@role_required('alumno')
+def estudiante_notas():
+    estudiante = Estudiante.query.get(session['usuario_id'])
+    inscripciones = Inscripcion.query.filter_by(alumno_id=estudiante.id).all()
+    bimestre_id = request.args.get('bimestre_id', type=int) or (obtener_bimestre_actual().id if obtener_bimestre_actual() else None)
+    bimestres = Bimestre.query.all()
+
+    notas_por_curso = {}
+    if bimestre_id and inscripciones:
+        curso_ids = [ins.curso_id for ins in inscripciones]
+        todas_evals = Evaluacion.query.filter(
+            Evaluacion.estudiante_id == estudiante.id,
+            Evaluacion.curso_id.in_(curso_ids),
+            Evaluacion.bimestre_id == bimestre_id
+        ).all()
+        todas_asistencias = Asistencia.query.filter(
+            Asistencia.estudiante_id == estudiante.id,
+            Asistencia.curso_id.in_(curso_ids),
+            Asistencia.bimestre_id == bimestre_id
+        ).all()
+
+        evals_idx = {}
+        for ev in todas_evals:
+            evals_idx.setdefault(ev.curso_id, []).append(ev)
+        asistencias_idx = {}
+        for a in todas_asistencias:
+            asistencias_idx.setdefault(a.curso_id, []).append(a)
+
+        pesos = {'cuaderno': 0.10, 'libro': 0.10, 'practicas': 0.20, 'exposiciones': 0.10, 'examen': 0.50}
+        for ins in inscripciones:
+            prom, asist, total = _calcular_promedio_desde_datos(
+                evals_idx.get(ins.curso_id, []), asistencias_idx.get(ins.curso_id, []), pesos
+            )
+            notas_por_curso[ins.curso_id] = {
+                'curso': ins.curso,
+                'promedio': prom,
+                'letra': nota_a_letra(prom),
+                'asistencia': asist
+            }
+    return render_template('estudiante_notas.html', notas=notas_por_curso, bimestre_id=bimestre_id, bimestres=bimestres)
+
+@app.route('/estudiante/asistencia', methods=['GET', 'POST'])
+@login_required
+@role_required('alumno')
+def estudiante_asistencia():
+    estudiante = Estudiante.query.get(session['usuario_id'])
+    bimestre_id = request.args.get('bimestre_id', type=int) or (obtener_bimestre_actual().id if obtener_bimestre_actual() else None)
+
+    if request.method == 'POST':
+        asistencia_id = int(request.form.get('asistencia_id'))
+        motivo = request.form.get('motivo')
+        j = Justificacion(asistencia_id=asistencia_id, estudiante_id=estudiante.id, motivo=motivo)
+        db.session.add(j); db.session.commit()
+        flash('Justificación enviada', 'success')
+        return redirect(url_for('estudiante_asistencia'))
+
+    asistencias = Asistencia.query.options(
+        joinedload(Asistencia.curso)
+    ).filter_by(estudiante_id=estudiante.id, bimestre_id=bimestre_id).order_by(Asistencia.fecha.desc()).all()
+    justificadas = {j.asistencia_id for j in Justificacion.query.filter_by(estudiante_id=estudiante.id).all()}
+    return render_template('estudiante_asistencia.html',
+        asistencias=asistencias, bimestre_id=bimestre_id,
+        bimestres=Bimestre.query.all(), justificadas=justificadas)
+
+@app.route('/estudiante/comentarios')
+@login_required
+@role_required('alumno')
+def estudiante_comentarios():
+    estudiante = Estudiante.query.get(session['usuario_id'])
+    comentarios = Comentario.query.options(
+        joinedload(Comentario.docente)
+    ).filter_by(estudiante_id=estudiante.id).order_by(Comentario.fecha_creacion.desc()).all()
+    return render_template('estudiante_comentarios.html', comentarios=comentarios)
+
+@app.route('/estudiante/pagos')
+@login_required
+@role_required('alumno')
+def estudiante_pagos():
+    estudiante = Estudiante.query.get(session['usuario_id'])
+    sincronizar_estado_pagos(estudiante.id)
+    pagos = PagoRealizado.query.options(
+        joinedload(PagoRealizado.plan)
+    ).filter_by(estudiante_id=estudiante.id).all()
+    planes = PagoPlan.query.filter_by(activo=True).all()
+    return render_template('estudiante_pagos.html', pagos=pagos, planes=planes, estudiante=estudiante)
+
+# ====================== ERROR HANDLERS ======================
 @app.errorhandler(404)
-def not_found(error):
-    """Página no encontrada"""
+def not_found(e):
     return render_template('error.html', error='Página no encontrada'), 404
 
 @app.errorhandler(500)
-def server_error(error):
-    """Error interno del servidor"""
+def server_error(e):
     return render_template('error.html', error='Error interno del servidor'), 500
 
-# ====================== EJECUCIÓN ======================
 if __name__ == '__main__':
-    app.run(debug=True)    
+    app.run(debug=True)

@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% block title %}Evaluaciones - {{ curso.nombre }}{% endblock %}
+{% block content %}
+<div class="module-header">
+    <h2><i class="fas fa-star"></i> {{ curso.nombre }}</h2>
+    <p>{{ curso.grado_rel.nombre if curso.grado_rel else '-' }} - Sección {{ curso.seccion_rel.nombre if curso.seccion_rel else '-' }}</p>
+</div>
+
+<div class="card">
+    <form class="filter-form" method="GET" action="{{ url_for('evaluaciones_curso', curso_id=curso.id) }}">
+        <div class="filter-group"><label>Bimestre</label>
+            <select name="bimestre_id" onchange="this.form.submit()">
+                {% for b in bimestres %}
+                <option value="{{ b.id }}" {{ 'selected' if b.id == bimestre_id }}>{{ b.nombre }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </form>
+</div>
+
+<div class="grid-2 mt-1">
+    <!-- Formulario de nota individual -->
+    <div class="card">
+        <div class="card-head"><h3>Registrar Nota</h3></div>
+        <form method="POST" action="{{ url_for('evaluaciones_curso', curso_id=curso.id) }}" class="filter-form">
+            <input type="hidden" name="accion" value="guardar">
+            <input type="hidden" name="bimestre_id" value="{{ bimestre_id }}">
+            <div class="filter-group"><label>Estudiante</label>
+                <select name="estudiante_id" required>
+                    {% for e in estudiantes %}
+                    <option value="{{ e.id }}">{{ e.apellido_paterno }} {{ e.apellido_materno }}, {{ e.nombres }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="filter-group"><label>Tipo</label>
+                <select name="tipo" required>
+                    <option value="cuaderno">Cuaderno (10%)</option>
+                    <option value="libro">Libro (10%)</option>
+                    <option value="practicas">Prácticas (20%)</option>
+                    <option value="exposiciones">Exposiciones (10%)</option>
+                    <option value="examen">Examen (50%)</option>
+                </select>
+            </div>
+            <div class="filter-group"><label>Nota (0-20)</label>
+                <input type="number" name="calificacion" min="0" max="20" step="0.5" required>
+            </div>
+            <div class="filter-group"><label>Observaciones</label>
+                <input type="text" name="observaciones" placeholder="Opcional">
+            </div>
+            <button class="btn btn-primary btn-sm"><i class="fas fa-save"></i> Guardar</button>
+        </form>
+    </div>
+
+    <!-- Importar Excel -->
+    <div class="card">
+        <div class="card-head"><h3>Importar desde Excel</h3></div>
+        <p>Descarga la plantilla, llénala y súbela.</p>
+        <a href="#" class="btn btn-sm btn-secondary" onclick="descargarPlantilla()"><i class="fas fa-download"></i> Descargar Plantilla</a>
+        <form method="POST" action="{{ url_for('evaluaciones_curso', curso_id=curso.id) }}" enctype="multipart/form-data" class="mt-1">
+            <input type="hidden" name="accion" value="importar">
+            <div class="filter-group"><label>Archivo .xlsx</label>
+                <input type="file" name="archivo" accept=".xlsx" required>
+            </div>
+            <button class="btn btn-primary btn-sm"><i class="fas fa-upload"></i> Importar</button>
+        </form>
+    </div>
+</div>
+
+<!-- Tabla de notas -->
+<div class="card mt-1">
+    <div class="card-head"><h3>Notas Registradas</h3></div>
+    <table class="table">
+        <tr>
+            <th>Estudiante</th>
+            <th>Cuaderno</th>
+            <th>Libro</th>
+            <th>Prácticas</th>
+            <th>Exposiciones</th>
+            <th>Examen</th>
+            <th>Promedio</th>
+            <th>Letra</th>
+        </tr>
+        {% for e in estudiantes %}
+        {% set sid = e.id %}
+        <tr>
+            <td>{{ e.apellido_paterno }} {{ e.nombres }}</td>
+            <td>{{ evals[sid]['cuaderno'][0] if sid in evals and 'cuaderno' in evals[sid] else '-' }}</td>
+            <td>{{ evals[sid]['libro'][0] if sid in evals and 'libro' in evals[sid] else '-' }}</td>
+            <td>{{ evals[sid]['practicas'][0] if sid in evals and 'practicas' in evals[sid] else '-' }}</td>
+            <td>{{ evals[sid]['exposiciones'][0] if sid in evals and 'exposiciones' in evals[sid] else '-' }}</td>
+            <td>{{ evals[sid]['examen'][0] if sid in evals and 'examen' in evals[sid] else '-' }}</td>
+            <td><strong>{{ calcular_promedio_bimestre(sid, curso.id, bimestre_id)[0] if calcular_promedio_bimestre(sid, curso.id, bimestre_id)[0] is not none else '-' }}</strong></td>
+            <td><span class="badge badge-{{ 'success' if calcular_promedio_bimestre(sid, curso.id, bimestre_id)[0] is not none and calcular_promedio_bimestre(sid, curso.id, bimestre_id)[0] >= 18 else 'primary' if calcular_promedio_bimestre(sid, curso.id, bimestre_id)[0] is not none and calcular_promedio_bimestre(sid, curso.id, bimestre_id)[0] >= 14 else 'warning' if calcular_promedio_bimestre(sid, curso.id, bimestre_id)[0] is not none and calcular_promedio_bimestre(sid, curso.id, bimestre_id)[0] >= 12 else 'danger' }}">
+                {{ nota_a_letra(calcular_promedio_bimestre(sid, curso.id, bimestre_id)[0]) if calcular_promedio_bimestre(sid, curso.id, bimestre_id)[0] is not none else '-' }}
+            </span></td>
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+
+<script>
+function descargarPlantilla() {
+    var csv = "N°,Apellidos,Nombres,DNI,Cuaderno,Libro,Prácticas,Exposiciones,Examen\n";
+    {% for e in estudiantes %}
+    csv += {{ loop.index|tojson }}+","+{{ (e.apellido_paterno+" "+e.apellido_materno)|tojson }}+","+{{ e.nombres|tojson }}+","+{{ e.dni|tojson }}+",,,,,,\n";
+    {% endfor %}
+    var blob = new Blob(["\uFEFF" + csv], {type: 'text/csv;charset=utf-8;'});
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'plantilla_notas_{{ curso.id }}.csv';
+    a.click();
+}
+</script>
+{% endblock %}

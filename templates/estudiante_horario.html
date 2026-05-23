@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Mi Horario{% endblock %}
+{% block content %}
+<div class="module-header"><h2><i class="fas fa-clock"></i> Mi Horario</h2></div>
+<div class="card">
+    <table class="table">
+        <tr><th>Día</th><th>Hora</th><th>Curso</th><th>Docente</th></tr>
+        {% for d in ['Lunes','Martes','Miércoles','Jueves','Viernes'] %}
+            {% set dia_num = loop.index %}
+            {% set horarios_dia = horarios|selectattr('dia_semana','equalto',dia_num)|list %}
+            {% if horarios_dia %}
+                {% for h in horarios_dia %}
+                <tr>
+                    {% if loop.first %}<td rowspan="{{ horarios_dia|length }}"><strong>{{ d }}</strong></td>{% endif %}
+                    <td>{{ h.hora_inicio.strftime('%H:%M') }} - {{ h.hora_fin.strftime('%H:%M') }}</td>
+                    <td>{{ h.curso.nombre }}</td>
+                    <td>{{ h.docente.nombre_completo }}</td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr><td><strong>{{ d }}</strong></td><td colspan="3" class="text-center text-muted">Sin clases</td></tr>
+            {% endif %}
+        {% endfor %}
+    </table>
+</div>
+{% endblock %}

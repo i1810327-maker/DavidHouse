@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Mis Comentarios{% endblock %}
+{% block content %}
+<div class="module-header"><h2><i class="fas fa-comment"></i> Comentarios de mis docentes</h2></div>
+<div class="card">
+    {% for c in comentarios %}
+    <div class="comentario-card">
+        <div class="flex-between">
+            <strong>{{ c.docente.nombre_completo if c.docente else '-' }}</strong>
+            <span class="badge badge-{{ 'success' if c.tipo == 'positivo' else 'danger' if c.tipo == 'negativo' else 'info' }}">{{ c.tipo|title }}</span>
+        </div>
+        <p class="mt-1">{{ c.contenido }}</p>
+        <small class="text-muted">{{ c.fecha_creacion.strftime('%d/%m/%Y') }}</small>
+    </div>
+    {% else %}
+    <p class="text-center">Sin comentarios</p>
+    {% endfor %}
+</div>
+{% endblock %}

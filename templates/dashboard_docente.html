@@ -1,154 +1,41 @@
 {% extends "base.html" %}
-{% block title %}Panel de Docente{% endblock %}
-
+{% block title %}Panel Docente{% endblock %}
 {% block content %}
+<div class="module-header">
+    <h2><i class="fas fa-chalkboard-teacher"></i> Bienvenido, {{ docente.nombre_completo }}</h2>
+</div>
+
 <div class="dashboard-top">
-    <div class="summary-card summary-orange">
-        <div class="summary-title">Cursos Asignados</div>
-        <div class="summary-value">{{ total_cursos }}</div>
-    </div>
-    <div class="summary-card summary-orange-light">
-        <div class="summary-title">Cantidad de estudiantes a cargo</div>
-        <div class="summary-value">{{ seccion_tutor_cantidad }}</div>
-    </div>
-    <div class="summary-card summary-card-muted">
-        <div class="summary-title">Sección Tutoría</div>
-        <div class="summary-value">{{ seccion_tutor_nombre }}</div>
-    </div>
-    <div class="summary-card summary-card-muted">
-        <div class="summary-title">Grado Tutoría</div>
-        <div class="summary-value">{{ seccion_tutor_grado }}</div>
+    <div class="summary-card summary-blue">
+        <div class="summary-icon"><i class="fas fa-book"></i></div>
+        <div class="summary-title">Mis Cursos</div>
+        <div class="summary-value">{{ cursos|length }}</div>
     </div>
 </div>
 
-
-
-<div class="dashboard-tabs-card">
-    <div class="dashboard-tabs">
-        <button class="dashboard-tab active" onclick="showTab('cursos', this)">Cursos</button>
-        <button class="dashboard-tab" onclick="showTab('alumnos', this)">Alumnos</button>
-        <button class="dashboard-tab" onclick="showTab('reportes', this)">Reportes</button>
-        <button class="dashboard-tab" onclick="showTab('notas', this)">Notas</button>
-        <button class="dashboard-tab" onclick="showTab('asistencia', this)">Asistencia</button>
-    </div>
-
-    <div id="cursos" class="dashboard-panel" style="display: block;">
-        <div class="panel-header">
-            <div>
-                <h2>Mis Cursos</h2>
-                <p>Revisa los cursos que tienes asignados y la matrícula de cada uno.</p>
+{% if cursos %}
+<div class="card mt-1">
+    <h3>Mis Cursos</h3>
+    <div class="grid-2 mt-1">
+        {% for c in cursos %}
+        <div class="card-item">
+            <h4><i class="fas fa-book-open"></i> {{ c.nombre }}</h4>
+            <p>{{ c.grado_rel.nombre if c.grado_rel else '-' }} - Sección {{ c.seccion_rel.nombre if c.seccion_rel else '-' }}</p>
+            <p><small>{{ c.periodo.nombre if c.periodo else '-' }}</small></p>
+            <div class="flex-center gap-1 mt-1">
+                <a href="{{ url_for('evaluaciones_curso', curso_id=c.id) }}" class="btn btn-primary btn-sm"><i class="fas fa-star"></i> Notas</a>
+                <a href="{{ url_for('asistencia_curso', curso_id=c.id) }}" class="btn btn-secondary btn-sm"><i class="fas fa-calendar-check"></i> Asistencia</a>
             </div>
         </div>
-
-        {% if cursos %}
-        <table>
-            <tr>
-                <th>Código</th>
-                <th>Curso</th>
-                <th>Grado</th>
-                <th>Sección</th>
-                <th>Alumnos</th>
-            </tr>
-            {% for curso in cursos %}
-            <tr>
-                <td><strong>{{ curso.codigo }}</strong></td>
-                <td>{{ curso.nombre }}</td>
-                <td>{{ curso.grado_rel.nombre }}</td>
-                <td>{{ curso.seccion_rel.nombre }}</td>
-                <td>{{ curso.inscripciones|length }}</td>
-            </tr>
-            {% endfor %}
-        </table>
-
-        {% if estudiantes %}
-        <div class="card" style="margin-top: 28px;">
-            <h3>Alumnos por sección</h3>
-            <div class="divider"></div>
-            <table>
-                <tr>
-                    <th>DNI</th>
-                    <th>Nombre</th>
-                    <th>Grado</th>
-                    <th>Sección</th>
-                </tr>
-                {% for alumno in estudiantes %}
-                <tr>
-                    <td>{{ alumno.dni }}</td>
-                    <td>{{ alumno.nombre_completo }}</td>
-                    <td>{{ alumno.grado_rel.nombre if alumno.grado_rel else 'N/A' }}</td>
-                    <td>{{ alumno.seccion_rel.nombre if alumno.seccion_rel else 'N/A' }}</td>
-                </tr>
-                {% endfor %}
-            </table>
-        </div>
-        {% endif %}
-        {% else %}
-        <div style="padding: 40px; text-align: center; color: #999;">
-            No tienes cursos asignados aún.
-        </div>
-        {% endif %}
-    </div>
-
-    <div id="alumnos" class="dashboard-panel" style="display: none;">
-        <div class="panel-header">
-            <div>
-                <h2>Alumnos</h2>
-                <p>Listado de alumnos por sección en desarrollo.</p>
-            </div>
-        </div>
-        <div style="padding: 40px; text-align: center; color: #999;">
-            Función en desarrollo. En este módulo solo se mostrarán los alumnos por sección.
-        </div>
-    </div>
-
-    <div id="reportes" class="dashboard-panel" style="display: none;">
-        <div class="panel-header">
-            <div>
-                <h2>Reportes</h2>
-                <p>Genera reportes de clase, calificaciones y asistencia.</p>
-            </div>
-        </div>
-        <div style="padding: 40px; text-align: center; color: #999;">
-            Módulo en desarrollo.
-        </div>
-    </div>
-
-    <div id="notas" class="dashboard-panel" style="display: none;">
-        <div class="panel-header">
-            <div>
-                <h2>Notas</h2>
-                <p>Registra y revisa las notas de tus estudiantes.</p>
-            </div>
-        </div>
-        <div style="padding: 40px; text-align: center; color: #999;">
-            Módulo en desarrollo.
-        </div>
-    </div>
-
-    <div id="asistencia" class="dashboard-panel" style="display: none;">
-        <div class="panel-header">
-            <div>
-                <h2>Asistencia</h2>
-                <p>Control de asistencia por curso.</p>
-            </div>
-        </div>
-        <div style="padding: 40px; text-align: center; color: #999;">
-            Módulo en desarrollo.
-        </div>
+        {% endfor %}
     </div>
 </div>
 
-<script>
-function showTab(tabId, button) {
-    const panels = document.querySelectorAll('.dashboard-panel');
-    panels.forEach(panel => panel.style.display = 'none');
-    document.getElementById(tabId).style.display = 'block';
-
-    const tabs = document.querySelectorAll('.dashboard-tab');
-    tabs.forEach(tab => tab.classList.remove('active'));
-    if (button) {
-        button.classList.add('active');
-    }
-}
-</script>
+<div class="flex-center gap-1 mt-1">
+    <a href="{{ url_for('comentarios_docente') }}" class="btn btn-primary"><i class="fas fa-comment"></i> Comentarios</a>
+    <a href="{{ url_for('documentos_docente') }}" class="btn btn-secondary"><i class="fas fa-upload"></i> Subir Documentos</a>
+</div>
+{% else %}
+<div class="empty-state"><p>No tienes cursos asignados aún</p></div>
+{% endif %}
 {% endblock %}

@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Comentarios{% endblock %}
+{% block content %}
+<div class="module-header"><h2><i class="fas fa-comment"></i> Comentarios a Estudiantes</h2></div>
+<div class="card">
+    <form method="POST" action="{{ url_for('comentarios_docente') }}" class="filter-form">
+        <div class="filter-group"><label>Curso</label>
+            <select name="curso_id" id="sel-curso" required onchange="cargarEstudiantes(this.value)">
+                <option value="">Seleccionar</option>
+                {% for c in cursos %}
+                <option value="{{ c.id }}">{{ c.nombre }} - {{ c.seccion_rel.nombre if c.seccion_rel else '' }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="filter-group"><label>Estudiante</label>
+            <select name="estudiante_id" id="sel-estudiante" required>
+                <option value="">Primero selecciona un curso</option>
+            </select>
+        </div>
+        <div class="filter-group"><label>Tipo</label>
+            <select name="tipo" required>
+                <option value="positivo">Positivo</option>
+                <option value="negativo">Negativo</option>
+                <option value="neutral">Neutral</option>
+                <option value="informativo">Informativo</option>
+            </select>
+        </div>
+        <div class="filter-group"><label>Bimestre</label>
+            <select name="bimestre_id">
+                <option value="">General</option>
+                {% for b in bimestres %}
+                <option value="{{ b.id }}">{{ b.nombre }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="filter-group" style="flex:2">
+            <label>Comentario</label>
+            <textarea name="contenido" rows="2" required style="width:100%;padding:8px;border:2px solid #e0e0e0;border-radius:8px;font-family:inherit"></textarea>
+        </div>
+        <button class="btn btn-primary btn-sm"><i class="fas fa-paper-plane"></i> Enviar</button>
+    </form>
+</div>
+<div class="card mt-1">
+    <h3>Comentarios enviados</h3>
+    {% for c in comentarios %}
+    <div class="comentario-card">
+        <div class="flex-between">
+            <strong>{{ c.estudiante.nombre_completo if c.estudiante else '-' }}</strong>
+            <span class="badge badge-{{ 'success' if c.tipo == 'positivo' else 'danger' if c.tipo == 'negativo' else 'info' }}">{{ c.tipo|title }}</span>
+        </div>
+        <p>{{ c.contenido }}</p>
+        <small class="text-muted">{{ c.fecha_creacion.strftime('%d/%m/%Y') }}</small>
+    </div>
+    {% else %}
+    <p class="text-center mt-1">Sin comentarios aún</p>
+    {% endfor %}
+</div>
+<script>
+function cargarEstudiantes(cursoId) {
+    var sel = document.getElementById('sel-estudiante');
+    sel.innerHTML = '<option value="">Cargando...</option>';
+    if (!cursoId) { sel.innerHTML = '<option value="">Primero selecciona un curso</option>'; return; }
+    fetch('/api/estudiantes_por_curso/' + cursoId)
+        .then(r => r.json())
+        .then(data => {
+            sel.innerHTML = '<option value="">Seleccionar</option>';
+            data.forEach(function(e) {
+                sel.innerHTML += '<option value="' + e.id + '">' + e.nombre + '</option>';
+            });
+        });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,213 @@
+{% extends "base.html" %}
+{% block title %}Registrar Estudiante{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 800px; margin: 0 auto;">
+    <h2><i class="fas fa-user-graduate"></i> Registrar Nuevo Estudiante</h2>
+    <p style="color: #666; margin-bottom: 25px;">
+        Complete todos los campos para crear una nueva cuenta de estudiante en el sistema.
+    </p>
+    <div class="divider"></div>
+
+    <form method="POST" action="{{ url_for('registrar_alumno') }}" onsubmit="return disableSubmitButton(this)">
+        <!-- SECCION APODERADO -->
+        <div style="background: #e8f5e9; border-left: 4px solid #4caf50; padding: 20px; margin-bottom: 30px; border-radius: 8px;">
+            <h3 style="color: #2e7d32; margin-bottom: 15px;"><i class="fas fa-user-tie"></i> Información del Apoderado</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div class="form-group">
+                    <label for="apoderado_nombres">* Nombres *</label>
+                    <input type="text" id="apoderado_nombres" name="apoderado_nombres" placeholder="Juan" required maxlength="60" pattern="[A-Za-zÁÉÍÓÚáéíóúÑñ\s]*" oninput="validarNombre(this)">
+                </div>
+                <div class="form-group">
+                    <label for="apoderado_apellido_paterno">* Apellido Paterno *</label>
+                    <input type="text" id="apoderado_apellido_paterno" name="apoderado_apellido_paterno" placeholder="García" required maxlength="40" pattern="[A-Za-zÁÉÍÓÚáéíóúÑñ\s]*" oninput="validarNombre(this)">
+                </div>
+                <div class="form-group">
+                    <label for="apoderado_apellido_materno">* Apellido Materno *</label>
+                    <input type="text" id="apoderado_apellido_materno" name="apoderado_apellido_materno" placeholder="López" required maxlength="40" pattern="[A-Za-zÁÉÍÓÚáéíóúÑñ\s]*" oninput="validarNombre(this)">
+                </div>
+                <div class="form-group">
+                    <label for="apoderado_telefono_principal">* Teléfono Principal</label>
+                    <input type="text" id="apoderado_telefono_principal" name="apoderado_telefono_principal" placeholder="987654321" maxlength="12" oninput="validarTelefono(this, 'Teléfono Principal')">
+                </div>
+                <div class="form-group">
+                    <label for="apoderado_telefono_secundario">* Teléfono Secundario</label>
+                    <input type="text" id="apoderado_telefono_secundario" name="apoderado_telefono_secundario" placeholder="912345678" maxlength="12" oninput="validarTelefono(this, 'Teléfono Secundario')">
+                </div>
+            </div>
+        </div>
+
+        <!-- SECCION ALUMNO -->
+        <div style="background: #fff3e0; border-left: 4px solid #ff9800; padding: 20px; margin-bottom: 30px; border-radius: 8px;">
+            <h3 style="color: #f57c00; margin-bottom: 15px;"><i class="fas fa-user-graduate"></i> Información del Alumno</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div class="form-group">
+                    <label for="dni">* DNI *</label>
+                    <input type="text" id="dni" name="dni" placeholder="12345678" required maxlength="9" pattern="[0-9]*" oninput="validarDni(this)">
+                </div>
+                <div class="form-group">
+                    <label for="nombres">* Nombres *</label>
+                    <input type="text" id="nombres" name="nombres" placeholder="Juan" required maxlength="60" pattern="[A-Za-zÁÉÍÓÚáéíóúÑñ\s]*" oninput="validarNombre(this)">
+                </div>
+                <div class="form-group">
+                    <label for="apellido_paterno">* Apellido Paterno *</label>
+                    <input type="text" id="apellido_paterno" name="apellido_paterno" placeholder="García" required maxlength="40" pattern="[A-Za-zÁÉÍÓÚáéíóúÑñ\s]*" oninput="validarNombre(this)">
+                </div>
+                <div class="form-group">
+                    <label for="apellido_materno">* Apellido Materno *</label>
+                    <input type="text" id="apellido_materno" name="apellido_materno" placeholder="López" required maxlength="40" pattern="[A-Za-zÁÉÍÓÚáéíóúÑñ\s]*" oninput="validarNombre(this)">
+                </div>
+                <div class="form-group">
+                    <label for="correo">* Correo Electrónico *</label>
+                    <input type="email" id="correo" name="correo" placeholder="alumno@colegio.edu.pe" required maxlength="100" oninput="validarCorreo(this)">
+                </div>
+                <div class="form-group">
+                    <label for="clave">* Contraseña *</label>
+                    <input type="password" id="clave" name="clave" placeholder="Contraseña segura" required maxlength="50" oninput="validarClaveInput(this)">
+                </div>
+                <div class="form-group">
+                    <label for="nivel_id">* Nivel *</label>
+                    <select id="nivel_id" name="nivel_id" onchange="filtrarGrados()" required>
+                        <option value="">-- Selecciona un nivel --</option>
+                        <option value="inicial">Inicial</option>
+                        <option value="primaria">Primaria</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="grado_id">* Grado *</label>
+                    <select id="grado_id" name="grado_id" onchange="filtrarSecciones()" required disabled>
+                        <option value="">-- Primero selecciona un nivel --</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="seccion_id">* Sección *</label>
+                    <select id="seccion_id" name="seccion_id" required disabled>
+                        <option value="">-- Primero selecciona un grado --</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div style="background: #f0f7ff; border-left: 4px solid #0066CC; padding: 15px; border-radius: 4px; margin: 20px 0;">
+            <strong><i class="fas fa-info-circle"></i> Nota:</strong> El apoderado es la persona responsable del alumno.
+        </div>
+
+        <div class="btn-group" style="margin-top: 30px;">
+            <button type="submit" class="btn"><i class="fas fa-save"></i> Registrar Estudiante</button>
+            <a href="{{ url_for('directora_dashboard') }}" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Cancelar</a>
+        </div>
+    </form>
+</div>
+
+<script>
+    const gradosData = JSON.parse('{{ grados_data | default([]) | tojson | safe }}');
+
+    function filtrarGrados() {
+        const nivelSelect = document.getElementById('nivel_id');
+        const gradoSelect = document.getElementById('grado_id');
+        const seccionSelect = document.getElementById('seccion_id');
+        const nivelSeleccionado = nivelSelect.value;
+        gradoSelect.innerHTML = '';
+        seccionSelect.innerHTML = '';
+        gradoSelect.disabled = true;
+        seccionSelect.disabled = true;
+        if (!nivelSeleccionado) {
+            gradoSelect.innerHTML = '<option value="">-- Primero selecciona un nivel --</option>';
+            seccionSelect.innerHTML = '<option value="">-- Primero selecciona un grado --</option>';
+            return;
+        }
+        const gradosFiltrados = gradosData.filter(g => g.nivel === nivelSeleccionado);
+        if (gradosFiltrados.length === 0) {
+            gradoSelect.innerHTML = '<option value="">No hay grados disponibles</option>';
+        } else {
+            gradoSelect.innerHTML = '<option value="">-- Selecciona un grado --</option>';
+            gradosFiltrados.forEach(g => {
+                const opt = document.createElement('option');
+                opt.value = g.id; opt.textContent = g.nombre;
+                gradoSelect.appendChild(opt);
+            });
+            gradoSelect.disabled = false;
+        }
+        filtrarSecciones();
+    }
+
+    function filtrarSecciones() {
+        const gradoSelect = document.getElementById('grado_id');
+        const seccionSelect = document.getElementById('seccion_id');
+        const gradoSeleccionado = gradoSelect.value;
+        seccionSelect.innerHTML = '';
+        if (!gradoSeleccionado) {
+            seccionSelect.innerHTML = '<option value="">-- Primero selecciona un grado --</option>';
+            seccionSelect.disabled = true;
+            return;
+        }
+        const grado = gradosData.find(g => g.id === parseInt(gradoSeleccionado));
+        if (!grado || !grado.secciones || grado.secciones.length === 0) {
+            seccionSelect.innerHTML = '<option value="">No hay secciones disponibles</option>';
+            seccionSelect.disabled = true;
+        } else {
+            seccionSelect.innerHTML = '<option value="">-- Selecciona una sección --</option>';
+            grado.secciones.forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s.id; opt.textContent = s.nombre;
+                seccionSelect.appendChild(opt);
+            });
+            seccionSelect.disabled = false;
+        }
+    }
+
+    function validarDni(input) {
+        if (input.value && !/^\d*$/.test(input.value)) {
+            input.setCustomValidity('El DNI debe contener solo números');
+            input.reportValidity();
+        } else if (input.value && input.value.length > 9) {
+            input.setCustomValidity('El DNI debe tener máximo 9 caracteres');
+            input.reportValidity();
+        } else {
+            input.setCustomValidity('');
+        }
+    }
+
+    function validarNombre(input) {
+        if (input.value && !/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s\-\']*$/.test(input.value)) {
+            input.setCustomValidity('Este campo debe contener solo letras y espacios');
+            input.reportValidity();
+        } else {
+            input.setCustomValidity('');
+        }
+    }
+
+    function validarCorreo(input) {
+        if (input.value && input.value.length > 100) {
+            input.setCustomValidity('El correo debe tener máximo 100 caracteres');
+            input.reportValidity();
+        } else if (input.value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input.value)) {
+            input.setCustomValidity('Ingrese un correo electrónico válido');
+            input.reportValidity();
+        } else {
+            input.setCustomValidity('');
+        }
+    }
+
+    function validarClaveInput(input) {
+        if (input.value && input.value.length > 50) {
+            input.setCustomValidity('La contraseña debe tener máximo 50 caracteres');
+            input.reportValidity();
+        } else {
+            input.setCustomValidity('');
+        }
+    }
+
+    function validarTelefono(input, campo) {
+        if (input.value && !/^\d*$/.test(input.value)) {
+            input.setCustomValidity(campo + ' debe contener solo números');
+            input.reportValidity();
+        } else if (input.value && input.value.length > 12) {
+            input.setCustomValidity(campo + ' debe tener máximo 12 caracteres');
+            input.reportValidity();
+        } else {
+            input.setCustomValidity('');
+        }
+    }
+</script>
+{% endblock %}

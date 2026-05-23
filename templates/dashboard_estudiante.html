@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Mi Panel - Estudiante{% endblock %}
+{% block content %}
+<div class="module-header">
+    <h2><i class="fas fa-user-graduate"></i> {{ estudiante.nombre_completo }}</h2>
+    <p>Grado: {{ estudiante.grado_rel.nombre if estudiante.grado_rel else '-' }} | Sección: {{ estudiante.seccion_rel.nombre if estudiante.seccion_rel else '-' }}</p>
+</div>
+
+<div class="dashboard-top">
+    <div class="summary-card summary-blue">
+        <div class="summary-icon"><i class="fas fa-book"></i></div>
+        <div class="summary-title">Cursos</div>
+        <div class="summary-value">{{ cursos|length }}</div>
+    </div>
+    <div class="summary-card summary-orange">
+        <div class="summary-icon"><i class="fas fa-star"></i></div>
+        <div class="summary-title">Promedio</div>
+        <div class="summary-value">
+            {% set ns = namespace(total=0, count=0) %}
+            {% for c in cursos %}
+                {% set p = promedios[c.id]['promedio'] if c.id in promedios else None %}
+                {% if p is not none %}{% set ns.total = ns.total + p %}{% set ns.count = ns.count + 1 %}{% endif %}
+            {% endfor %}
+            {{ '%.1f'|format(ns.total / ns.count) if ns.count > 0 else '-' }}
+        </div>
+    </div>
+    <div class="summary-card summary-green">
+        <div class="summary-icon"><i class="fas fa-money-bill"></i></div>
+        <div class="summary-title">Pagos Pend.</div>
+        <div class="summary-value">{{ pagos_pendientes }}</div>
+    </div>
+    <div class="summary-card summary-purple">
+        <div class="summary-icon"><i class="fas fa-exclamation-triangle"></i></div>
+        <div class="summary-title">Atrasados</div>
+        <div class="summary-value">{{ pagos_atrasados }}</div>
+    </div>
+</div>
+
+<div class="grid-2 mt-1">
+    {% for c in cursos %}
+    {% set p = promedios[c.id] if c.id in promedios else None %}
+    <div class="card">
+        <h4><i class="fas fa-book-open"></i> {{ c.nombre }}</h4>
+        <p><small>{{ c.docente.nombre_completo if c.docente else '-' }}</small></p>
+        <div class="flex-between mt-1">
+            <span>Promedio: <strong>{{ p.promedio if p else '-' }}</strong></span>
+            <span class="badge badge-{{ 'success' if p and p.promedio >= 14 else 'warning' if p and p.promedio >= 12 else 'danger' }}">
+                {{ p.letra if p else '-' }}
+            </span>
+        </div>
+        <small>Asistencia: {{ p.asistencia if p else '0' }}%</small>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="flex-center gap-1 mt-1">
+    <a href="{{ url_for('estudiante_horario') }}" class="btn btn-primary"><i class="fas fa-clock"></i> Mi Horario</a>
+    <a href="{{ url_for('estudiante_notas') }}" class="btn btn-secondary"><i class="fas fa-star"></i> Mis Notas</a>
+    <a href="{{ url_for('estudiante_asistencia') }}" class="btn btn-info"><i class="fas fa-calendar-check"></i> Asistencia</a>
+    <a href="{{ url_for('estudiante_comentarios') }}" class="btn btn-warning"><i class="fas fa-comment"></i> Comentarios</a>
+    <a href="{{ url_for('estudiante_pagos') }}" class="btn btn-primary"><i class="fas fa-money-bill"></i> Pagos</a>
+</div>
+{% endblock %}
