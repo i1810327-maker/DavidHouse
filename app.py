@@ -887,6 +887,18 @@ def editar_alumno(id):
                 for e in errores: flash(e, 'danger')
                 return redirect(url_for('editar_alumno', id=id))
             a.clave = bcrypt.generate_password_hash(clave).decode('utf-8')
+        # Guardar apoderado
+        ap = Apoderado.query.filter_by(alumno_id=a.id).first()
+        if request.form.get('apo_nombres'):
+            if not ap:
+                ap = Apoderado(alumno_id=a.id)
+                db.session.add(ap)
+            ap.nombres = request.form.get('apo_nombres')
+            ap.apellido_paterno = request.form.get('apo_apellido_paterno')
+            ap.apellido_materno = request.form.get('apo_apellido_materno')
+            ap.telefono_principal = request.form.get('apo_telefono_principal')
+            ap.telefono_secundario = request.form.get('apo_telefono_secundario')
+            ap.es_apoderado = request.form.get('es_apoderado') == 'on'
         db.session.commit()
         flash('Estudiante actualizado', 'success')
         return redirect(url_for('listar_alumnos'))
@@ -1180,9 +1192,11 @@ def carpetas_admin():
 def docente_dashboard():
     docente = Colaborador.query.get(session['usuario_id'])
     cursos = Curso.query.options(
-        joinedload(Curso.grado_rel), joinedload(Curso.seccion_rel)
+        joinedload(Curso.grado_rel), joinedload(Curso.seccion_rel), joinedload(Curso.periodo)
     ).filter_by(docente_id=docente.id, activo=True).all()
-    return render_template('dashboard_docente.html', docente=docente, cursos=cursos)
+    seccion_ids = {c.seccion_id for c in cursos if c.seccion_id}
+    total_estudiantes = Estudiante.query.filter(Estudiante.seccion_id.in_(seccion_ids)).count() if seccion_ids else 0
+    return render_template('dashboard_docente.html', docente=docente, cursos=cursos, total_estudiantes=total_estudiantes)
 
 @app.route('/docente/cursos/<int:curso_id>/evaluaciones', methods=['GET', 'POST'])
 @login_required
@@ -1497,7 +1511,7 @@ def estudiante_notas():
 @role_required('alumno')
 def estudiante_asistencia():
     estudiante = Estudiante.query.get(session['usuario_id'])
-    bimestre_id = request.args.get('bimestre_id', type=int) or (obtener_bimestre_actual().id if obtener_bimestre_actual() else None)
+    bimestre_id = request.form.get('bimestre_id', type=int) or request.args.get('bimestre_id', type=int) or (obtener_bimestre_actual().id if obtener_bimestre_actual() else None)
 
     if request.method == 'POST':
         asistencia_id = int(request.form.get('asistencia_id'))
@@ -1505,7 +1519,7 @@ def estudiante_asistencia():
         j = Justificacion(asistencia_id=asistencia_id, estudiante_id=estudiante.id, motivo=motivo)
         db.session.add(j); db.session.commit()
         flash('Justificación enviada', 'success')
-        return redirect(url_for('estudiante_asistencia'))
+        return redirect(url_for('estudiante_asistencia', bimestre_id=bimestre_id))
 
     asistencias = Asistencia.query.options(
         joinedload(Asistencia.curso)

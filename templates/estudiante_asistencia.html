@@ -24,6 +24,7 @@
                 {% if a.estado == 'falta' and a.id not in justificadas %}
                 <form method="POST" action="{{ url_for('estudiante_asistencia') }}" style="display:inline">
                     <input type="hidden" name="asistencia_id" value="{{ a.id }}">
+                    <input type="hidden" name="bimestre_id" value="{{ bimestre_id }}">
                     <input type="text" name="motivo" placeholder="Motivo" required size="20">
                     <button class="btn btn-sm btn-primary"><i class="fas fa-paper-plane"></i> Justificar</button>
                 </form>

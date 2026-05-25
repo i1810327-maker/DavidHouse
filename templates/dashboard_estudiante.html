@@ -1,63 +1,139 @@
 {% extends "base.html" %}
 {% block title %}Mi Panel - Estudiante{% endblock %}
 {% block content %}
-<div class="module-header">
-    <h2><i class="fas fa-user-graduate"></i> {{ estudiante.nombre_completo }}</h2>
-    <p>Grado: {{ estudiante.grado_rel.nombre if estudiante.grado_rel else '-' }} | Sección: {{ estudiante.seccion_rel.nombre if estudiante.seccion_rel else '-' }}</p>
-</div>
-
-<div class="dashboard-top">
-    <div class="summary-card summary-blue">
-        <div class="summary-icon"><i class="fas fa-book"></i></div>
-        <div class="summary-title">Cursos</div>
-        <div class="summary-value">{{ cursos|length }}</div>
+<div class="dashboard-container">
+    <div class="module-header">
+        <h2><i class="fas fa-user-graduate"></i> {{ estudiante.nombre_completo }}</h2>
+        <p>Grado: {{ estudiante.grado_rel.nombre if estudiante.grado_rel else '-' }} | Sección: {{ estudiante.seccion_rel.nombre if estudiante.seccion_rel else '-' }}</p>
     </div>
-    <div class="summary-card summary-orange">
-        <div class="summary-icon"><i class="fas fa-star"></i></div>
-        <div class="summary-title">Promedio</div>
-        <div class="summary-value">
-            {% set ns = namespace(total=0, count=0) %}
-            {% for c in cursos %}
-                {% set p = promedios[c.id]['promedio'] if c.id in promedios else None %}
-                {% if p is not none %}{% set ns.total = ns.total + p %}{% set ns.count = ns.count + 1 %}{% endif %}
-            {% endfor %}
-            {{ '%.1f'|format(ns.total / ns.count) if ns.count > 0 else '-' }}
+
+    <div class="summary-row">
+        <div class="summary-card-dir">
+            <div class="summary-card-dir-icon" style="background:#e3f2fd;color:#1565c0;"><i class="fas fa-book"></i></div>
+            <div class="summary-card-dir-body">
+                <div class="summary-card-dir-value">{{ cursos|length }}</div>
+                <div class="summary-card-dir-label">Cursos</div>
+            </div>
+        </div>
+        <div class="summary-card-dir">
+            <div class="summary-card-dir-icon" style="background:#fff3e0;color:#e65100;"><i class="fas fa-star"></i></div>
+            <div class="summary-card-dir-body">
+                <div class="summary-card-dir-value">
+                    {% set ns = namespace(total=0, count=0) %}
+                    {% for c in cursos %}
+                        {% set p = promedios[c.id]['promedio'] if c.id in promedios else None %}
+                        {% if p is not none %}{% set ns.total = ns.total + p %}{% set ns.count = ns.count + 1 %}{% endif %}
+                    {% endfor %}
+                    {{ '%.1f'|format(ns.total / ns.count) if ns.count > 0 else '-' }}
+                </div>
+                <div class="summary-card-dir-label">Promedio General</div>
+            </div>
+        </div>
+        <div class="summary-card-dir">
+            <div class="summary-card-dir-icon" style="background:#e8f5e9;color:#2e7d32;"><i class="fas fa-money-bill"></i></div>
+            <div class="summary-card-dir-body">
+                <div class="summary-card-dir-value">{{ pagos_pendientes }}</div>
+                <div class="summary-card-dir-label">Pagos Pendientes</div>
+            </div>
+        </div>
+        <div class="summary-card-dir">
+            <div class="summary-card-dir-icon" style="background:#ffebee;color:#c62828;"><i class="fas fa-exclamation-triangle"></i></div>
+            <div class="summary-card-dir-body">
+                <div class="summary-card-dir-value">{{ pagos_atrasados }}</div>
+                <div class="summary-card-dir-label">Atrasados</div>
+            </div>
         </div>
     </div>
-    <div class="summary-card summary-green">
-        <div class="summary-icon"><i class="fas fa-money-bill"></i></div>
-        <div class="summary-title">Pagos Pend.</div>
-        <div class="summary-value">{{ pagos_pendientes }}</div>
-    </div>
-    <div class="summary-card summary-purple">
-        <div class="summary-icon"><i class="fas fa-exclamation-triangle"></i></div>
-        <div class="summary-title">Atrasados</div>
-        <div class="summary-value">{{ pagos_atrasados }}</div>
-    </div>
-</div>
 
-<div class="grid-2 mt-1">
-    {% for c in cursos %}
-    {% set p = promedios[c.id] if c.id in promedios else None %}
-    <div class="card">
-        <h4><i class="fas fa-book-open"></i> {{ c.nombre }}</h4>
-        <p><small>{{ c.docente.nombre_completo if c.docente else '-' }}</small></p>
-        <div class="flex-between mt-1">
-            <span>Promedio: <strong>{{ p.promedio if p else '-' }}</strong></span>
-            <span class="badge badge-{{ 'success' if p and p.promedio >= 14 else 'warning' if p and p.promedio >= 12 else 'danger' }}">
-                {{ p.letra if p else '-' }}
-            </span>
+    <div class="teacher-grid">
+        {% set colores = ['#1565c0','#2e7d32','#e65100','#6a1b9a','#c62828','#00838f','#4e342e','#37474f','#558b2f','#ad1457'] %}
+        {% for c in cursos %}
+        {% set p = promedios[c.id] if c.id in promedios else None %}
+        <div class="dashboard-course-card" style="border-top: 4px solid {{ colores[loop.index0 % colores|length] }};">
+            <div class="course-card-head">
+                <div class="course-icon" style="background:{{ colores[loop.index0 % colores|length] }}20;color:{{ colores[loop.index0 % colores|length] }};">
+                    <i class="fas fa-{{ 'book-open' if loop.index0 % 3 == 0 else 'calculator' if loop.index0 % 3 == 1 else 'flask' }}"></i>
+                </div>
+                <div class="course-info">
+                    <h4>{{ c.nombre }}</h4>
+                    <p>{{ c.docente.nombre_completo if c.docente else '-' }}</p>
+                </div>
+            </div>
+            <div class="flex-between">
+                <div>
+                    <span style="font-size:13px;color:#666;">Promedio:</span>
+                    <strong style="font-size:18px;color:{{ '#28a745' if p and p.promedio >= 14 else '#ff9800' if p and p.promedio >= 12 else '#dc3545' }};">{{ p.promedio if p else '-' }}</strong>
+                </div>
+                <div>
+                    <span class="badge-dir badge-dir-{{ 'success' if p and p.promedio >= 14 else 'warning' if p and p.promedio >= 12 else 'danger' }}" style="font-size:14px;padding:6px 16px;">
+                        {{ p.letra if p else '-' }}
+                    </span>
+                </div>
+            </div>
+            <div style="margin-top:8px;font-size:12px;color:#888;">
+                Asistencia: <strong>{{ p.asistencia if p else '0' }}%</strong>
+            </div>
         </div>
-        <small>Asistencia: {{ p.asistencia if p else '0' }}%</small>
+        {% endfor %}
     </div>
-    {% endfor %}
+
+    <div class="action-grid mt-3" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;">
+        <a href="{{ url_for('estudiante_horario') }}" class="action-card" style="text-align:center;background:#e3f2fd;border-color:#bbdefb;">
+            <i class="fas fa-clock" style="font-size:28px;color:#1565c0;display:block;margin-bottom:6px;"></i>
+            <h4 style="color:#1565c0;font-size:14px;margin:0;">Mi Horario</h4>
+        </a>
+        <a href="{{ url_for('estudiante_notas') }}" class="action-card" style="text-align:center;background:#fff3e0;border-color:#ffe0b2;">
+            <i class="fas fa-star" style="font-size:28px;color:#e65100;display:block;margin-bottom:6px;"></i>
+            <h4 style="color:#e65100;font-size:14px;margin:0;">Mis Notas</h4>
+        </a>
+        <a href="{{ url_for('estudiante_asistencia') }}" class="action-card" style="text-align:center;background:#e8f5e9;border-color:#c8e6c9;">
+            <i class="fas fa-calendar-check" style="font-size:28px;color:#2e7d32;display:block;margin-bottom:6px;"></i>
+            <h4 style="color:#2e7d32;font-size:14px;margin:0;">Asistencia</h4>
+        </a>
+        <a href="{{ url_for('estudiante_comentarios') }}" class="action-card" style="text-align:center;background:#f3e5f5;border-color:#e1bee7;">
+            <i class="fas fa-comment" style="font-size:28px;color:#6a1b9a;display:block;margin-bottom:6px;"></i>
+            <h4 style="color:#6a1b9a;font-size:14px;margin:0;">Comentarios</h4>
+        </a>
+        <a href="{{ url_for('estudiante_pagos') }}" class="action-card" style="text-align:center;background:#fce4ec;border-color:#f8bbd0;">
+            <i class="fas fa-money-bill" style="font-size:28px;color:#c62828;display:block;margin-bottom:6px;"></i>
+            <h4 style="color:#c62828;font-size:14px;margin:0;">Pagos</h4>
+        </a>
+    </div>
 </div>
 
-<div class="flex-center gap-1 mt-1">
-    <a href="{{ url_for('estudiante_horario') }}" class="btn btn-primary"><i class="fas fa-clock"></i> Mi Horario</a>
-    <a href="{{ url_for('estudiante_notas') }}" class="btn btn-secondary"><i class="fas fa-star"></i> Mis Notas</a>
-    <a href="{{ url_for('estudiante_asistencia') }}" class="btn btn-info"><i class="fas fa-calendar-check"></i> Asistencia</a>
-    <a href="{{ url_for('estudiante_comentarios') }}" class="btn btn-warning"><i class="fas fa-comment"></i> Comentarios</a>
-    <a href="{{ url_for('estudiante_pagos') }}" class="btn btn-primary"><i class="fas fa-money-bill"></i> Pagos</a>
-</div>
+<style>
+.dashboard-course-card {
+    background: white;
+    border-radius: 14px;
+    padding: 20px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+    border: 1px solid #f0f0f0;
+    transition: all 0.2s;
+}
+
+.dashboard-course-card:hover {
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    transform: translateY(-1px);
+}
+
+.course-card-head {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 14px;
+}
+
+.course-icon {
+    width: 44px; height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+.course-info h4 { font-size: 15px; color: #1a1a2e; margin-bottom: 2px; }
+.course-info p { font-size: 12px; color: #888; margin: 0; }
+</style>
 {% endblock %}
