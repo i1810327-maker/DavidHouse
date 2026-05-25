@@ -149,6 +149,7 @@ class Apoderado(db.Model):
     __tablename__ = 'apoderados'
     id = db.Column(db.Integer, primary_key=True)
     alumno_id = db.Column(db.Integer, db.ForeignKey('estudiantes.id'), nullable=False)
+    dni = db.Column(db.String(20))
     nombres = db.Column(db.String(100), nullable=False)
     apellido_paterno = db.Column(db.String(80), nullable=False)
     apellido_materno = db.Column(db.String(80), nullable=False)
@@ -282,6 +283,7 @@ class PagoPlan(db.Model):
     nivel_id = db.Column(db.Integer, db.ForeignKey('niveles.id'))
     grado_id = db.Column(db.Integer, db.ForeignKey('grados.id'))
     tipo = db.Column(db.Enum('matricula', 'mensualidad', 'otro'), nullable=False)
+    metodo_pago = db.Column(db.String(30), default='efectivo')
     fecha_vencimiento = db.Column(db.Date, nullable=False)
     activo = db.Column(db.Boolean, default=True)
     periodo = db.relationship('PeriodoAcademico', backref='pago_planes', lazy=True)
@@ -297,6 +299,7 @@ class PagoRealizado(db.Model):
     monto_pagado = db.Column(db.Numeric(8, 2), nullable=False)
     fecha_pago = db.Column(db.DateTime, default=datetime.utcnow)
     estado = db.Column(db.Enum('pagado', 'pendiente', 'atrasado'), default='pendiente')
+    metodo_pago = db.Column(db.String(30), default='efectivo')
     mora_acumulada = db.Column(db.Numeric(8, 2), default=0)
     observaciones = db.Column(db.Text)
     estudiante = db.relationship('Estudiante', backref='pagos', lazy=True)

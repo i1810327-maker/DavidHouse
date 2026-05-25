@@ -174,7 +174,7 @@
         <div class="ref-request-card">
             <div class="ref-request-header">
                 <div class="ref-request-title">{{ s.titulo }}</div>
-                <span class="ref-badge ref-badge-{{ 'success' if s.fecha_maxima > now() else 'danger' }}">
+                <span style="background:{{ '#e6fffa' if s.fecha_maxima > now() else '#fff5f5' }};color:{{ '#234e52' if s.fecha_maxima > now() else '#9b2c2c' }};padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">
                     {{ 'Plazo vigente' if s.fecha_maxima > now() else 'Vencido' }}
                 </span>
             </div>

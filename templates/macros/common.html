@@ -1,35 +1,36 @@
 {% macro grade_badge(nota) %}
   {% if nota is not none and nota >= 18 %}
-    <span class="badge badge-primary">{{ nota }}</span>
+    <span style="background:#e3f2fd;color:#1565c0;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">{{ nota }}</span>
   {% elif nota is not none and nota >= 14 %}
-    <span class="badge badge-success">{{ nota }}</span>
+    <span style="background:#e6fffa;color:#234e52;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">{{ nota }}</span>
   {% elif nota is not none and nota >= 12 %}
-    <span class="badge badge-warning">{{ nota }}</span>
+    <span style="background:#fff3cd;color:#856404;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">{{ nota }}</span>
   {% elif nota is not none %}
-    <span class="badge badge-danger">{{ nota }}</span>
+    <span style="background:#fff5f5;color:#9b2c2c;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">{{ nota }}</span>
   {% else %}
-    <span class="badge badge-secondary">-</span>
+    <span style="background:#e2e8f0;color:#4a5568;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">-</span>
   {% endif %}
 {% endmacro %}
 
 {% macro letter_grade(nota) %}
   {% set letra = nota_a_letra(nota) if nota is not none else '-' %}
   {% if letra == 'AD' %}
-    <span class="badge badge-primary">{{ letra }}</span>
+    <span style="background:#e3f2fd;color:#1565c0;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">{{ letra }}</span>
   {% elif letra == 'A' %}
-    <span class="badge badge-success">{{ letra }}</span>
+    <span style="background:#e6fffa;color:#234e52;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">{{ letra }}</span>
   {% elif letra == 'B' %}
-    <span class="badge badge-warning">{{ letra }}</span>
+    <span style="background:#fff3cd;color:#856404;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">{{ letra }}</span>
   {% elif letra == 'C' %}
-    <span class="badge badge-danger">{{ letra }}</span>
+    <span style="background:#fff5f5;color:#9b2c2c;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">{{ letra }}</span>
   {% else %}
-    <span class="badge badge-secondary">{{ letra }}</span>
+    <span style="background:#e2e8f0;color:#4a5568;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">{{ letra }}</span>
   {% endif %}
 {% endmacro %}
 
 {% macro status_badge(estado) %}
-  {% set cls = 'success' if estado == 'pagado' or estado == 'activo' or estado == 'aprobado' or estado == 'presente' else 'danger' if estado in ('inactivo','rechazado','falta','atrasado') else 'warning' if estado in ('pendiente','tarde') else 'info' %}
-  <span class="badge badge-{{ cls }}">{{ estado|title }}</span>
+  {% set bg = '#e6fffa' if estado in ('pagado','activo','aprobado','presente') else '#fff5f5' if estado in ('inactivo','rechazado','falta','atrasado') else '#fff3cd' if estado in ('pendiente','tarde') else '#e3f2fd' %}
+  {% set fg = '#234e52' if estado in ('pagado','activo','aprobado','presente') else '#9b2c2c' if estado in ('inactivo','rechazado','falta','atrasado') else '#856404' if estado in ('pendiente','tarde') else '#1565c0' %}
+  <span style="background:{{ bg }};color:{{ fg }};padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">{{ estado|title }}</span>
 {% endmacro %}
 
 {% macro evento_card(evento) %}

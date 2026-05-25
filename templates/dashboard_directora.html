@@ -2,31 +2,36 @@
 {% block title %}Panel Directora{% endblock %}
 {% block content %}
 
-<div class="ref-stats">
-    <div class="ref-stat-card">
-        <div class="ref-stat-icon" style="background:#e8f5e9;color:#2e7d32;"><i class="fas fa-chalkboard-teacher"></i></div>
-        <div><div class="ref-stat-value">{{ docentes|length }}</div><div class="ref-stat-label">Total Docentes</div></div>
+<div class="dash-header">
+    <h1>Panel de Directora</h1>
+    <p>Bienvenida, {{ session.nombres }} — Supervisa y gestiona el colegio</p>
+</div>
+
+<div class="dash-stats">
+    <div class="dash-stat">
+        <div class="dash-stat-icon" style="background:linear-gradient(135deg,#2e7d32,#66bb6a);color:white;"><i class="fas fa-chalkboard-teacher"></i></div>
+        <div class="dash-stat-info"><div class="dash-stat-value">{{ docentes|length }}</div><div class="dash-stat-label">Total Docentes</div></div>
     </div>
-    <div class="ref-stat-card">
-        <div class="ref-stat-icon" style="background:#e3f2fd;color:#1565c0;"><i class="fas fa-user-graduate"></i></div>
-        <div><div class="ref-stat-value">{{ estudiantes_count }}</div><div class="ref-stat-label">Total Estudiantes</div></div>
+    <div class="dash-stat">
+        <div class="dash-stat-icon" style="background:linear-gradient(135deg,#1565c0,#42a5f5);color:white;"><i class="fas fa-user-graduate"></i></div>
+        <div class="dash-stat-info"><div class="dash-stat-value">{{ estudiantes_count }}</div><div class="dash-stat-label">Total Estudiantes</div></div>
     </div>
-    <div class="ref-stat-card">
-        <div class="ref-stat-icon" style="background:#fff3e0;color:#e65100;"><i class="fas fa-money-bill"></i></div>
-        <div><div class="ref-stat-value">S/ {{ planes|sum(attribute='monto') }}</div><div class="ref-stat-label">Ingresos Mensuales</div></div>
+    <div class="dash-stat">
+        <div class="dash-stat-icon" style="background:linear-gradient(135deg,#e65100,#ff8a50);color:white;"><i class="fas fa-money-bill"></i></div>
+        <div class="dash-stat-info"><div class="dash-stat-value">S/ {{ planes|sum(attribute='monto') }}</div><div class="dash-stat-label">Ingresos Mensuales</div></div>
     </div>
-    <div class="ref-stat-card">
-        <div class="ref-stat-icon" style="background:#f3e5f5;color:#6a1b9a;"><i class="fas fa-star"></i></div>
-        <div><div class="ref-stat-value">--</div><div class="ref-stat-label">Promedio Institucional</div></div>
+    <div class="dash-stat">
+        <div class="dash-stat-icon" style="background:linear-gradient(135deg,#6a1b9a,#ab47bc);color:white;"><i class="fas fa-star"></i></div>
+        <div class="dash-stat-info"><div class="dash-stat-value">--</div><div class="dash-stat-label">Promedio Institucional</div></div>
     </div>
 </div>
 
-<div class="ref-tabs">
-    <button class="ref-tab active" onclick="showRefTab('colaboradores',this)"><i class="fas fa-users"></i> Colaboradores</button>
-    <button class="ref-tab" onclick="showRefTab('alumnos',this)"><i class="fas fa-user-graduate"></i> Alumnos</button>
-    <button class="ref-tab" onclick="showRefTab('pagos',this)"><i class="fas fa-money-bill"></i> Pagos</button>
-    <button class="ref-tab" onclick="showRefTab('notas',this)"><i class="fas fa-star"></i> Notas</button>
-    <button class="ref-tab" onclick="showRefTab('academico',this)"><i class="fas fa-graduation-cap"></i> Académico</button>
+<div class="dash-tabs">
+    <button class="dash-tab active" onclick="showRefTab('colaboradores',this)"><i class="fas fa-users"></i> Colaboradores</button>
+    <button class="dash-tab" onclick="showRefTab('alumnos',this)"><i class="fas fa-user-graduate"></i> Alumnos</button>
+    <button class="dash-tab" onclick="showRefTab('pagos',this)"><i class="fas fa-money-bill"></i> Pagos</button>
+    <button class="dash-tab" onclick="showRefTab('notas',this)"><i class="fas fa-star"></i> Notas</button>
+    <button class="dash-tab" onclick="showRefTab('academico',this)"><i class="fas fa-graduation-cap"></i> Académico</button>
 </div>
 
 <!-- ============ COLABORADORES ============ -->
@@ -46,29 +51,29 @@
         </div>
 
         <div class="ref-filters">
-            <select class="ref-filter-select" onchange="filtrarDocentes()"><option value="">Todos los Niveles</option>{% for n in niveles %}<option value="{{ n.id }}">{{ n.nombre }}</option>{% endfor %}</select>
-            <select class="ref-filter-select" onchange="filtrarDocentes()"><option value="">Todos los Grados</option>{% for g in grados %}<option value="{{ g.id }}">{{ g.nombre }}</option>{% endfor %}</select>
-            <select class="ref-filter-select" onchange="filtrarDocentes()"><option value="">Todas las Secciones</option>{% for s in secciones %}<option value="{{ s.id }}">{{ s.grado.nombre }} {{ s.nombre }}</option>{% endfor %}</select>
+            <select class="ref-filter-select" id="doc-nivel" onchange="cargarGradosRef(this.value,'doc-grado','Todos los Grados')"><option value="">Todos los Niveles</option>{% for n in niveles %}<option value="{{ n.id }}">{{ n.nombre }}</option>{% endfor %}</select>
+            <select class="ref-filter-select" id="doc-grado" onchange="cargarSeccionesRef(this.value,'doc-seccion','Todas las Secciones')"><option value="">Todos los Grados</option></select>
+            <select class="ref-filter-select" id="doc-seccion" onchange="filtrarDocentes()"><option value="">Todas las Secciones</option></select>
         </div>
 
-        <div class="ref-teacher-grid">
+        <div class="dash-teacher-grid">
             {% for d in docentes_data %}
-            <div class="ref-teacher-card">
-                <div class="ref-teacher-left">
-                    <div class="ref-teacher-avatar" style="background:{{ ['#1565c0','#2e7d32','#e65100','#6a1b9a','#c62828','#00838f','#4e342e','#37474f','#558b2f','#ad1457'] | random }};">
+            <div class="dash-teacher-card">
+                <div class="dash-teacher-left">
+                    <div class="dash-teacher-avatar" style="background:{{ ['#1565c0','#2e7d32','#e65100','#6a1b9a','#c62828','#00838f','#4e342e','#37474f','#558b2f','#ad1457'] | random }};">
                         {{ d.iniciales }}
                     </div>
-                    <div class="ref-teacher-info">
+                    <div class="dash-teacher-info">
                         <h4>{{ d.nombre_completo }}</h4>
                         <p>Docente • {{ d.materia }}</p>
-                        <div class="ref-teacher-meta">
+                        <div class="dash-teacher-meta">
                             <span><i class="fas fa-book"></i> {{ d.cursos_count }} clases</span>
                             <span><i class="fas fa-users"></i> {{ d.estudiantes_count }} estudiantes</span>
                         </div>
                     </div>
                 </div>
-                <div class="ref-teacher-right">
-                    <span class="ref-badge ref-badge-{{ 'success' if d.activo else 'danger' }}">{{ 'Activo' if d.activo else 'Inactivo' }}</span>
+                <div class="dash-teacher-right">
+                    <span class="status-pill status-{{ 'ativo' if d.activo else 'inactivo' }}">{{ 'Activo' if d.activo else 'Inactivo' }}</span>
                     <a href="{{ url_for('directora.editar_docente', id=d.id) }}" class="ref-btn-outline ref-btn-sm"><i class="fas fa-eye"></i> Ver Detalle</a>
                     <form method="POST" action="{{ url_for('directora.toggle_colaborador', id=d.id) }}" style="display:inline">
                         <button class="ref-header-btn" title="{{ 'Desactivar' if d.activo else 'Activar' }}"><i class="fas fa-{{ 'pause' if d.activo else 'play' }}"></i></button>
@@ -91,9 +96,9 @@
         </div>
 
         <div class="ref-filters">
-            <select class="ref-filter-select" onchange="filtrarReportes()"><option value="">Todos los Niveles</option>{% for n in niveles %}<option value="{{ n.id }}">{{ n.nombre }}</option>{% endfor %}</select>
-            <select class="ref-filter-select" onchange="filtrarReportes()"><option value="">Todos los Grados</option>{% for g in grados %}<option value="{{ g.id }}">{{ g.nombre }}</option>{% endfor %}</select>
-            <select class="ref-filter-select" onchange="filtrarReportes()"><option value="">Todas las Secciones</option>{% for s in secciones %}<option value="{{ s.id }}">{{ s.grado.nombre }} {{ s.nombre }}</option>{% endfor %}</select>
+            <select class="ref-filter-select" id="rep-nivel" onchange="cargarGradosRef(this.value,'rep-grado','Todos los Grados')"><option value="">Todos los Niveles</option>{% for n in niveles %}<option value="{{ n.id }}">{{ n.nombre }}</option>{% endfor %}</select>
+            <select class="ref-filter-select" id="rep-grado" onchange="cargarSeccionesRef(this.value,'rep-seccion','Todas las Secciones')"><option value="">Todos los Grados</option></select>
+            <select class="ref-filter-select" id="rep-seccion" onchange="filtrarReportes()"><option value="">Todas las Secciones</option></select>
             <select class="ref-filter-select" onchange="filtrarReportes()"><option value="">Todos los Tipos</option><option value="pendiente">Pendiente</option><option value="aprobado">Aprobado</option><option value="rechazado">Rechazado</option></select>
         </div>
 
@@ -108,7 +113,7 @@
                     </div>
                 </div>
                 <div style="display:flex;align-items:center;gap:10px;">
-                    <span class="ref-badge ref-badge-{{ 'warning' if doc.estado == 'pendiente' else 'success' if doc.estado == 'aprobado' else 'danger' }}">{{ doc.estado|title }}</span>
+                    <span style="background:{{ '#fff3cd' if doc.estado == 'pendiente' else '#e6fffa' if doc.estado == 'aprobado' else '#fff5f5' }};color:{{ '#856404' if doc.estado == 'pendiente' else '#234e52' if doc.estado == 'aprobado' else '#9b2c2c' }};padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">{{ doc.estado|title }}</span>
                     {% if doc.estado == 'pendiente' %}
                     <button class="ref-header-btn" title="Aprobar" onclick="revisarDocumento({{ doc.id }},'aprobar','{{ doc.titulo }}')"><i class="fas fa-check" style="color:#2e7d32;"></i></button>
                     <button class="ref-header-btn" title="Rechazar" onclick="revisarDocumento({{ doc.id }},'rechazar','{{ doc.titulo }}')"><i class="fas fa-times" style="color:#c62828;"></i></button>
@@ -141,9 +146,9 @@
     </form>
 
     <div class="ref-filters">
-        <select class="ref-filter-select" id="alu-nivel" onchange="filtrarAlumnos()"><option value="">Todos los Niveles</option>{% for n in niveles %}<option value="{{ n.id }}">{{ n.nombre }}</option>{% endfor %}</select>
-        <select class="ref-filter-select" id="alu-grado" onchange="filtrarAlumnos()"><option value="">Todos los Grados</option>{% for g in grados %}<option value="{{ g.id }}">{{ g.nombre }}</option>{% endfor %}</select>
-        <select class="ref-filter-select" id="alu-seccion" onchange="filtrarAlumnos()"><option value="">Todas las Secciones</option>{% for s in secciones %}<option value="{{ s.id }}">{{ s.grado.nombre }} {{ s.nombre }}</option>{% endfor %}</select>
+        <select class="ref-filter-select" id="alu-nivel" onchange="cargarGradosRef(this.value,'alu-grado','Todos los Grados');setTimeout(function(){filtrarAlumnos()},100)"><option value="">Todos los Niveles</option>{% for n in niveles %}<option value="{{ n.id }}">{{ n.nombre }}</option>{% endfor %}</select>
+        <select class="ref-filter-select" id="alu-grado" onchange="cargarSeccionesRef(this.value,'alu-seccion','Todas las Secciones');setTimeout(function(){filtrarAlumnos()},100)"><option value="">Todos los Grados</option></select>
+        <select class="ref-filter-select" id="alu-seccion" onchange="filtrarAlumnos()"><option value="">Todas las Secciones</option></select>
         <input type="text" class="ref-filter-select" id="alu-search" placeholder="Buscar nombre..." onkeyup="filtrarAlumnos()" style="min-width:200px;">
     </div>
 
@@ -157,9 +162,9 @@
                 <td>{{ a.correo }}</td>
                 <td>{{ a.grado_rel.nombre if a.grado_rel else '-' }}</td>
                 <td>{{ a.seccion_rel.nombre if a.seccion_rel else '-' }}</td>
-                <td><span class="ref-badge ref-badge-{{ 'success' if a.activo else 'danger' }}">{{ 'Activo' if a.activo else 'Inactivo' }}</span></td>
+                <td><span style="background:{{ '#e6fffa' if a.activo else '#fff5f5' }};color:{{ '#234e52' if a.activo else '#9b2c2c' }};padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">{{ 'Activo' if a.activo else 'Inactivo' }}</span></td>
                 <td style="text-align:right;white-space:nowrap;">
-                    <button class="ref-btn-outline ref-btn-sm" onclick="editarAlumno({{ a.id }}, '{{ a.dni }}', '{{ a.nombres }}', '{{ a.apellido_paterno }}', '{{ a.apellido_materno }}', '{{ a.correo }}', {{ a.grado_id }}, {{ a.seccion_id }})"><i class="fas fa-edit"></i></button>
+                    <button class="ref-btn-outline ref-btn-sm" onclick="editarAlumno({{ a.id }}, '{{ a.dni }}', '{{ a.nombres }}', '{{ a.apellido_paterno }}', '{{ a.apellido_materno }}', '{{ a.correo }}', {{ a.grado_rel.nivel_id if a.grado_rel else 'null' }}, {{ a.grado_id }}, {{ a.seccion_id }})"><i class="fas fa-edit"></i></button>
                     <form method="POST" action="{{ url_for('directora.toggle_estudiante', id=a.id) }}" style="display:inline">
                         <button class="ref-header-btn" title="{{ 'Desactivar' if a.activo else 'Activar' }}"><i class="fas fa-{{ 'pause' if a.activo else 'play' }}"></i></button>
                     </form>
@@ -179,12 +184,12 @@
         <h3>Registrar Nuevo Estudiante</h3>
         <form method="POST" action="{{ url_for('directora.crear_estudiante') }}">
             <div class="row g-3 mb-3">
-                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">DNI</label><input type="text" name="dni" class="ref-filter-select w-100" style="min-height:44px;" required></div>
-                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Nombres</label><input type="text" name="nombres" class="ref-filter-select w-100" style="min-height:44px;" required></div>
+                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">DNI</label><input type="text" name="dni" class="ref-filter-select w-100" style="min-height:44px;" required pattern="[0-9]{1,8}" maxlength="8" oninput="this.value=this.value.replace(/[^0-9]/g,'')" title="Solo números (8 dígitos máximo)"></div>
+                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Nombres</label><input type="text" name="nombres" class="ref-filter-select w-100" style="min-height:44px;" required pattern="[A-Za-zÁÉÍÓÚáéíóúñÑüÜ\s]+" oninput="this.value=this.value.replace(/[^A-Za-zÁÉÍÓÚáéíóúñÑüÜ\s]/g,'')" title="Solo letras y espacios"></div>
             </div>
             <div class="row g-3 mb-3">
-                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Ap. Paterno</label><input type="text" name="apellido_paterno" class="ref-filter-select w-100" style="min-height:44px;" required></div>
-                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Ap. Materno</label><input type="text" name="apellido_materno" class="ref-filter-select w-100" style="min-height:44px;" required></div>
+                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Ap. Paterno</label><input type="text" name="apellido_paterno" class="ref-filter-select w-100" style="min-height:44px;" required pattern="[A-Za-zÁÉÍÓÚáéíóúñÑüÜ\s]+" oninput="this.value=this.value.replace(/[^A-Za-zÁÉÍÓÚáéíóúñÑüÜ\s]/g,'')" title="Solo letras y espacios"></div>
+                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Ap. Materno</label><input type="text" name="apellido_materno" class="ref-filter-select w-100" style="min-height:44px;" required pattern="[A-Za-zÁÉÍÓÚáéíóúñÑüÜ\s]+" oninput="this.value=this.value.replace(/[^A-Za-zÁÉÍÓÚáéíóúñÑüÜ\s]/g,'')" title="Solo letras y espacios"></div>
             </div>
             <div class="row g-3 mb-3">
                 <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Correo</label><input type="email" name="correo" class="ref-filter-select w-100" style="min-height:44px;" required></div>
@@ -228,15 +233,15 @@
         <h3>Editar Estudiante</h3>
         <form method="POST" action="" id="form-editar-alumno">
             <div class="row g-3 mb-3">
-                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">DNI</label><input type="text" name="dni" id="edit-dni" class="ref-filter-select w-100" style="min-height:44px;" required></div>
+                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">DNI</label><input type="text" name="dni" id="edit-dni" class="ref-filter-select w-100" style="min-height:44px;" required pattern="[0-9]{1,8}" maxlength="8" oninput="this.value=this.value.replace(/[^0-9]/g,'')" title="Solo números (8 dígitos máximo)"></div>
                 <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Correo</label><input type="email" name="correo" id="edit-correo" class="ref-filter-select w-100" style="min-height:44px;" required></div>
             </div>
             <div class="row g-3 mb-3">
-                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Nombres</label><input type="text" name="nombres" id="edit-nombres" class="ref-filter-select w-100" style="min-height:44px;" required></div>
-                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Ap. Paterno</label><input type="text" name="apellido_paterno" id="edit-apellido_paterno" class="ref-filter-select w-100" style="min-height:44px;" required></div>
+                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Nombres</label><input type="text" name="nombres" id="edit-nombres" class="ref-filter-select w-100" style="min-height:44px;" required pattern="[A-Za-zÁÉÍÓÚáéíóúñÑüÜ\s]+" oninput="this.value=this.value.replace(/[^A-Za-zÁÉÍÓÚáéíóúñÑüÜ\s]/g,'')" title="Solo letras y espacios"></div>
+                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Ap. Paterno</label><input type="text" name="apellido_paterno" id="edit-apellido_paterno" class="ref-filter-select w-100" style="min-height:44px;" required pattern="[A-Za-zÁÉÍÓÚáéíóúñÑüÜ\s]+" oninput="this.value=this.value.replace(/[^A-Za-zÁÉÍÓÚáéíóúñÑüÜ\s]/g,'')" title="Solo letras y espacios"></div>
             </div>
             <div class="row g-3 mb-3">
-                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Ap. Materno</label><input type="text" name="apellido_materno" id="edit-apellido_materno" class="ref-filter-select w-100" style="min-height:44px;" required></div>
+                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Ap. Materno</label><input type="text" name="apellido_materno" id="edit-apellido_materno" class="ref-filter-select w-100" style="min-height:44px;" required pattern="[A-Za-zÁÉÍÓÚáéíóúñÑüÜ\s]+" oninput="this.value=this.value.replace(/[^A-Za-zÁÉÍÓÚáéíóúñÑüÜ\s]/g,'')" title="Solo letras y espacios"></div>
                 <div class="col-md-6" style="position:relative;">
                     <label style="font-size:12px;font-weight:500;color:#555;">Nueva Contraseña (opcional)</label>
                     <input type="password" name="clave" class="ref-filter-select w-100" style="min-height:44px;padding-right:40px;">
@@ -244,14 +249,19 @@
                 </div>
             </div>
             <div class="row g-3 mb-3">
-                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Grado</label>
-                    <select name="grado_id" id="edit-grado" class="ref-filter-select w-100" style="min-height:44px;">
-                        {% for g in grados %}<option value="{{ g.id }}">{{ g.nombre }}</option>{% endfor %}
+                <div class="col-md-4"><label style="font-size:12px;font-weight:500;color:#555;">Nivel</label>
+                    <select id="edit-nivel" class="ref-filter-select w-100" style="min-height:44px;" onchange="cargarGradosRef(this.value,'edit-grado','Seleccionar Grado');limpiarSelect('edit-seccion','Seleccionar Sección')">
+                        <option value="">Seleccionar</option>{% for n in niveles %}<option value="{{ n.id }}">{{ n.nombre }}</option>{% endfor %}
                     </select>
                 </div>
-                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Sección</label>
+                <div class="col-md-4"><label style="font-size:12px;font-weight:500;color:#555;">Grado</label>
+                    <select name="grado_id" id="edit-grado" class="ref-filter-select w-100" style="min-height:44px;" onchange="cargarSeccionesRef(this.value,'edit-seccion','Seleccionar Sección')">
+                        <option value="">Primero selecciona nivel</option>
+                    </select>
+                </div>
+                <div class="col-md-4"><label style="font-size:12px;font-weight:500;color:#555;">Sección</label>
                     <select name="seccion_id" id="edit-seccion" class="ref-filter-select w-100" style="min-height:44px;">
-                        {% for s in secciones %}<option value="{{ s.id }}">{{ s.grado.nombre }} {{ s.nombre }}</option>{% endfor %}
+                        <option value="">Primero selecciona grado</option>
                     </select>
                 </div>
             </div>
@@ -270,16 +280,16 @@
         <h3>Registrar Nuevo Docente</h3>
         <form method="POST" action="{{ url_for('directora.crear_colaborador') }}">
             <div class="row g-3 mb-3">
-                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">DNI</label><input type="text" name="dni" class="ref-filter-select w-100" style="min-height:44px;" required></div>
-                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Nombres</label><input type="text" name="nombres" class="ref-filter-select w-100" style="min-height:44px;" required></div>
+                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">DNI</label><input type="text" name="dni" class="ref-filter-select w-100" style="min-height:44px;" required pattern="[0-9]{1,8}" maxlength="8" oninput="this.value=this.value.replace(/[^0-9]/g,'')" title="Solo números (8 dígitos máximo)"></div>
+                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Nombres</label><input type="text" name="nombres" class="ref-filter-select w-100" style="min-height:44px;" required pattern="[A-Za-zÁÉÍÓÚáéíóúñÑüÜ\s]+" oninput="this.value=this.value.replace(/[^A-Za-zÁÉÍÓÚáéíóúñÑüÜ\s]/g,'')" title="Solo letras y espacios"></div>
             </div>
             <div class="row g-3 mb-3">
-                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Ap. Paterno</label><input type="text" name="apellido_paterno" class="ref-filter-select w-100" style="min-height:44px;" required></div>
-                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Ap. Materno</label><input type="text" name="apellido_materno" class="ref-filter-select w-100" style="min-height:44px;" required></div>
+                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Ap. Paterno</label><input type="text" name="apellido_paterno" class="ref-filter-select w-100" style="min-height:44px;" required pattern="[A-Za-zÁÉÍÓÚáéíóúñÑüÜ\s]+" oninput="this.value=this.value.replace(/[^A-Za-zÁÉÍÓÚáéíóúñÑüÜ\s]/g,'')" title="Solo letras y espacios"></div>
+                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Ap. Materno</label><input type="text" name="apellido_materno" class="ref-filter-select w-100" style="min-height:44px;" required pattern="[A-Za-zÁÉÍÓÚáéíóúñÑüÜ\s]+" oninput="this.value=this.value.replace(/[^A-Za-zÁÉÍÓÚáéíóúñÑüÜ\s]/g,'')" title="Solo letras y espacios"></div>
             </div>
             <div class="row g-3 mb-3">
-                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Tel. Principal</label><input type="text" name="telefono_principal" class="ref-filter-select w-100" style="min-height:44px;" maxlength="12"></div>
-                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Tel. Secundario</label><input type="text" name="telefono_secundario" class="ref-filter-select w-100" style="min-height:44px;" maxlength="12"></div>
+                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Tel. Principal</label><input type="text" name="telefono_principal" class="ref-filter-select w-100" style="min-height:44px;" maxlength="12" pattern="[0-9]+" oninput="this.value=this.value.replace(/[^0-9]/g,'')" title="Solo números"></div>
+                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Tel. Secundario</label><input type="text" name="telefono_secundario" class="ref-filter-select w-100" style="min-height:44px;" maxlength="12" pattern="[0-9]+" oninput="this.value=this.value.replace(/[^0-9]/g,'')" title="Solo números"></div>
             </div>
             <div class="row g-3 mb-3">
                 <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Correo</label><input type="email" name="correo" class="ref-filter-select w-100" style="min-height:44px;" required></div>
@@ -317,20 +327,20 @@
     </div>
 
     <div class="ref-filters">
-        <select class="ref-filter-select" id="pag-nivel" onchange="filtrarPlanes()"><option value="">Todos los Niveles</option>{% for n in niveles %}<option value="{{ n.id }}">{{ n.nombre }}</option>{% endfor %}</select>
-        <select class="ref-filter-select" id="pag-grado" onchange="filtrarPlanes()"><option value="">Todos los Grados</option>{% for g in grados %}<option value="{{ g.id }}">{{ g.nombre }}</option>{% endfor %}</select>
-        <select class="ref-filter-select" id="pag-seccion" onchange="filtrarPlanes()"><option value="">Todas las Secciones</option>{% for s in secciones %}<option value="{{ s.id }}">{{ s.grado.nombre }} {{ s.nombre }}</option>{% endfor %}</select>
+        <select class="ref-filter-select" id="pag-nivel" onchange="cargarGradosRef(this.value,'pag-grado','Todos los Grados')"><option value="">Todos los Niveles</option>{% for n in niveles %}<option value="{{ n.id }}">{{ n.nombre }}</option>{% endfor %}</select>
+        <select class="ref-filter-select" id="pag-grado" onchange="cargarSeccionesRef(this.value,'pag-seccion','Todas las Secciones')"><option value="">Todos los Grados</option></select>
+        <select class="ref-filter-select" id="pag-seccion" onchange="filtrarPlanes()"><option value="">Todas las Secciones</option></select>
     </div>
 
     <div class="row g-3">
         <div class="col-md-6"><div class="card h-100">
             <h3 style="font-size:16px;font-weight:600;color:#1a1a2e;margin-bottom:12px;">Planes de Pago</h3>
             <div class="table-responsive"><table class="ref-table">
-                <thead><tr><th>Nombre</th><th>Monto</th><th>Tipo</th><th>Vencimiento</th><th>Estado</th></tr></thead>
+                <thead><tr><th>Nombre</th><th>Monto</th><th>Tipo</th><th>Método</th><th>Vencimiento</th><th>Estado</th></tr></thead>
                 <tbody>
                     {% for pl in planes if planes %}
-                    <tr data-nivel="{{ pl.nivel_id or '' }}" data-grado="{{ pl.grado_id or '' }}"><td>{{ pl.nombre }}</td><td>S/ {{ pl.monto }}</td><td>{{ pl.tipo }}</td><td>{{ pl.fecha_vencimiento }}</td><td><span class="ref-badge ref-badge-{{ 'success' if pl.activo else 'danger' }}">{{ 'Activo' if pl.activo else 'Inactivo' }}</span></td></tr>
-                    {% else %}<tr><td colspan="5" style="text-align:center;padding:20px;color:#888;">Sin planes</td></tr>{% endfor %}
+                    <tr data-nivel="{{ pl.nivel_id or '' }}" data-grado="{{ pl.grado_id or '' }}"><td>{{ pl.nombre }}</td><td>S/ {{ pl.monto }}</td><td>{{ pl.tipo }}</td><td>{{ pl.metodo_pago or 'efectivo' }}</td><td>{{ pl.fecha_vencimiento }}</td><td><span style="background:{{ '#e6fffa' if pl.activo else '#fff5f5' }};color:{{ '#234e52' if pl.activo else '#9b2c2c' }};padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">{{ 'Activo' if pl.activo else 'Inactivo' }}</span></td></tr>
+                    {% else %}<tr><td colspan="6" style="text-align:center;padding:20px;color:#888;">Sin planes</td></tr>{% endfor %}
                 </tbody>
             </table></div>
         </div></div>
@@ -354,6 +364,14 @@
                     <label class="form-label">Monto</label>
                     <input type="number" name="monto_pagado" step="0.01" class="form-control" required>
                 </div>
+                <div class="mb-2">
+                    <label class="form-label">Método de Pago</label>
+                    <select name="metodo_pago" class="form-select">
+                        <option value="efectivo">Efectivo</option>
+                        <option value="transferencia">Transferencia</option>
+                        <option value="tarjeta">Tarjeta</option>
+                    </select>
+                </div>
                 <button class="ref-btn-primary w-100 justify-content-center mt-2"><i class="fas fa-save"></i> Registrar</button>
             </form>
         </div></div>
@@ -361,6 +379,31 @@
 
     <div class="mt-3"><button class="ref-btn-outline w-100 justify-content-center" onclick="asignarPlanTodos()"><i class="fas fa-users"></i> Asignar plan activo a todos los estudiantes</button></div>
     <form method="POST" action="{{ url_for('directora.pagos') }}" id="form-asignar-plan-todos" style="display:none"><input type="hidden" name="accion" value="asignar_plan"><input type="hidden" name="plan_id" id="asignar-plan-id"></form>
+
+    <div class="mt-4"><div class="card">
+        <h3 style="font-size:16px;font-weight:600;color:#1a1a2e;margin-bottom:12px;">Historial de Pagos</h3>
+        <div class="table-responsive"><table class="ref-table">
+            <thead><tr><th>Estudiante</th><th>Plan</th><th>Monto</th><th>Método de Pago</th><th>Estado</th><th></th></tr></thead>
+            <tbody>
+                {% for pago in pagos_realizados %}
+                <tr>
+                    <td><strong>{{ pago.estudiante.nombre_completo }}</strong></td>
+                    <td>{{ pago.plan.nombre }}</td>
+                    <td>S/ {{ pago.monto_pagado }}</td>
+                    <td>
+                        <select class="form-select form-select-sm" style="width:auto;display:inline-block;" onchange="actualizarMetodoPago({{ pago.id }}, this.value)">
+                            <option value="efectivo" {{ 'selected' if pago.metodo_pago == 'efectivo' }}>Efectivo</option>
+                            <option value="transferencia" {{ 'selected' if pago.metodo_pago == 'transferencia' }}>Transferencia</option>
+                            <option value="tarjeta" {{ 'selected' if pago.metodo_pago == 'tarjeta' }}>Tarjeta</option>
+                        </select>
+                    </td>
+                    <td><span style="background:{{ '#e6fffa' if pago.estado == 'pagado' else '#fff3cd' if pago.estado == 'pendiente' else '#fff5f5' }};color:{{ '#234e52' if pago.estado == 'pagado' else '#856404' if pago.estado == 'pendiente' else '#9b2c2c' }};padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">{{ pago.estado|title }}</span></td>
+                    <td><button class="ref-btn-outline ref-btn-sm" onclick="editarPago({{ pago.id }})"><i class="fas fa-edit"></i></button></td>
+                </tr>
+                {% else %}<tr><td colspan="6" style="text-align:center;padding:20px;color:#888;">Sin pagos registrados</td></tr>{% endfor %}
+            </tbody>
+        </table></div>
+    </div></div>
 </div>
 
 <!-- ============ NOTAS ============ -->
@@ -371,7 +414,7 @@
             <p>Gestiona las calificaciones de los estudiantes</p>
         </div>
         <div style="display:flex;gap:10px;flex-wrap:wrap;">
-            <button class="ref-btn-primary" onclick="guardarNotasMasivo()"><i class="fas fa-save"></i> Guardar Todo</button>
+            <button class="ref-btn-primary" onclick="guardarNotas()"><i class="fas fa-save"></i> Guardar Todo</button>
             <form method="POST" action="{{ url_for('directora.generar_boleta') }}" style="display:inline" id="bol-generar-form">
                 <input type="hidden" name="seccion_id" id="bol-seccion-id" value="">
                 <input type="hidden" name="bimestre_id" id="bol-bimestre-id" value="">
@@ -381,11 +424,12 @@
     </div>
 
     <div class="ref-filters">
-        <select class="ref-filter-select" id="notas-nivel" onchange="cargarGradosRef(this.value,'notas-grado')"><option value="">Todos los Niveles</option>{% for n in niveles %}<option value="{{ n.id }}">{{ n.nombre }}</option>{% endfor %}</select>
-        <select class="ref-filter-select" id="notas-grado" onchange="cargarSeccionesRef(this.value,'notas-seccion')"><option value="">Todos los Grados</option></select>
-        <select class="ref-filter-select" id="notas-seccion"><option value="">Todas las Secciones</option>{% for s in secciones %}<option value="{{ s.id }}">{{ s.grado.nombre }} {{ s.nombre }}</option>{% endfor %}</select>
-        <select class="ref-filter-select" id="notas-curso"><option value="">Seleccionar Curso</option>{% for c in cursos %}<option value="{{ c.id }}">{{ c.nombre }}</option>{% endfor %}</select>
+        <select class="ref-filter-select" id="notas-nivel" onchange="cargarGradosRef(this.value,'notas-grado');limpiarSelect('notas-seccion');limpiarSelect('notas-curso');cargarListaAlumnos()"><option value="">Todos los Niveles</option>{% for n in niveles %}<option value="{{ n.id }}">{{ n.nombre }}</option>{% endfor %}</select>
+        <select class="ref-filter-select" id="notas-grado" onchange="cargarSeccionesRef(this.value,'notas-seccion');limpiarSelect('notas-curso');cargarListaAlumnos()"><option value="">Todos los Grados</option></select>
+        <select class="ref-filter-select" id="notas-seccion" onchange="cargarCursosPorSeccion(this.value,'notas-curso');cargarListaAlumnos()"><option value="">Todas las Secciones</option></select>
+        <select class="ref-filter-select" id="notas-curso"><option value="">Seleccionar Curso</option></select>
         <select class="ref-filter-select" id="notas-bimestre">{% for b in bimestres %}<option value="{{ b.id }}">{{ b.nombre }}</option>{% endfor %}</select>
+        <button class="ref-btn-primary" onclick="cargarNotas()"><i class="fas fa-search"></i> Cargar Notas</button>
     </div>
 
     <div class="ref-grade-grid" id="notas-grid">
@@ -393,13 +437,12 @@
             <thead>
                 <tr><th>Estudiante</th><th>Cuaderno (10%)</th><th>Libro (10%)</th><th>Prácticas (20%)</th><th>Exposiciones (10%)</th><th>Examen (50%)</th><th>Promedio</th><th>Letra</th></tr>
             </thead>
-            <tbody>
+            <tbody id="notas-tbody">
                 <tr><td colspan="8" style="text-align:center;padding:40px;color:#888;">Selecciona un curso y bimestre para ver las notas</td></tr>
             </tbody>
         </table></div>
     </div>
 </div>
-
 <!-- ============ ACADEMICO ============ -->
 <div id="panel-academico" class="ref-tab-panel">
     <div class="ref-subtabs">
@@ -414,7 +457,7 @@
                 <div class="ref-section-header" style="margin-bottom:12px;"><h3 style="font-size:16px;margin:0;">Niveles</h3><button class="ref-btn-outline ref-btn-sm" onclick="document.getElementById('modal-nivel').style.display='flex'"><i class="fas fa-plus"></i></button></div>
                 <div class="table-responsive"><table class="ref-table">
                     {% for n in niveles %}
-                    <tr><td>{{ n.nombre }}</td><td><span class="ref-badge ref-badge-{{ 'success' if n.activo else 'danger' }}">{{ 'Activo' if n.activo else 'Inactivo' }}</span></td>
+                    <tr><td>{{ n.nombre }}</td><td><span style="background:{{ '#e6fffa' if n.activo else '#fff5f5' }};color:{{ '#234e52' if n.activo else '#9b2c2c' }};padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">{{ 'Activo' if n.activo else 'Inactivo' }}</span></td>
                         <td><form method="POST" action="{{ url_for('directora.niveles_crud') }}" style="display:inline"><input type="hidden" name="accion" value="toggle"><input type="hidden" name="id" value="{{ n.id }}"><button class="ref-header-btn"><i class="fas fa-{{ 'pause' if n.activo else 'play' }}"></i></button></form></td></tr>
                     {% endfor %}
                 </table></div>
@@ -423,7 +466,7 @@
                 <div class="ref-section-header" style="margin-bottom:12px;"><h3 style="font-size:16px;margin:0;">Grados</h3><button class="ref-btn-outline ref-btn-sm" onclick="abrirModalGrado()"><i class="fas fa-plus"></i></button></div>
                 <div class="table-responsive"><table class="ref-table">
                     {% for g in grados %}
-                    <tr><td>{{ g.nombre }}</td><td>{{ g.nivel_rel.nombre if g.nivel_rel else '-' }}</td><td><span class="ref-badge ref-badge-{{ 'success' if g.activo else 'danger' }}">{{ 'Activo' if g.activo else 'Inactivo' }}</span></td>
+                    <tr><td>{{ g.nombre }}</td><td>{{ g.nivel_rel.nombre if g.nivel_rel else '-' }}</td><td><span style="background:{{ '#e6fffa' if g.activo else '#fff5f5' }};color:{{ '#234e52' if g.activo else '#9b2c2c' }};padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">{{ 'Activo' if g.activo else 'Inactivo' }}</span></td>
                         <td><form method="POST" action="{{ url_for('directora.grados_crud') }}" style="display:inline"><input type="hidden" name="accion" value="toggle"><input type="hidden" name="id" value="{{ g.id }}"><button class="ref-header-btn"><i class="fas fa-{{ 'pause' if g.activo else 'play' }}"></i></button></form></td></tr>
                     {% endfor %}
                 </table></div>
@@ -432,7 +475,7 @@
                 <div class="ref-section-header" style="margin-bottom:12px;"><h3 style="font-size:16px;margin:0;">Secciones</h3><button class="ref-btn-outline ref-btn-sm" onclick="abrirModalSeccion()"><i class="fas fa-plus"></i></button></div>
                 <div class="table-responsive"><table class="ref-table">
                     {% for s in secciones %}
-                    <tr><td>{{ s.grado.nombre }} - {{ s.nombre }}</td><td><span class="ref-badge ref-badge-{{ 'success' if s.activo else 'danger' }}">{{ 'Activo' if s.activo else 'Inactivo' }}</span></td>
+                    <tr><td>{{ s.grado.nombre }} - {{ s.nombre }}</td><td><span style="background:{{ '#e6fffa' if s.activo else '#fff5f5' }};color:{{ '#234e52' if s.activo else '#9b2c2c' }};padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">{{ 'Activo' if s.activo else 'Inactivo' }}</span></td>
                         <td><form method="POST" action="{{ url_for('directora.secciones_crud') }}" style="display:inline"><input type="hidden" name="accion" value="toggle"><input type="hidden" name="id" value="{{ s.id }}"><button class="ref-header-btn"><i class="fas fa-{{ 'pause' if s.activo else 'play' }}"></i></button></form></td></tr>
                     {% endfor %}
                 </table></div>
@@ -450,7 +493,7 @@
             <tbody>
                 {% for c in cursos %}
                 <tr><td><strong>{{ c.nombre }}</strong></td><td>{{ c.codigo }}</td><td>{{ c.grado_rel.nombre if c.grado_rel else '-' }}</td><td>{{ c.seccion_rel.nombre if c.seccion_rel else '-' }}</td><td>{{ c.docente.nombre_completo if c.docente else '-' }}</td>
-                    <td><span class="ref-badge ref-badge-{{ 'success' if c.activo else 'danger' }}">{{ 'Activo' if c.activo else 'Inactivo' }}</span></td>
+                    <td><span style="background:{{ '#e6fffa' if c.activo else '#fff5f5' }};color:{{ '#234e52' if c.activo else '#9b2c2c' }};padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">{{ 'Activo' if c.activo else 'Inactivo' }}</span></td>
                     <td><form method="POST" action="{{ url_for('directora.cursos_crud') }}" style="display:inline"><input type="hidden" name="accion" value="toggle"><input type="hidden" name="id" value="{{ c.id }}"><button class="ref-header-btn"><i class="fas fa-{{ 'pause' if c.activo else 'play' }}"></i></button></form></td></tr>
                 {% endfor %}
             </tbody>
@@ -466,19 +509,25 @@
             <div class="table-responsive"><table>
                 <thead><tr><th>Hora</th><th>Lunes</th><th>Martes</th><th>Miércoles</th><th>Jueves</th><th>Viernes</th></tr></thead>
                 <tbody>
-                    {% set horas = ['08:00','09:00','10:00','11:00','12:00','13:00','14:00'] %}
-                    {% for h in horas %}
+                    {% set bloques = [('08:00','08:45'), ('08:45','09:30'), ('09:30','10:15'), ('RECESO','RECESO'), ('10:30','11:15'), ('11:15','12:00'), ('12:00','12:45')] %}
+                    {% for inicio, fin in bloques %}
+                    {% if inicio == 'RECESO' %}
+                    <tr style="background:#f4f4f4;">
+                        <td colspan="6" style="text-align:center;font-weight:600;color:#999;padding:8px;">RECESO</td>
+                    </tr>
+                    {% else %}
                     <tr>
-                        <td class="time-slot">{{ h }} - {{ '%02d:%02d'|format((h.split(':')[0]|int + 1), 0) }}</td>
+                        <td class="time-slot">{{ inicio }} - {{ fin }}</td>
                         {% for dia in range(1,6) %}
                         <td>
-                            {% set clases = horarios | selectattr('dia_semana', 'equalto', dia) | selectattr('hora_inicio.strftime', 'equalto', h + ':00') | list %}
+                            {% set clases = horarios | selectattr('dia_semana', 'equalto', dia) | selectattr('hora_inicio.strftime', 'equalto', inicio + ':00') | list %}
                             {% for c in clases %}
                             <div class="class-cell"><strong>{{ c.curso.nombre }}</strong><small>{{ c.docente.nombre_completo }}<br>{{ c.seccion.grado.nombre }} {{ c.seccion.nombre }}</small></div>
                             {% endfor %}
                         </td>
                         {% endfor %}
                     </tr>
+                    {% endif %}
                     {% endfor %}
                 </tbody>
             </table></div>
@@ -576,8 +625,14 @@
                 <select id="hc-dia">
                     <option value="1">Lunes</option><option value="2">Martes</option><option value="3">Miércoles</option><option value="4">Jueves</option><option value="5">Viernes</option>
                 </select>
-                <input type="time" id="hc-inicio" value="08:00">
-                <input type="time" id="hc-fin" value="09:00">
+                <select id="hc-bloque">
+                    <option value="08:00|08:45">08:00 - 08:45</option>
+                    <option value="08:45|09:30">08:45 - 09:30</option>
+                    <option value="09:30|10:15">09:30 - 10:15</option>
+                    <option value="10:30|11:15">10:30 - 11:15</option>
+                    <option value="11:15|12:00">11:15 - 12:00</option>
+                    <option value="12:00|12:45">12:00 - 12:45</option>
+                </select>
                 <select id="hc-curso">
                     <option value="">Curso</option>
                     {% for c in cursos %}<option value="{{ c.id }}">{{ c.nombre }}</option>{% endfor %}
@@ -613,8 +668,14 @@
                 <div class="col-md-6"><label class="form-label">Nivel</label><select name="nivel_id" class="form-select"><option value="">Todos los niveles</option>{% for n in niveles %}<option value="{{ n.id }}">{{ n.nombre }}</option>{% endfor %}</select></div>
             </div>
             <div class="row g-3 mb-3">
-                <div class="col-md-6"><label class="form-label">Grado</label><select name="grado_id" class="form-select"><option value="">Todos los grados</option>{% for g in grados %}<option value="{{ g.id }}">{{ g.nombre }}</option>{% endfor %}</select></div>
+                <div class="col-md-6"><label class="form-label">Grado</label><select name="grado_id" id="plan-grado-id" class="form-select"><option value="">Todos los grados</option>{% for g in grados %}<option value="{{ g.id }}">{{ g.nombre }}</option>{% endfor %}</select></div>
+                <div class="col-md-6"><label class="form-label">Método de Pago</label><select name="metodo_pago" class="form-select"><option value="efectivo">Efectivo</option><option value="transferencia">Transferencia</option><option value="tarjeta">Tarjeta</option></select></div>
+            </div>
+            <div class="row g-3 mb-3">
                 <div class="col-md-6"><label class="form-label">Fecha Vencimiento</label><input type="date" name="fecha_vencimiento" class="form-control" required></div>
+                <div class="col-md-6 d-flex align-items-end pb-2">
+                    <div class="form-check"><input type="checkbox" name="auto_asignar" id="auto-asignar-chk" class="form-check-input"><label class="form-check-label" for="auto-asignar-chk">Auto-asignar a todos los estudiantes del grado seleccionado</label></div>
+                </div>
             </div>
             <div class="ref-modal-actions">
                 <button type="button" class="ref-btn-outline" onclick="document.getElementById('modal-pago-plan').style.display='none'">Cancelar</button>
@@ -631,6 +692,11 @@ const API_EDIT_ALUMNO = "{{ url_for('directora.editar_estudiante', id=0) }}";
 const API_HORARIOS = "{{ url_for('directora.api_horarios_por_seccion', seccion_id=0) }}";
 const API_HOR_CREAR = "{{ url_for('directora.api_horario_crear') }}";
 const API_HOR_ELIMINAR = "{{ url_for('directora.api_horario_eliminar', id=0) }}";
+const API_CURSOS_SECCION = "{{ url_for('directora.api_cursos_por_seccion', seccion_id=0) }}";
+const API_NOTAS = "{{ url_for('directora.api_notas_por_curso') }}";
+const API_NOTAS_GUARDAR = "{{ url_for('directora.api_notas_guardar') }}";
+const API_ALUMNOS = "{{ url_for('directora.api_alumnos') }}";
+const API_ACTUALIZAR_METODO_PAGO = "{{ url_for('directora.api_actualizar_metodo_pago') }}";
 
 function cerrarModalHorario() { document.getElementById('modal-horario').style.display = 'none'; }
 function abrirModalGrado() { document.getElementById('modal-grado').style.display = 'flex'; }
@@ -651,18 +717,24 @@ var bloquesHorario = [];
 
 function renderHorarioPreview() {
     var dias = ['Lunes','Martes','Mi\u00e9rcoles','Jueves','Viernes'];
-    var horas = ['08:00','09:00','10:00','11:00','12:00','13:00','14:00'];
+    var bloques = [['08:00','08:45'],['08:45','09:30'],['09:30','10:15'],['RECESO','RECESO'],['10:30','11:15'],['11:15','12:00'],['12:00','12:45']];
     var html = '<div class="hc-header">Hora</div>';
     for (var d = 0; d < 5; d++) html += '<div class="hc-header">' + dias[d] + '</div>';
-    horas.forEach(function(h) {
-        var nextH = (parseInt(h.split(':')[0]) + 1).toString().padStart(2,'0') + ':00';
-        html += '<div class="hc-time">' + h + ' - ' + nextH + '</div>';
-        for (var d = 1; d <= 5; d++) {
-            html += '<div class="hc-cell" data-hora="' + h + '" data-dia="' + d + '">';
-            bloquesHorario.filter(function(b) { return b.dia_semana == d && b.hora_inicio == h; }).forEach(function(b) {
-                html += '<div class="hc-block"><strong>' + b.curso_nombre + '</strong><small>' + b.docente_nombre + '</small><button class="block-remove" onclick="eliminarBloqueHorario(' + b.id + ',event)"><i class="fas fa-times"></i></button></div>';
-            });
-            html += '</div>';
+    bloques.forEach(function(b) {
+        if (b[0] === 'RECESO') {
+            html += '<div class="hc-time" style="background:#f0f0f0;color:#888;font-weight:600;text-align:center;">RECESO</div>';
+            for (var d = 1; d <= 5; d++) {
+                html += '<div class="hc-cell" style="background:#f5f5f5;"></div>';
+            }
+        } else {
+            html += '<div class="hc-time">' + b[0] + ' - ' + b[1] + '</div>';
+            for (var d = 1; d <= 5; d++) {
+                html += '<div class="hc-cell" data-hora="' + b[0] + '" data-dia="' + d + '">';
+                bloquesHorario.filter(function(bl) { return bl.dia_semana == d && bl.hora_inicio == b[0]; }).forEach(function(bl) {
+                    html += '<div class="hc-block"><strong>' + bl.curso_nombre + '</strong><small>' + bl.docente_nombre + '</small><button class="block-remove" onclick="eliminarBloqueHorario(' + bl.id + ',event)"><i class="fas fa-times"></i></button></div>';
+                });
+                html += '</div>';
+            }
         }
     });
     document.getElementById('horario-preview').innerHTML = html;
@@ -671,11 +743,13 @@ function renderHorarioPreview() {
 function agregarBloqueHorario() {
     var secId = document.getElementById('hor-seccion').value;
     if (!secId) { showToast('Selecciona una sección primero','warning'); return; }
+    var bloqueVal = document.getElementById('hc-bloque').value;
+    var partes = bloqueVal.split('|');
     var data = {
         seccion_id: parseInt(secId),
         dia_semana: parseInt(document.getElementById('hc-dia').value),
-        hora_inicio: document.getElementById('hc-inicio').value,
-        hora_fin: document.getElementById('hc-fin').value,
+        hora_inicio: partes[0],
+        hora_fin: partes[1],
         curso_id: parseInt(document.getElementById('hc-curso').value),
         docente_id: parseInt(document.getElementById('hc-docente').value)
     };
@@ -698,29 +772,50 @@ function eliminarBloqueHorario(id, event) {
     });
 }
 
-function cargarGradosRef(nivelId, targetId) {
+function cargarGradosRef(nivelId, targetId, placeholder, callback) {
     var sel = document.getElementById(targetId);
     if (!sel) return;
+    var ph = placeholder || 'Seleccionar Grado';
     sel.innerHTML = '<option value="">Cargando...</option>';
+    if (!nivelId) { sel.innerHTML = '<option value="">' + ph + '</option>'; return; }
     fetch(API_GRADOS_REF.replace('/0', '/' + nivelId)).then(function(r) { return r.json(); }).then(function(data) {
-        sel.innerHTML = '<option value="">Seleccionar Grado</option>';
+        sel.innerHTML = '<option value="">' + ph + '</option>';
         data.forEach(function(g) {
             var o = document.createElement('option');
             o.value = g.id; o.textContent = g.nombre;
             sel.appendChild(o);
         });
+        if (callback) callback();
     });
 }
 
-function cargarSeccionesRef(gradoId, targetId) {
+function cargarSeccionesRef(gradoId, targetId, placeholder, callback) {
     var sel = document.getElementById(targetId);
     if (!sel) return;
+    var ph = placeholder || 'Seleccionar Sección';
     sel.innerHTML = '<option value="">Cargando...</option>';
+    if (!gradoId) { sel.innerHTML = '<option value="">' + ph + '</option>'; return; }
     fetch(API_SECCIONES_REF.replace('/0', '/' + gradoId)).then(function(r) { return r.json(); }).then(function(data) {
-        sel.innerHTML = '<option value="">Seleccionar Sección</option>';
+        sel.innerHTML = '<option value="">' + ph + '</option>';
         data.forEach(function(s) {
             var o = document.createElement('option');
             o.value = s.id; o.textContent = s.nombre;
+            sel.appendChild(o);
+        });
+        if (callback) callback();
+    });
+}
+
+function cargarCursosPorSeccion(seccionId, targetId) {
+    var sel = document.getElementById(targetId);
+    if (!sel) return;
+    sel.innerHTML = '<option value="">Cargando...</option>';
+    if (!seccionId) { sel.innerHTML = '<option value="">Seleccionar Curso</option>'; return; }
+    fetch(API_CURSOS_SECCION.replace('/0', '/' + seccionId)).then(function(r) { return r.json(); }).then(function(data) {
+        sel.innerHTML = '<option value="">Seleccionar Curso</option>';
+        data.forEach(function(c) {
+            var o = document.createElement('option');
+            o.value = c.id; o.textContent = c.nombre;
             sel.appendChild(o);
         });
     });
@@ -730,7 +825,7 @@ function showRefTab(tabId, btn) {
     document.querySelectorAll('.ref-tab-panel').forEach(function(p) { p.classList.remove('active'); });
     var el = document.getElementById('panel-' + tabId);
     if (el) el.classList.add('active');
-    document.querySelectorAll('.ref-tab').forEach(function(t) { t.classList.remove('active'); });
+    document.querySelectorAll('.ref-tab, .dash-tab').forEach(function(t) { t.classList.remove('active'); });
     if (btn) btn.classList.add('active');
 }
 
@@ -742,7 +837,121 @@ function showRefSubtab(subId, btn) {
     if (btn) btn.classList.add('active');
 }
 
-function guardarNotasMasivo() { alert('Función de guardado masivo implementada próximamente'); }
+function limpiarSelect(id) {
+    var sel = document.getElementById(id);
+    if (sel) { sel.innerHTML = '<option value="">-</option>'; }
+}
+
+function cargarListaAlumnos() {
+    var tbody = document.getElementById('notas-tbody');
+    var nivel = document.getElementById('notas-nivel').value;
+    var grado = document.getElementById('notas-grado').value;
+    var seccion = document.getElementById('notas-seccion').value;
+    var params = [];
+    if (nivel) params.push('nivel_id=' + nivel);
+    if (grado) params.push('grado_id=' + grado);
+    if (seccion) params.push('seccion_id=' + seccion);
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:40px;color:#888;">Cargando...</td></tr>';
+    fetch(API_ALUMNOS + (params.length ? '?' + params.join('&') : '')).then(function(r) { return r.json(); }).then(function(estudiantes) {
+        if (!estudiantes || estudiantes.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:40px;color:#888;">No hay estudiantes</td></tr>';
+            return;
+        }
+        var html = '';
+        estudiantes.forEach(function(est) {
+            html += '<tr>';
+            html += '<td class="student-name"><strong>' + est.nombre + '</strong><br><small style="color:#888;">' + (est.nivel ? est.nivel + ' - ' + est.grado + ' - ' + est.seccion : '') + '</small></td>';
+            html += '<td><input type="number" step="0.1" min="0" max="20" class="ref-grade-input" value="" data-est="' + est.id + '" data-tipo="cuaderno" onchange="calcularPromedioFila(this)"></td>';
+            html += '<td><input type="number" step="0.1" min="0" max="20" class="ref-grade-input" value="" data-est="' + est.id + '" data-tipo="libro" onchange="calcularPromedioFila(this)"></td>';
+            html += '<td><input type="number" step="0.1" min="0" max="20" class="ref-grade-input" value="" data-est="' + est.id + '" data-tipo="practicas" onchange="calcularPromedioFila(this)"></td>';
+            html += '<td><input type="number" step="0.1" min="0" max="20" class="ref-grade-input" value="" data-est="' + est.id + '" data-tipo="exposiciones" onchange="calcularPromedioFila(this)"></td>';
+            html += '<td><input type="number" step="0.1" min="0" max="20" class="ref-grade-input" value="" data-est="' + est.id + '" data-tipo="examen" onchange="calcularPromedioFila(this)"></td>';
+            html += '<td class="promedio-cell">-</td><td class="letra-cell">-</td>';
+            html += '</tr>';
+        });
+        tbody.innerHTML = html;
+    });
+}
+
+function cargarNotas() {
+    var cursoId = document.getElementById('notas-curso').value;
+    var bimestreId = document.getElementById('notas-bimestre').value;
+    var tbody = document.getElementById('notas-tbody');
+    if (!cursoId || !bimestreId) {
+        cargarListaAlumnos();
+        return;
+    }
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:40px;color:#888;">Cargando notas...</td></tr>';
+    fetch(API_NOTAS + '?curso_id=' + cursoId + '&bimestre_id=' + bimestreId).then(function(r) { return r.json(); }).then(function(data) {
+        cargarListaAlumnos();
+        if (!data.estudiantes || data.estudiantes.length === 0) return;
+        var idx = {};
+        data.estudiantes.forEach(function(est) { idx[est.id] = est.notas || {}; });
+        document.querySelectorAll('#notas-tbody tr').forEach(function(row) {
+            var inputs = row.querySelectorAll('.ref-grade-input');
+            if (!inputs.length) return;
+            var estId = parseInt(inputs[0].getAttribute('data-est'));
+            var notas = idx[estId];
+            if (!notas) return;
+            var c = notas.cuaderno, l = notas.libro, p = notas.practicas, ex = notas.exposiciones, em = notas.examen;
+            inputs.forEach(function(inp) {
+                var tipo = inp.getAttribute('data-tipo');
+                var val = notas[tipo];
+                if (val != null) inp.value = val;
+            });
+            if (c != null && l != null && p != null && ex != null && em != null) {
+                var prom = (parseFloat(c) * 0.10) + (parseFloat(l) * 0.10) + (parseFloat(p) * 0.20) + (parseFloat(ex) * 0.10) + (parseFloat(em) * 0.50);
+                row.querySelector('.promedio-cell').textContent = prom.toFixed(2);
+                row.querySelector('.letra-cell').textContent = calcularLetra(prom);
+            }
+        });
+    });
+}
+
+function calcularPromedioFila(input) {
+    var row = input.closest('tr');
+    var inputs = row.querySelectorAll('.ref-grade-input');
+    var vals = [];
+    inputs.forEach(function(inp) { var v = parseFloat(inp.value); vals.push(isNaN(v) ? 0 : v); });
+    var prom = vals[0]*0.10 + vals[1]*0.10 + vals[2]*0.20 + vals[3]*0.10 + vals[4]*0.50;
+    row.querySelector('.promedio-cell').textContent = prom.toFixed(2);
+    row.querySelector('.letra-cell').textContent = calcularLetra(prom);
+}
+
+function calcularLetra(promedio) {
+    if (promedio == null) return '-';
+    if (promedio >= 17) return 'A';
+    if (promedio >= 14) return 'B';
+    if (promedio >= 11) return 'C';
+    return 'D';
+}
+
+function guardarNotas() {
+    var cursoId = document.getElementById('notas-curso').value;
+    var bimestreId = document.getElementById('notas-bimestre').value;
+    if (!cursoId || !bimestreId) { showToast('Selecciona curso y bimestre', 'warning'); return; }
+    var estudiantes = [];
+    document.querySelectorAll('#notas-tbody tr').forEach(function(row) {
+        var inputs = row.querySelectorAll('.ref-grade-input');
+        if (inputs.length === 0) return;
+        var estId = inputs[0].getAttribute('data-est');
+        if (!estId) return;
+        var data = {estudiante_id: parseInt(estId)};
+        inputs.forEach(function(inp) {
+            data[inp.getAttribute('data-tipo')] = inp.value.trim() || null;
+        });
+        estudiantes.push(data);
+    });
+    if (estudiantes.length === 0) { showToast('No hay notas para guardar', 'warning'); return; }
+    fetch(API_NOTAS_GUARDAR, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({curso_id: parseInt(cursoId), bimestre_id: parseInt(bimestreId), estudiantes: estudiantes})
+    }).then(function(r) { return r.json(); }).then(function(resp) {
+        if (resp.success) { showToast('Notas guardadas correctamente', 'success'); cargarNotas(); }
+        else { showToast(resp.error || 'Error al guardar', 'danger'); }
+    });
+}
 
 function generarBoleta() {
     var sec = document.getElementById('notas-seccion');
@@ -778,16 +987,23 @@ function filtrarAlumnos() {
     });
 }
 
-function editarAlumno(id, dni, nombres, apPat, apMat, correo, gradoId, seccionId) {
+function editarAlumno(id, dni, nombres, apPat, apMat, correo, nivelId, gradoId, seccionId) {
     document.getElementById('edit-dni').value = dni;
     document.getElementById('edit-correo').value = correo;
     document.getElementById('edit-nombres').value = nombres;
     document.getElementById('edit-apellido_paterno').value = apPat;
     document.getElementById('edit-apellido_materno').value = apMat;
-    document.getElementById('edit-grado').value = gradoId;
-    document.getElementById('edit-seccion').value = seccionId;
     document.getElementById('form-editar-alumno').action = API_EDIT_ALUMNO.replace('/0', '/' + id);
     document.getElementById('modal-alumno-editar').style.display = 'flex';
+    if (nivelId) {
+        document.getElementById('edit-nivel').value = nivelId;
+        cargarGradosRef(nivelId, 'edit-grado', 'Seleccionar Grado', function() {
+            document.getElementById('edit-grado').value = gradoId;
+            cargarSeccionesRef(gradoId, 'edit-seccion', 'Seleccionar Sección', function() {
+                document.getElementById('edit-seccion').value = seccionId;
+            });
+        });
+    }
 }
 
 function revisarDocumento(id, accion, titulo) {
@@ -795,6 +1011,21 @@ function revisarDocumento(id, accion, titulo) {
     document.getElementById('rev-doc-accion').value = accion;
     document.getElementById('form-revisar-doc').action = '{{ url_for("directora.revisar_documento", id=0) }}'.replace('/0', '/' + id);
     document.getElementById('modal-revisar-doc').style.display = 'flex';
+}
+
+function actualizarMetodoPago(pagoId, metodo) {
+    fetch(API_ACTUALIZAR_METODO_PAGO, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({pago_id: pagoId, metodo_pago: metodo})
+    }).then(function(r) { return r.json(); }).then(function(resp) {
+        if (resp.success) showToast('Método de pago actualizado', 'success');
+        else showToast('Error al actualizar', 'danger');
+    });
+}
+
+function editarPago(pagoId) {
+    showToast('Editar pago #' + pagoId + ' - Funcionalidad próximamente', 'info');
 }
 
 function asignarPlanTodos() {

@@ -58,6 +58,9 @@ def dashboard():
         joinedload(Horario.curso), joinedload(Horario.seccion), joinedload(Horario.docente), joinedload(Horario.bimestre)
     ).all()
     planes = PagoPlan.query.filter_by(activo=True).all()
+    pagos_realizados = PagoRealizado.query.options(
+        joinedload(PagoRealizado.estudiante), joinedload(PagoRealizado.plan)
+    ).order_by(PagoRealizado.fecha_pago.desc()).all()
     estudiantes = alumnos
     eventos = Evento.query.filter_by(activo=True).order_by(Evento.orden).all()
     documentos = DocumentoDocente.query.options(
@@ -95,7 +98,7 @@ def dashboard():
         grados=grados, secciones=secciones,
         niveles=niveles, periodos=periodos,
         cursos=cursos, bimestres=bimestres,
-        horarios=horarios_list, planes=planes,
+        horarios=horarios_list, planes=planes, pagos_realizados=pagos_realizados,
         estudiantes=estudiantes, documentos=documentos,
         justificaciones=justificaciones_pendientes,
         eventos=eventos, solicitudes=solicitudes)
@@ -258,14 +261,17 @@ def cursos_crud():
 @login_required
 @role_required('directora')
 def api_grados_por_nivel(nivel_id):
-    grados = Grado.query.filter_by(nivel_id=nivel_id, activo=True).all()
-    return jsonify([{'id': g.id, 'nombre': g.nombre} for g in grados])
+    grados = Grado.query.filter_by(nivel_id=nivel_id).all()
+    return jsonify([{
+        'id': g.id, 'nombre': g.nombre,
+        'secciones': [{'id': s.id, 'nombre': s.nombre} for s in g.secciones if s.activo]
+    } for g in grados])
 
 @directora_bp.route('/api/secciones/<int:grado_id>')
 @login_required
 @role_required('directora')
 def api_secciones_por_grado(grado_id):
-    secciones = Seccion.query.filter_by(grado_id=grado_id, activo=True).all()
+    secciones = Seccion.query.filter_by(grado_id=grado_id).all()
     return jsonify([{'id': s.id, 'nombre': s.nombre} for s in secciones])
 
 @directora_bp.route('/horarios', methods=['POST'])
@@ -466,11 +472,11 @@ def registrar_docente():
     grados_data = []
     for grado in grados:
         grado_dict = {
-            'id': grado.id, 'nombre': grado.nombre, 'nivel': grado.nivel,
+            'id': grado.id, 'nombre': grado.nombre, 'nivel': grado.nivel, 'nivel_id': grado.nivel_id,
             'secciones': [{'id': s.id, 'nombre': s.nombre} for s in grado.secciones if s.activo]
         }
         grados_data.append(grado_dict)
-    return render_template('docentes_form.html', grados_data=grados_data)
+    return render_template('docentes_form.html', grados_data=grados_data, niveles=Nivel.query.all())
 
 @directora_bp.route('/listar_docentes')
 @login_required
@@ -517,8 +523,9 @@ def registrar_alumno():
         )
         db.session.add(a); db.session.commit()
         ap_nombres = request.form.get('apoderado_nombres')
-        if ap_nombres:
+        if ap_nombres and 'apoderado_activo' in request.form:
             ap = Apoderado(
+                dni=request.form.get('apoderado_dni', ''),
                 nombres=ap_nombres,
                 apellido_paterno=request.form.get('apoderado_apellido_paterno', ''),
                 apellido_materno=request.form.get('apoderado_apellido_materno', ''),
@@ -533,11 +540,12 @@ def registrar_alumno():
     grados_data = []
     for grado in grados:
         grado_dict = {
-            'id': grado.id, 'nombre': grado.nombre, 'nivel': grado.nivel,
+            'id': grado.id, 'nombre': grado.nombre, 'nivel': grado.nivel, 'nivel_id': grado.nivel_id,
             'secciones': [{'id': s.id, 'nombre': s.nombre} for s in grado.secciones if s.activo]
         }
         grados_data.append(grado_dict)
-    return render_template('registrar_alumno.html', grados_data=grados_data)
+    niveles = Nivel.query.all()
+    return render_template('registrar_alumno.html', grados_data=grados_data, niveles=niveles)
 
 @directora_bp.route('/editar_docente/<int:id>', methods=['GET', 'POST'])
 @login_required
@@ -581,7 +589,7 @@ def editar_docente(id):
     grados_data = []
     for grado in grados:
         grado_dict = {
-            'id': grado.id, 'nombre': grado.nombre, 'nivel': grado.nivel,
+            'id': grado.id, 'nombre': grado.nombre, 'nivel': grado.nivel, 'nivel_id': grado.nivel_id,
             'secciones': [{'id': s.id, 'nombre': s.nombre} for s in grado.secciones if s.activo]
         }
         grados_data.append(grado_dict)
@@ -595,9 +603,10 @@ def editar_docente(id):
         'id': c2.id, 'nombre': c2.nombre,
         'grado_id': c2.grado_id, 'seccion_id': c2.seccion_id
     } for c2 in cursos_disponibles]
+    niveles = Nivel.query.all()
     return render_template('editar_docente.html', docente=c, grados_data=grados_data,
                            cursos_asignados=cursos_asignados, cursos_disponibles=cursos_disponibles,
-                           cursos_data=cursos_data)
+                           cursos_data=cursos_data, niveles=niveles)
 
 @directora_bp.route('/api/docente/<int:id>/asignar_curso', methods=['POST'])
 @login_required
@@ -671,12 +680,12 @@ def editar_alumno(id):
     grados_data = []
     for grado in grados:
         grado_dict = {
-            'id': grado.id, 'nombre': grado.nombre, 'nivel': grado.nivel,
+            'id': grado.id, 'nombre': grado.nombre, 'nivel': grado.nivel, 'nivel_id': grado.nivel_id,
             'secciones': [{'id': s.id, 'nombre': s.nombre} for s in grado.secciones if s.activo]
         }
         grados_data.append(grado_dict)
     return render_template('editar_alumno.html', alumno=a, apoderado=apoderado,
-                           grados=grados, grados_data=grados_data)
+                           grados=grados, grados_data=grados_data, niveles=Nivel.query.all())
 
 @directora_bp.route('/eliminar_alumno/<int:id>', methods=['POST'])
 @login_required
@@ -934,35 +943,70 @@ def pagos():
                 nivel_id=int(request.form.get('nivel_id')) if request.form.get('nivel_id') else None,
                 grado_id=int(request.form.get('grado_id')) if request.form.get('grado_id') else None,
                 tipo=request.form.get('tipo'),
+                metodo_pago=request.form.get('metodo_pago', 'efectivo'),
                 fecha_vencimiento=datetime.strptime(request.form.get('fecha_vencimiento'), '%Y-%m-%d')
             )
             db.session.add(p); db.session.commit()
-            flash('Plan de pago creado', 'success')
+            if request.form.get('auto_asignar') and p.grado_id:
+                estudiantes = Estudiante.query.filter_by(grado_id=p.grado_id).all()
+                for est in estudiantes:
+                    existente = PagoRealizado.query.filter_by(estudiante_id=est.id, pago_plan_id=p.id).first()
+                    if not existente:
+                        r = PagoRealizado(
+                            estudiante_id=est.id, pago_plan_id=p.id,
+                            monto_pagado=p.monto, estado='pendiente',
+                            metodo_pago=p.metodo_pago
+                        )
+                        db.session.add(r)
+                db.session.commit()
+                flash(f'Plan de pago creado y asignado a {len(estudiantes)} estudiantes', 'success')
+            else:
+                flash('Plan de pago creado', 'success')
         elif accion == 'registrar_pago':
             r = PagoRealizado(
                 estudiante_id=int(request.form.get('estudiante_id')),
                 pago_plan_id=int(request.form.get('pago_plan_id')),
                 monto_pagado=request.form.get('monto_pagado'),
-                estado='pagado'
+                estado='pagado',
+                metodo_pago=request.form.get('metodo_pago', 'efectivo')
             )
             db.session.add(r); db.session.commit()
             flash('Pago registrado', 'success')
         elif accion == 'asignar_plan':
-            estudiantes = Estudiante.query.all()
-            plan_id = int(request.form.get('pago_plan_id'))
+            plan_id = int(request.form.get('plan_id'))
+            plan = PagoPlan.query.get(plan_id)
+            if not plan:
+                flash('Plan no encontrado', 'danger')
+                return redirect(url_for('directora.dashboard'))
+            query = Estudiante.query
+            if plan.grado_id:
+                query = query.filter_by(grado_id=plan.grado_id)
+            estudiantes = query.all()
             for est in estudiantes:
                 existente = PagoRealizado.query.filter_by(estudiante_id=est.id, pago_plan_id=plan_id).first()
                 if not existente:
-                    plan = PagoPlan.query.get(plan_id)
                     r = PagoRealizado(
                         estudiante_id=est.id, pago_plan_id=plan_id,
-                        monto_pagado=plan.monto, estado='pendiente'
+                        monto_pagado=plan.monto, estado='pendiente',
+                        metodo_pago=plan.metodo_pago
                     )
                     db.session.add(r)
             db.session.commit()
-            flash('Plan asignado a todos los estudiantes', 'success')
+            flash(f'Plan asignado a {len(estudiantes)} estudiantes', 'success')
         return redirect(url_for('directora.dashboard'))
     return redirect(url_for('directora.dashboard'))
+
+@directora_bp.route('/api/pago/actualizar_metodo', methods=['POST'])
+@login_required
+@role_required('directora')
+def api_actualizar_metodo_pago():
+    data = request.get_json()
+    pago = PagoRealizado.query.get(int(data['pago_id']))
+    if not pago:
+        return jsonify({'success': False, 'error': 'Pago no encontrado'}), 404
+    pago.metodo_pago = data['metodo_pago']
+    db.session.commit()
+    return jsonify({'success': True})
 
 @directora_bp.route('/carpetas', methods=['GET', 'POST'])
 @login_required
@@ -1047,3 +1091,97 @@ def api_estudiantes_por_curso(curso_id):
     inscripciones = Inscripcion.query.filter_by(curso_id=curso_id).all()
     estudiantes = [{'id': ins.alumno.id, 'nombre': ins.alumno.nombre_completo} for ins in inscripciones]
     return jsonify(estudiantes)
+
+@directora_bp.route('/api/alumnos')
+@login_required
+@role_required('directora')
+def api_alumnos():
+    nivel_id = request.args.get('nivel_id', type=int)
+    grado_id = request.args.get('grado_id', type=int)
+    seccion_id = request.args.get('seccion_id', type=int)
+    query = Estudiante.query.filter_by(activo=True)
+    if seccion_id:
+        query = query.filter_by(seccion_id=seccion_id)
+    elif grado_id:
+        query = query.filter_by(grado_id=grado_id)
+    elif nivel_id:
+        grados_ids = [g.id for g in Grado.query.filter_by(nivel_id=nivel_id).all()]
+        query = query.filter(Estudiante.grado_id.in_(grados_ids))
+    estudiantes = query.order_by(Estudiante.apellido_paterno, Estudiante.nombres).all()
+    return jsonify([{
+        'id': e.id, 'nombre': e.nombre_completo, 'dni': e.dni,
+        'grado': e.grado_rel.nombre if e.grado_rel else '',
+        'seccion': e.seccion_rel.nombre if e.seccion_rel else '',
+        'nivel': e.grado_rel.nivel_rel.nombre if e.grado_rel and e.grado_rel.nivel_rel else ''
+    } for e in estudiantes])
+
+@directora_bp.route('/api/cursos/<int:seccion_id>')
+@login_required
+@role_required('directora')
+def api_cursos_por_seccion(seccion_id):
+    cursos = Curso.query.filter_by(seccion_id=seccion_id, activo=True).all()
+    return jsonify([{'id': c.id, 'nombre': c.nombre} for c in cursos])
+
+@directora_bp.route('/api/notas')
+@login_required
+@role_required('directora')
+def api_notas_por_curso():
+    curso_id = request.args.get('curso_id', type=int)
+    bimestre_id = request.args.get('bimestre_id', type=int)
+    if not curso_id or not bimestre_id:
+        return jsonify({'estudiantes': []})
+    curso = Curso.query.get(curso_id)
+    if not curso:
+        return jsonify({'estudiantes': []})
+    estudiantes = Estudiante.query.filter_by(seccion_id=curso.seccion_id, activo=True).order_by(Estudiante.apellido_paterno).all()
+    evaluaciones = Evaluacion.query.filter_by(curso_id=curso_id, bimestre_id=bimestre_id).all()
+    evals_idx = {}
+    for ev in evaluaciones:
+        evals_idx.setdefault(ev.estudiante_id, {})[ev.tipo] = float(ev.calificacion)
+    result = []
+    for e in estudiantes:
+        notas = evals_idx.get(e.id, {})
+        result.append({
+            'id': e.id,
+            'nombre': e.nombre_completo,
+            'notas': {
+                'cuaderno': notas.get('cuaderno'),
+                'libro': notas.get('libro'),
+                'practicas': notas.get('practicas'),
+                'exposiciones': notas.get('exposiciones'),
+                'examen': notas.get('examen')
+            }
+        })
+    return jsonify({'estudiantes': result})
+
+@directora_bp.route('/api/notas/guardar', methods=['POST'])
+@login_required
+@role_required('directora')
+def api_notas_guardar():
+    data = request.get_json()
+    curso_id = data.get('curso_id')
+    bimestre_id = data.get('bimestre_id')
+    estudiantes_data = data.get('estudiantes', [])
+    if not curso_id or not bimestre_id:
+        return jsonify({'success': False, 'error': 'Faltan parámetros'}), 400
+    existing = Evaluacion.query.filter_by(curso_id=curso_id, bimestre_id=bimestre_id).all()
+    evals_key = {}
+    for ev in existing:
+        evals_key[(ev.estudiante_id, ev.tipo)] = ev
+    for ed in estudiantes_data:
+        est_id = ed.get('estudiante_id')
+        for tipo in ['cuaderno', 'libro', 'practicas', 'exposiciones', 'examen']:
+            val = ed.get(tipo)
+            if val is not None and val != '':
+                key = (est_id, tipo)
+                if key in evals_key:
+                    evals_key[key].calificacion = float(val)
+                else:
+                    ev = Evaluacion(
+                        curso_id=curso_id, estudiante_id=est_id,
+                        bimestre_id=bimestre_id, tipo=tipo,
+                        calificacion=float(val), fecha=datetime.now().date()
+                    )
+                    db.session.add(ev)
+    db.session.commit()
+    return jsonify({'success': True})

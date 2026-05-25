@@ -26,7 +26,7 @@
             <td>{{ d.carpeta.nombre }}</td><td>{{ d.titulo }}</td>
             <td><a href="{{ url_for('static', filename=d.archivo_ruta) }}" target="_blank"><i class="fas fa-download"></i> Ver</a></td>
             <td>{{ d.fecha_subida.strftime('%d/%m/%Y') }}</td>
-            <td><span class="badge badge-{{ 'warning' if d.estado == 'pendiente' else 'success' if d.estado == 'aprobado' else 'danger' }}">{{ d.estado|title }}</span></td>
+            <td><span style="background:{{ '#fff3cd' if d.estado == 'pendiente' else '#e6fffa' if d.estado == 'aprobado' else '#fff5f5' }};color:{{ '#856404' if d.estado == 'pendiente' else '#234e52' if d.estado == 'aprobado' else '#9b2c2c' }};padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">{{ d.estado|title }}</span></td>
             <td>{{ d.comentario_revision or '-' }}</td>
         </tr>
         {% else %}

@@ -20,7 +20,7 @@
         <tr>
             <td>{{ data.curso.nombre }}</td>
             <td><strong>{{ data.promedio if data.promedio is not none else '-' }}</strong></td>
-            <td><span class="badge badge-{{ 'success' if data.letra in ('AD','A') else 'warning' if data.letra == 'B' else 'danger' }}">{{ data.letra }}</span></td>
+            <td><span style="background:{{ '#e6fffa' if data.letra in ('AD','A') else '#fff3cd' if data.letra == 'B' else '#fff5f5' }};color:{{ '#234e52' if data.letra in ('AD','A') else '#856404' if data.letra == 'B' else '#9b2c2c' }};padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">{{ data.letra }}</span></td>
             <td>{{ data.asistencia }}%</td>
         </tr>
         {% else %}

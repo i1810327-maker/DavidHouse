@@ -79,7 +79,7 @@
                     <td><strong>{{ p.get('promedio', '-') if p.get('promedio') is not none else '-' }}</strong></td>
                     <td>
                         {% set letra = p.get('letra', '-') %}
-                        <span class="ref-badge ref-badge-{{ 'success' if letra in ('AD','A') else 'warning' if letra == 'B' else 'danger' if letra == 'C' else 'info' }}">{{ letra }}</span>
+                        <span style="background:{{ '#e6fffa' if letra in ('AD','A') else '#fff3cd' if letra == 'B' else '#fff5f5' if letra == 'C' else '#e3f2fd' }};color:{{ '#234e52' if letra in ('AD','A') else '#856404' if letra == 'B' else '#9b2c2c' if letra == 'C' else '#1565c0' }};padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">{{ letra }}</span>
                     </td>
                     <td>
                         <button class="ref-btn-outline ref-btn-sm" onclick="verDetalleNotas({{ c.id }}, '{{ c.nombre }}')"><i class="fas fa-eye"></i> Ver más detalle</button>
@@ -118,13 +118,13 @@
                 <div style="font-size:12px;color:#888;">{{ a.fecha }}</div>
             </div>
             <div style="display:flex;align-items:center;gap:10px;">
-                <span class="ref-badge ref-badge-{{ 'success' if a.estado == 'presente' else 'warning' if a.estado == 'tarde' else 'danger' if a.estado == 'falta' else 'info' }}">
+                <span style="background:{{ '#e6fffa' if a.estado == 'presente' else '#fff3cd' if a.estado == 'tarde' else '#fff5f5' if a.estado == 'falta' else '#e3f2fd' }};color:{{ '#234e52' if a.estado == 'presente' else '#856404' if a.estado == 'tarde' else '#9b2c2c' if a.estado == 'falta' else '#1565c0' }};padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">
                     {{ a.estado|title }}
                 </span>
                 {% if a.estado == 'falta' and a.id not in justificadas %}
                 <button class="ref-btn-outline ref-btn-sm" onclick="mostrarJustificar({{ a.id }})"><i class="fas fa-pen"></i> Justificar</button>
                 {% elif a.id in justificadas %}
-                <span class="ref-badge ref-badge-info">Justificado</span>
+                <span style="background:#e3f2fd;color:#1565c0;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">Justificado</span>
                 {% endif %}
             </div>
         </div>
@@ -148,7 +148,7 @@
             <div class="ref-comment-header">
                 <div class="ref-comment-author">{{ c.docente.nombre_completo if c.docente else '-' }}</div>
                 <div style="display:flex;align-items:center;gap:8px;">
-                    <span class="ref-badge ref-badge-{{ 'success' if c.tipo == 'positivo' or c.tipo == 'comportamiento' else 'warning' if c.tipo == 'recomendacion' else 'info' }}">{{ c.tipo|title }}</span>
+                    <span style="background:{{ '#e6fffa' if c.tipo == 'positivo' or c.tipo == 'comportamiento' else '#fff3cd' if c.tipo == 'recomendacion' else '#e3f2fd' }};color:{{ '#234e52' if c.tipo == 'positivo' or c.tipo == 'comportamiento' else '#856404' if c.tipo == 'recomendacion' else '#1565c0' }};padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">{{ c.tipo|title }}</span>
                     <span class="ref-comment-date">{{ c.fecha_creacion.strftime('%d/%m/%Y') }}</span>
                 </div>
             </div>
@@ -186,7 +186,7 @@
             </div>
             <div style="text-align:right;">
                 <div class="ref-payment-amount">S/ {{ p.monto_pagado }}</div>
-                <span class="ref-badge ref-badge-{{ 'success' if p.estado == 'pagado' else 'warning' if p.estado == 'pendiente' else 'danger' }}">{{ p.estado|title }}</span>
+                <span style="background:{{ '#e6fffa' if p.estado == 'pagado' else '#fff3cd' if p.estado == 'pendiente' else '#fff5f5' }};color:{{ '#234e52' if p.estado == 'pagado' else '#856404' if p.estado == 'pendiente' else '#9b2c2c' }};padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">{{ p.estado|title }}</span>
             </div>
         </div>
         {% else %}
@@ -259,7 +259,7 @@ function verDetalleNotas(cursoId, cursoNombre) {
                     html += '<td>' + (b.notas.exposiciones || '-') + '</td>';
                     html += '<td>' + (b.notas.examen || '-') + '</td>';
                     html += '<td><strong>' + (b.promedio || '-') + '</strong></td>';
-                    html += '<td><span class="ref-badge ref-badge-' + (b.letra == 'AD' || b.letra == 'A' ? 'success' : b.letra == 'B' ? 'warning' : 'danger') + '">' + b.letra + '</span></td></tr>';
+                    html += '<td><span style="background:' + (b.letra == 'AD' || b.letra == 'A' ? '#e6fffa' : b.letra == 'B' ? '#fff3cd' : '#fff5f5') + ';color:' + (b.letra == 'AD' || b.letra == 'A' ? '#234e52' : b.letra == 'B' ? '#856404' : '#9b2c2c') + ';padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">' + b.letra + '</span></td></tr>';
                 });
                 html += '</tbody></table></div>';
                 document.getElementById('detalle-notas-content').innerHTML = html;

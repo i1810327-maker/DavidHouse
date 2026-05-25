@@ -17,27 +17,27 @@
             <div class="form-grid">
                 <div class="form-group">
                     <label for="dni" class="form-label">DNI *</label>
-                    <input type="text" id="dni" name="dni" placeholder="12345678" required maxlength="9" pattern="[0-9]*" oninput="validarDni(this)" class="form-control">
+                    <input type="text" id="dni" name="dni" placeholder="12345678" required maxlength="8" pattern="[0-9]{1,8}" oninput="this.value=this.value.replace(/[^0-9]/g,'')" class="form-control" title="Solo números (8 dígitos máximo)">
                 </div>
                 <div class="form-group">
                     <label for="nombres" class="form-label">Nombres *</label>
-                    <input type="text" id="nombres" name="nombres" placeholder="Juan" required maxlength="60" pattern="[A-Za-zÁÉÍÓÚáéíóúÑñ\s]*" oninput="validarNombre(this)" class="form-control">
+                    <input type="text" id="nombres" name="nombres" placeholder="Juan" required maxlength="60" pattern="[A-Za-zÁÉÍÓÚáéíóúñÑüÜ\s]+" oninput="this.value=this.value.replace(/[^A-Za-zÁÉÍÓÚáéíóúñÑüÜ\s]/g,'')" class="form-control" title="Solo letras y espacios">
                 </div>
                 <div class="form-group">
                     <label for="apellido_paterno" class="form-label">Apellido Paterno *</label>
-                    <input type="text" id="apellido_paterno" name="apellido_paterno" placeholder="García" required maxlength="40" pattern="[A-Za-zÁÉÍÓÚáéíóúÑñ\s]*" oninput="validarNombre(this)" class="form-control">
+                    <input type="text" id="apellido_paterno" name="apellido_paterno" placeholder="García" required maxlength="40" pattern="[A-Za-zÁÉÍÓÚáéíóúñÑüÜ\s]+" oninput="this.value=this.value.replace(/[^A-Za-zÁÉÍÓÚáéíóúñÑüÜ\s]/g,'')" class="form-control" title="Solo letras y espacios">
                 </div>
                 <div class="form-group">
                     <label for="apellido_materno" class="form-label">Apellido Materno *</label>
-                    <input type="text" id="apellido_materno" name="apellido_materno" placeholder="López" required maxlength="40" pattern="[A-Za-zÁÉÍÓÚáéíóúÑñ\s]*" oninput="validarNombre(this)" class="form-control">
+                    <input type="text" id="apellido_materno" name="apellido_materno" placeholder="López" required maxlength="40" pattern="[A-Za-zÁÉÍÓÚáéíóúñÑüÜ\s]+" oninput="this.value=this.value.replace(/[^A-Za-zÁÉÍÓÚáéíóúñÑüÜ\s]/g,'')" class="form-control" title="Solo letras y espacios">
                 </div>
                 <div class="form-group">
                     <label for="telefono_principal" class="form-label">Teléfono Principal</label>
-                    <input type="text" id="telefono_principal" name="telefono_principal" placeholder="987654321" maxlength="12" oninput="validarTelefono(this, 'Teléfono Principal')" class="form-control">
+                    <input type="text" id="telefono_principal" name="telefono_principal" placeholder="987654321" maxlength="12" pattern="[0-9]+" oninput="this.value=this.value.replace(/[^0-9]/g,'')" class="form-control" title="Solo números">
                 </div>
                 <div class="form-group">
                     <label for="telefono_secundario" class="form-label">Teléfono Secundario</label>
-                    <input type="text" id="telefono_secundario" name="telefono_secundario" placeholder="912345678" maxlength="12" oninput="validarTelefono(this, 'Teléfono Secundario')" autocomplete="off" class="form-control">
+                    <input type="text" id="telefono_secundario" name="telefono_secundario" placeholder="912345678" maxlength="12" pattern="[0-9]+" oninput="this.value=this.value.replace(/[^0-9]/g,'')" autocomplete="off" class="form-control" title="Solo números">
                 </div>
             </div>
 
@@ -83,8 +83,7 @@
                     <label for="nivel_docente" class="form-label">Nivel</label>
                     <select id="nivel_docente" name="nivel_docente" onchange="filtrarGradosDocente()" class="form-select">
                         <option value="">-- Sin asignar --</option>
-                        <option value="inicial">Inicial</option>
-                        <option value="primaria">Primaria</option>
+                        {% for n in niveles %}<option value="{{ n.id }}">{{ n.nombre }}</option>{% endfor %}
                     </select>
                 </div>
                 <div class="form-group">
@@ -143,7 +142,7 @@
             seccionSelect.innerHTML = '<option value="">-- Primero selecciona un grado --</option>';
             return;
         }
-        const gradosFiltrados = gradosData.filter(grado => grado.nivel === nivelSeleccionado);
+        const gradosFiltrados = gradosData.filter(grado => grado.nivel_id === parseInt(nivelSeleccionado));
         if (gradosFiltrados.length === 0) {
             gradoSelect.innerHTML = '<option value="">No hay grados disponibles</option>';
         } else {

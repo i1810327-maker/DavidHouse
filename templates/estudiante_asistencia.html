@@ -19,7 +19,7 @@
         {% for a in asistencias %}
         <tr>
             <td>{{ a.fecha }}</td><td>{{ a.curso.nombre }}</td>
-            <td><span class="badge badge-{{ 'success' if a.estado == 'presente' else 'warning' if a.estado == 'tarde' else 'danger' if a.estado == 'falta' else 'info' }}">{{ a.estado|title }}</span></td>
+            <td><span style="background:{{ '#e6fffa' if a.estado == 'presente' else '#fff3cd' if a.estado == 'tarde' else '#fff5f5' if a.estado == 'falta' else '#e3f2fd' }};color:{{ '#234e52' if a.estado == 'presente' else '#856404' if a.estado == 'tarde' else '#9b2c2c' if a.estado == 'falta' else '#1565c0' }};padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">{{ a.estado|title }}</span></td>
             <td>
                 {% if a.estado == 'falta' and a.id not in justificadas %}
                 <form method="POST" action="{{ url_for('estudiante.asistencia') }}" enctype="multipart/form-data" style="display:inline">
@@ -31,7 +31,7 @@
                     <button class="btn btn-sm btn-primary"><i class="fas fa-paper-plane"></i> Justificar</button>
                 </form>
                 {% elif a.id in justificadas %}
-                <span class="badge badge-info">Justificado</span>
+                <span style="background:#e3f2fd;color:#1565c0;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">Justificado</span>
                 {% else %}-{% endif %}
             </td>
         </tr>

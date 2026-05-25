@@ -31,9 +31,9 @@
                 <td>{{ alumno.seccion_rel.nombre if alumno.seccion_rel else 'N/A' }}</td>
                 <td>
                     {% if alumno.activo %}
-                        <span class="badge badge-success">Activo</span>
+                        <span style="background:#e6fffa;color:#234e52;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">Activo</span>
                     {% else %}
-                        <span class="badge badge-danger">Inactivo</span>
+                        <span style="background:#fff5f5;color:#9b2c2c;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">Inactivo</span>
                     {% endif %}
                 </td>
                 <td>
