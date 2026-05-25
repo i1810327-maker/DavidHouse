@@ -4,22 +4,22 @@
 <div class="module-header"><h2><i class="fas fa-upload"></i> Subir Documentos</h2></div>
 <div class="card">
     <form method="POST" action="{{ url_for('docente.documentos') }}" enctype="multipart/form-data" class="filter-form">
-        <div class="filter-group"><label>Carpeta</label>
-            <select name="carpeta_id" required>
+        <div class="filter-group"><label class="form-label">Carpeta</label>
+            <select name="carpeta_id" required class="form-select">
                 {% for c in carpetas %}
                 <option value="{{ c.id }}">{{ c.nombre }}</option>
                 {% endfor %}
             </select>
         </div>
-        <div class="filter-group"><label>Título</label><input type="text" name="titulo" required></div>
-        <div class="filter-group"><label>Archivo</label><input type="file" name="archivo" required></div>
-        <div class="filter-group" style="flex:2"><label>Descripción</label><input type="text" name="descripcion"></div>
+        <div class="filter-group"><label class="form-label">Título</label><input type="text" name="titulo" required class="form-control"></div>
+        <div class="filter-group"><label class="form-label">Archivo</label><input type="file" name="archivo" required class="form-control"></div>
+        <div class="filter-group" style="flex:2"><label class="form-label">Descripción</label><input type="text" name="descripcion" class="form-control"></div>
         <button class="btn btn-primary btn-sm"><i class="fas fa-upload"></i> Subir</button>
     </form>
 </div>
 <div class="card mt-1">
     <h3>Mis Documentos Subidos</h3>
-    <table class="table">
+    <div class="table-responsive"><table class="table">
         <tr><th>Carpeta</th><th>Título</th><th>Archivo</th><th>Subido</th><th>Estado</th><th>Comentario</th></tr>
         {% for d in documentos %}
         <tr>
@@ -32,6 +32,6 @@
         {% else %}
         <tr><td colspan="6" class="text-center">Sin documentos</td></tr>
         {% endfor %}
-    </table>
+    </table></div>
 </div>
 {% endblock %}

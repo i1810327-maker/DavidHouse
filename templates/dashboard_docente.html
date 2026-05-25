@@ -64,14 +64,14 @@
     </div>
 
     <div class="ref-grade-grid" id="docnotas-grid">
-        <table>
+        <div class="table-responsive"><table>
             <thead>
                 <tr><th>Estudiante</th><th>Cuaderno (10%)</th><th>Libro (10%)</th><th>Prácticas (20%)</th><th>Exposiciones (10%)</th><th>Examen (50%)</th><th>Promedio</th><th>Letra</th></tr>
             </thead>
             <tbody>
                 <tr><td colspan="8" style="text-align:center;padding:40px;color:#888;">Selecciona un curso y bimestre para ver las notas</td></tr>
             </tbody>
-        </table>
+        </table></div>
     </div>
 </div>
 
@@ -101,7 +101,7 @@
             <i class="fas fa-book" style="color:#003D82;"></i> {{ c.grado_rel.nombre if c.grado_rel else '' }} - Sección {{ c.seccion_rel.nombre if c.seccion_rel else '' }} • {{ c.nombre }}
             <span style="font-weight:400;font-size:13px;color:#888;margin-left:8px;">({{ estudiantes_curso|length }} estudiantes)</span>
         </h3>
-        <table class="ref-table">
+        <div class="table-responsive"><table class="ref-table">
             <thead><tr><th>DNI</th><th>Nombre Completo</th><th>Correo</th></tr></thead>
             <tbody>
                 {% for e in estudiantes_curso %}
@@ -112,7 +112,7 @@
                 <tr><td colspan="3" style="text-align:center;padding:20px;color:#888;">Sin estudiantes en este curso</td></tr>
                 {% endfor %}
             </tbody>
-        </table>
+        </table></div>
     </div>
     {% else %}
     <p style="text-align:center;padding:40px;color:#888;">No tienes cursos asignados</p>
@@ -194,14 +194,16 @@
 
 <!-- Modal Subir Reporte -->
 <div class="ref-modal-overlay" id="modal-subir-reporte">
-    <div class="ref-modal" style="max-width:500px;">
+    <div class="ref-modal" style="max-width:500px;max-height:85vh;overflow-y:auto;">
         <span class="close" onclick="document.getElementById('modal-subir-reporte').style.display='none'">&times;</span>
         <h3 id="modal-reporte-title">Subir Reporte</h3>
         <form method="POST" action="{{ url_for('docente.documentos') }}" enctype="multipart/form-data">
             <input type="hidden" name="solicitud_reporte_id" id="reporte-solicitud-id" value="">
-            <div class="form-group"><label>Título *</label><input type="text" name="titulo" required></div>
-            <div class="form-group"><label>Descripción</label><textarea name="descripcion" rows="3"></textarea></div>
-            <div class="form-group"><label>Archivo * (PDF o Word)</label><input type="file" name="archivo" accept=".pdf,.doc,.docx" required></div>
+            <div class="row g-3 mb-3">
+                <div class="col-12"><label class="form-label">Título *</label><input type="text" name="titulo" class="form-control w-100" style="min-height:44px;" required></div>
+                <div class="col-12"><label class="form-label">Descripción</label><textarea name="descripcion" rows="3" class="form-control w-100" style="min-height:44px;"></textarea></div>
+                <div class="col-12"><label class="form-label">Archivo * (PDF o Word)</label><input type="file" name="archivo" accept=".pdf,.doc,.docx" class="form-control w-100" style="min-height:44px;" required></div>
+            </div>
             <div class="ref-modal-actions">
                 <button type="button" class="ref-btn-outline" onclick="document.getElementById('modal-subir-reporte').style.display='none'">Cancelar</button>
                 <button class="ref-btn-primary"><i class="fas fa-upload"></i> Subir</button>
@@ -219,7 +221,7 @@
         </div>
     </div>
     <div class="ref-schedule">
-        <table>
+        <div class="table-responsive"><table>
             <thead><tr><th>Hora</th><th>Lunes</th><th>Martes</th><th>Miércoles</th><th>Jueves</th><th>Viernes</th></tr></thead>
             <tbody>
                 {% set horas = ['08:00','09:00','10:00','11:00','12:00','13:00'] %}
@@ -237,7 +239,7 @@
                 </tr>
                 {% endfor %}
             </tbody>
-        </table>
+        </table></div>
     </div>
 </div>
 

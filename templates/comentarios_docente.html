@@ -4,29 +4,29 @@
 <div class="module-header"><h2><i class="fas fa-comment"></i> Comentarios a Estudiantes</h2></div>
 <div class="card">
     <form method="POST" action="{{ url_for('docente.comentarios') }}" class="filter-form">
-        <div class="filter-group"><label>Curso</label>
-            <select name="curso_id" id="sel-curso" required onchange="cargarEstudiantes(this.value)">
+        <div class="filter-group"><label class="form-label">Curso</label>
+            <select name="curso_id" id="sel-curso" required onchange="cargarEstudiantes(this.value)" class="form-select">
                 <option value="">Seleccionar</option>
                 {% for c in cursos %}
                 <option value="{{ c.id }}">{{ c.nombre }} - {{ c.seccion_rel.nombre if c.seccion_rel else '' }}</option>
                 {% endfor %}
             </select>
         </div>
-        <div class="filter-group"><label>Estudiante</label>
-            <select name="estudiante_id" id="sel-estudiante" required>
+        <div class="filter-group"><label class="form-label">Estudiante</label>
+            <select name="estudiante_id" id="sel-estudiante" required class="form-select">
                 <option value="">Primero selecciona un curso</option>
             </select>
         </div>
-        <div class="filter-group"><label>Tipo</label>
-            <select name="tipo" required>
+        <div class="filter-group"><label class="form-label">Tipo</label>
+            <select name="tipo" required class="form-select">
                 <option value="positivo">Positivo</option>
                 <option value="negativo">Negativo</option>
                 <option value="neutral">Neutral</option>
                 <option value="informativo">Informativo</option>
             </select>
         </div>
-        <div class="filter-group"><label>Bimestre</label>
-            <select name="bimestre_id">
+        <div class="filter-group"><label class="form-label">Bimestre</label>
+            <select name="bimestre_id" class="form-select">
                 <option value="">General</option>
                 {% for b in bimestres %}
                 <option value="{{ b.id }}">{{ b.nombre }}</option>
@@ -34,8 +34,8 @@
             </select>
         </div>
         <div class="filter-group" style="flex:2">
-            <label>Comentario</label>
-            <textarea name="contenido" rows="2" required style="width:100%;padding:8px;border:2px solid #e0e0e0;border-radius:8px;font-family:inherit"></textarea>
+            <label class="form-label">Comentario</label>
+            <textarea name="contenido" rows="2" required style="width:100%;padding:8px;border:2px solid #e0e0e0;border-radius:8px;font-family:inherit" class="form-control"></textarea>
         </div>
         <button class="btn btn-primary btn-sm"><i class="fas fa-paper-plane"></i> Enviar</button>
     </form>

@@ -311,14 +311,33 @@
                 </div>
                 <form class="contacto-form" method="POST" action="{{ url_for('contacto') }}">
                     <div class="contacto-form-row">
-                        <input type="text" name="nombre" placeholder="Nombre completo" required>
-                        <input type="email" name="correo" placeholder="Correo electrónico" required>
+                        <div class="contacto-field">
+                            <label for="cf_nombre">Nombre completo <span class="req">*</span></label>
+                            <input type="text" id="cf_nombre" name="nombre" placeholder="Ej: Juan Pérez" required>
+                        </div>
+                        <div class="contacto-field">
+                            <label for="cf_correo">Correo electrónico <span class="req">*</span></label>
+                            <input type="email" id="cf_correo" name="correo" placeholder="Ej: juan@example.com" required>
+                        </div>
                     </div>
                     <div class="contacto-form-row">
-                        <input type="tel" name="telefono" placeholder="Teléfono" required>
-                        <input type="text" name="interes" placeholder="Nivel de interés (Inicial / Primaria)">
+                        <div class="contacto-field">
+                            <label for="cf_telefono">Teléfono <span class="req">*</span></label>
+                            <input type="tel" id="cf_telefono" name="telefono" placeholder="Ej: 999 888 777" required>
+                        </div>
+                        <div class="contacto-field">
+                            <label for="cf_interes">Nivel de interés</label>
+                            <select id="cf_interes" name="interes">
+                                <option value="">Seleccionar nivel</option>
+                                <option value="Inicial">Inicial (3-5 años)</option>
+                                <option value="Primaria">Primaria (6-11 años)</option>
+                            </select>
+                        </div>
                     </div>
-                    <textarea name="mensaje" rows="4" placeholder="Mensaje (opcional)"></textarea>
+                    <div class="contacto-field">
+                        <label for="cf_mensaje">Mensaje</label>
+                        <textarea id="cf_mensaje" name="mensaje" rows="4" placeholder="Escribe tu mensaje aquí (opcional)"></textarea>
+                    </div>
                     <button type="submit" class="btn-primary" style="width:100%;justify-content:center;"><i class="fas fa-paper-plane"></i> Enviar Solicitud</button>
                 </form>
             </div>

@@ -52,23 +52,23 @@
         <div class="card-head"><h3>Cambiar Contraseña</h3></div>
         <form method="POST" action="{{ url_for('cambiar_clave') }}" onsubmit="return validarCambioClave()">
             <div class="filter-form">
-                <div class="filter-group"><label>Contraseña actual</label>
+                <div class="filter-group"><label class="form-label">Contraseña actual</label>
                     <div style="position:relative;">
-                        <input type="password" id="clave_actual" name="clave_actual" required class="form-input" style="padding-right:40px;">
+                        <input type="password" id="clave_actual" name="clave_actual" required class="form-input form-control" style="padding-right:40px;">
                         <button type="button" class="password-toggle" onclick="togglePassword(this)"><i class="fas fa-eye"></i></button>
                     </div>
                 </div>
             </div>
             <div class="filter-form">
-                <div class="filter-group"><label>Nueva contraseña</label>
+                <div class="filter-group"><label class="form-label">Nueva contraseña</label>
                     <div style="position:relative;">
-                        <input type="password" id="clave_nueva" name="clave_nueva" required class="form-input" minlength="8" onkeyup="medirSeguridad()" style="padding-right:40px;">
+                        <input type="password" id="clave_nueva" name="clave_nueva" required class="form-input form-control" minlength="8" onkeyup="medirSeguridad()" style="padding-right:40px;">
                         <button type="button" class="password-toggle" onclick="togglePassword(this)"><i class="fas fa-eye"></i></button>
                     </div>
                 </div>
-                <div class="filter-group"><label>Confirmar nueva</label>
+                <div class="filter-group"><label class="form-label">Confirmar nueva</label>
                     <div style="position:relative;">
-                        <input type="password" id="clave_confirmar" name="clave_confirmar" required class="form-input" minlength="8" onkeyup="medirSeguridad()" style="padding-right:40px;">
+                        <input type="password" id="clave_confirmar" name="clave_confirmar" required class="form-input form-control" minlength="8" onkeyup="medirSeguridad()" style="padding-right:40px;">
                         <button type="button" class="password-toggle" onclick="togglePassword(this)"><i class="fas fa-eye"></i></button>
                     </div>
                 </div>

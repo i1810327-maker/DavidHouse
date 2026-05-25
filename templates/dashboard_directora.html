@@ -46,9 +46,9 @@
         </div>
 
         <div class="ref-filters">
-            <select class="ref-filter-select"><option value="">Todos los Niveles</option>{% for n in niveles %}<option value="{{ n.id }}">{{ n.nombre }}</option>{% endfor %}</select>
-            <select class="ref-filter-select"><option value="">Todos los Grados</option>{% for g in grados %}<option value="{{ g.id }}">{{ g.nombre }}</option>{% endfor %}</select>
-            <select class="ref-filter-select"><option value="">Todas las Secciones</option>{% for s in secciones %}<option value="{{ s.id }}">{{ s.grado.nombre }} {{ s.nombre }}</option>{% endfor %}</select>
+            <select class="ref-filter-select" onchange="filtrarDocentes()"><option value="">Todos los Niveles</option>{% for n in niveles %}<option value="{{ n.id }}">{{ n.nombre }}</option>{% endfor %}</select>
+            <select class="ref-filter-select" onchange="filtrarDocentes()"><option value="">Todos los Grados</option>{% for g in grados %}<option value="{{ g.id }}">{{ g.nombre }}</option>{% endfor %}</select>
+            <select class="ref-filter-select" onchange="filtrarDocentes()"><option value="">Todas las Secciones</option>{% for s in secciones %}<option value="{{ s.id }}">{{ s.grado.nombre }} {{ s.nombre }}</option>{% endfor %}</select>
         </div>
 
         <div class="ref-teacher-grid">
@@ -76,45 +76,7 @@
                 </div>
             </div>
             {% else %}
-            <p style="text-align:center;padding:40px;color:#888;">No hay docentes registrados</p>
-            {% endfor %}
-        </div>
-    </div>
-            <button class="ref-btn-primary" onclick="document.getElementById('modal-colaborador-crear').style.display='flex'"><i class="fas fa-plus"></i> Registrar Docente</button>
-        </div>
-
-        <div class="ref-filters">
-            <select class="ref-filter-select"><option value="">Todos los Niveles</option>{% for n in niveles %}<option value="{{ n.id }}">{{ n.nombre }}</option>{% endfor %}</select>
-            <select class="ref-filter-select"><option value="">Todos los Grados</option>{% for g in grados %}<option value="{{ g.id }}">{{ g.nombre }}</option>{% endfor %}</select>
-            <select class="ref-filter-select"><option value="">Todas las Secciones</option>{% for s in secciones %}<option value="{{ s.id }}">{{ s.grado.nombre }} {{ s.nombre }}</option>{% endfor %}</select>
-        </div>
-
-        <div class="ref-teacher-grid">
-            {% for d in docentes_data %}
-            <div class="ref-teacher-card">
-                <div class="ref-teacher-left">
-                    <div class="ref-teacher-avatar" style="background:{{ ['#1565c0','#2e7d32','#e65100','#6a1b9a','#c62828','#00838f','#4e342e','#37474f','#558b2f','#ad1457'] | random }};">
-                        {{ d.iniciales }}
-                    </div>
-                    <div class="ref-teacher-info">
-                        <h4>{{ d.nombre_completo }}</h4>
-                        <p>{{ d.materia }}</p>
-                        <div class="ref-teacher-meta">
-                            <span><i class="fas fa-book"></i> {{ d.cursos_count }} clases</span>
-                            <span><i class="fas fa-users"></i> {{ d.estudiantes_count }} estudiantes</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="ref-teacher-right">
-                    <span class="ref-badge ref-badge-{{ 'success' if d.activo else 'danger' }}">{{ 'Activo' if d.activo else 'Inactivo' }}</span>
-                    <a href="{{ url_for('directora.editar_docente', id=d.id) }}" class="ref-btn-outline ref-btn-sm"><i class="fas fa-eye"></i> Ver Detalle</a>
-                    <form method="POST" action="{{ url_for('directora.toggle_colaborador', id=d.id) }}" style="display:inline">
-                        <button class="ref-header-btn" title="{{ 'Desactivar' if d.activo else 'Activar' }}"><i class="fas fa-{{ 'pause' if d.activo else 'play' }}"></i></button>
-                    </form>
-                </div>
-            </div>
-            {% else %}
-            <p style="text-align:center;padding:40px;color:#888;">No hay docentes registrados</p>
+            <p style="text-align:center;padding:40px;color:#888;grid-column:1/-1;">No hay docentes registrados</p>
             {% endfor %}
         </div>
     </div>
@@ -129,21 +91,20 @@
         </div>
 
         <div class="ref-filters">
-            <select class="ref-filter-select"><option value="">Todos los Niveles</option>{% for n in niveles %}<option value="{{ n.id }}">{{ n.nombre }}</option>{% endfor %}</select>
-            <select class="ref-filter-select"><option value="">Todos los Grados</option>{% for g in grados %}<option value="{{ g.id }}">{{ g.nombre }}</option>{% endfor %}</select>
-            <select class="ref-filter-select"><option value="">Todas las Secciones</option>{% for s in secciones %}<option value="{{ s.id }}">{{ s.grado.nombre }} {{ s.nombre }}</option>{% endfor %}</select>
-            <select class="ref-filter-select"><option value="">Todos los Tipos</option><option value="pendiente">Pendiente</option><option value="aprobado">Aprobado</option><option value="rechazado">Rechazado</option></select>
+            <select class="ref-filter-select" onchange="filtrarReportes()"><option value="">Todos los Niveles</option>{% for n in niveles %}<option value="{{ n.id }}">{{ n.nombre }}</option>{% endfor %}</select>
+            <select class="ref-filter-select" onchange="filtrarReportes()"><option value="">Todos los Grados</option>{% for g in grados %}<option value="{{ g.id }}">{{ g.nombre }}</option>{% endfor %}</select>
+            <select class="ref-filter-select" onchange="filtrarReportes()"><option value="">Todas las Secciones</option>{% for s in secciones %}<option value="{{ s.id }}">{{ s.grado.nombre }} {{ s.nombre }}</option>{% endfor %}</select>
+            <select class="ref-filter-select" onchange="filtrarReportes()"><option value="">Todos los Tipos</option><option value="pendiente">Pendiente</option><option value="aprobado">Aprobado</option><option value="rechazado">Rechazado</option></select>
         </div>
 
         <div class="ref-doc-list">
             {% for doc in documentos %}
-            <div class="ref-doc-item">
+            <div class="ref-doc-card">
                 <div class="ref-doc-left">
-                    <div class="ref-doc-icon"><i class="fas fa-{{ 'file-pdf' if doc.archivo_nombre.endswith('.pdf') else 'file-word' if doc.archivo_nombre.endswith(('.doc','.docx')) else 'file' }}"></i></div>
-                    <div class="ref-doc-info">
+                    <div class="ref-doc-icon" style="background:#fff3e0;color:#e65100;"><i class="fas fa-{{ 'file-pdf' if doc.archivo_nombre.endswith('.pdf') else 'file-word' if doc.archivo_nombre.endswith(('.doc','.docx')) else 'file' }}"></i></div>
+                    <div>
                         <h4>{{ doc.titulo }}</h4>
-                        <p>{{ doc.docente.nombre_completo }}</p>
-                        <div class="ref-doc-meta">{{ doc.fecha_subida.strftime('%d/%m/%Y') }}</div>
+                        <p style="font-size:13px;color:var(--text-secondary);margin:2px 0;">{{ doc.docente.nombre_completo }} &middot; {{ doc.fecha_subida.strftime('%d/%m/%Y') }}</p>
                     </div>
                 </div>
                 <div style="display:flex;align-items:center;gap:10px;">
@@ -169,7 +130,7 @@
             <h2>Gestión de Estudiantes</h2>
             <p>Administra todos los estudiantes del colegio</p>
         </div>
-        <div style="display:flex;gap:10px;">
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
             <button class="ref-btn-primary" onclick="document.getElementById('modal-alumno-crear').style.display='flex'"><i class="fas fa-plus"></i> Nuevo</button>
             <button class="ref-btn-outline" onclick="document.getElementById('csv-import-input').click()"><i class="fas fa-file-import"></i> Importar CSV</button>
             <a href="{{ url_for('directora.exportar_alumnos_csv') }}" class="ref-btn-outline"><i class="fas fa-file-export"></i> Exportar CSV</a>
@@ -186,7 +147,7 @@
         <input type="text" class="ref-filter-select" id="alu-search" placeholder="Buscar nombre..." onkeyup="filtrarAlumnos()" style="min-width:200px;">
     </div>
 
-    <table class="ref-table" id="alu-table">
+    <div class="table-responsive"><table class="ref-table" id="alu-table">
         <thead><tr><th>DNI</th><th>Nombre</th><th>Correo</th><th>Grado</th><th>Sección</th><th>Estado</th><th></th></tr></thead>
         <tbody>
             {% for a in alumnos %}
@@ -197,7 +158,7 @@
                 <td>{{ a.grado_rel.nombre if a.grado_rel else '-' }}</td>
                 <td>{{ a.seccion_rel.nombre if a.seccion_rel else '-' }}</td>
                 <td><span class="ref-badge ref-badge-{{ 'success' if a.activo else 'danger' }}">{{ 'Activo' if a.activo else 'Inactivo' }}</span></td>
-                <td style="text-align:right;">
+                <td style="text-align:right;white-space:nowrap;">
                     <button class="ref-btn-outline ref-btn-sm" onclick="editarAlumno({{ a.id }}, '{{ a.dni }}', '{{ a.nombres }}', '{{ a.apellido_paterno }}', '{{ a.apellido_materno }}', '{{ a.correo }}', {{ a.grado_id }}, {{ a.seccion_id }})"><i class="fas fa-edit"></i></button>
                     <form method="POST" action="{{ url_for('directora.toggle_estudiante', id=a.id) }}" style="display:inline">
                         <button class="ref-header-btn" title="{{ 'Desactivar' if a.activo else 'Activar' }}"><i class="fas fa-{{ 'pause' if a.activo else 'play' }}"></i></button>
@@ -208,53 +169,53 @@
             <tr><td colspan="7" style="text-align:center;padding:40px;color:#888;">Sin estudiantes registrados</td></tr>
             {% endfor %}
         </tbody>
-    </table>
+    </table></div>
 </div>
 
 <!-- Modal Nuevo Alumno -->
 <div class="ref-modal-overlay" id="modal-alumno-crear">
-    <div class="ref-modal" style="max-width:560px;">
+    <div class="ref-modal" style="max-width:560px;max-height:85vh;overflow-y:auto;">
         <span class="close" onclick="document.getElementById('modal-alumno-crear').style.display='none'">&times;</span>
         <h3>Registrar Nuevo Estudiante</h3>
         <form method="POST" action="{{ url_for('directora.crear_estudiante') }}">
-            <div class="ref-filters" style="margin-bottom:12px;">
-                <div style="flex:1;"><label style="font-size:12px;font-weight:500;color:#555;">DNI</label><input type="text" name="dni" class="ref-filter-select" style="width:100%;" required></div>
-                <div style="flex:1;"><label style="font-size:12px;font-weight:500;color:#555;">Correo</label><input type="email" name="correo" class="ref-filter-select" style="width:100%;" required></div>
+            <div class="row g-3 mb-3">
+                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">DNI</label><input type="text" name="dni" class="ref-filter-select w-100" style="min-height:44px;" required></div>
+                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Nombres</label><input type="text" name="nombres" class="ref-filter-select w-100" style="min-height:44px;" required></div>
             </div>
-            <div class="ref-filters" style="margin-bottom:12px;">
-                <div style="flex:1;"><label style="font-size:12px;font-weight:500;color:#555;">Nombres</label><input type="text" name="nombres" class="ref-filter-select" style="width:100%;" required></div>
-                <div style="flex:1;"><label style="font-size:12px;font-weight:500;color:#555;">Ap. Paterno</label><input type="text" name="apellido_paterno" class="ref-filter-select" style="width:100%;" required></div>
+            <div class="row g-3 mb-3">
+                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Ap. Paterno</label><input type="text" name="apellido_paterno" class="ref-filter-select w-100" style="min-height:44px;" required></div>
+                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Ap. Materno</label><input type="text" name="apellido_materno" class="ref-filter-select w-100" style="min-height:44px;" required></div>
             </div>
-            <div class="ref-filters" style="margin-bottom:12px;">
-                <div style="flex:1;"><label style="font-size:12px;font-weight:500;color:#555;">Ap. Materno</label><input type="text" name="apellido_materno" class="ref-filter-select" style="width:100%;" required></div>
-                <div style="flex:1;position:relative;">
+            <div class="row g-3 mb-3">
+                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Correo</label><input type="email" name="correo" class="ref-filter-select w-100" style="min-height:44px;" required></div>
+                <div class="col-md-6" style="position:relative;">
                     <label style="font-size:12px;font-weight:500;color:#555;">Contraseña</label>
-                    <input type="password" name="clave" class="ref-filter-select" style="width:100%;padding-right:40px;" required>
+                    <input type="password" name="clave" class="ref-filter-select w-100" style="min-height:44px;padding-right:40px;" required>
                     <button type="button" class="password-toggle" onclick="togglePassword(this)"><i class="fas fa-eye"></i></button>
                 </div>
             </div>
-            <div class="ref-filters" style="margin-bottom:12px;">
-                <div style="flex:1;"><label style="font-size:12px;font-weight:500;color:#555;">Nivel</label>
-                    <select name="nivel_id" class="ref-filter-select" style="width:100%;" onchange="cargarGradosRef(this.value,'alumno-grado')">
+            <div class="row g-3 mb-3">
+                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Nivel</label>
+                    <select name="nivel_id" class="ref-filter-select w-100" style="min-height:44px;" onchange="cargarGradosRef(this.value,'alumno-grado')">
                         <option value="">Seleccionar</option>{% for n in niveles %}<option value="{{ n.id }}">{{ n.nombre }}</option>{% endfor %}
                     </select>
                 </div>
-                <div style="flex:1;"><label style="font-size:12px;font-weight:500;color:#555;">Grado</label>
-                    <select id="alumno-grado" name="grado_id" class="ref-filter-select" style="width:100%;" onchange="cargarSeccionesRef(this.value,'alumno-seccion')">
+                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Grado</label>
+                    <select id="alumno-grado" name="grado_id" class="ref-filter-select w-100" style="min-height:44px;" onchange="cargarSeccionesRef(this.value,'alumno-seccion')">
                         <option value="">Primero selecciona nivel</option>
                     </select>
                 </div>
             </div>
-            <div class="ref-filters" style="margin-bottom:12px;">
-                <div style="flex:1;"><label style="font-size:12px;font-weight:500;color:#555;">Sección</label>
-                    <select id="alumno-seccion" name="seccion_id" class="ref-filter-select" style="width:100%;">
+            <div class="row g-3 mb-3">
+                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Sección</label>
+                    <select id="alumno-seccion" name="seccion_id" class="ref-filter-select w-100" style="min-height:44px;">
                         <option value="">Primero selecciona grado</option>
                     </select>
                 </div>
             </div>
             <div class="ref-modal-actions">
                 <button type="button" class="ref-btn-outline" onclick="document.getElementById('modal-alumno-crear').style.display='none'">Cancelar</button>
-                <button class="ref-btn-primary">Guardar Estudiante</button>
+                <button class="ref-btn-primary">Registrar Estudiante</button>
             </div>
         </form>
     </div>
@@ -262,34 +223,34 @@
 
 <!-- Modal Editar Alumno -->
 <div class="ref-modal-overlay" id="modal-alumno-editar">
-    <div class="ref-modal" style="max-width:560px;">
+    <div class="ref-modal" style="max-width:560px;max-height:85vh;overflow-y:auto;">
         <span class="close" onclick="document.getElementById('modal-alumno-editar').style.display='none'">&times;</span>
         <h3>Editar Estudiante</h3>
         <form method="POST" action="" id="form-editar-alumno">
-            <div class="ref-filters" style="margin-bottom:12px;">
-                <div style="flex:1;"><label style="font-size:12px;font-weight:500;color:#555;">DNI</label><input type="text" name="dni" id="edit-dni" class="ref-filter-select" style="width:100%;" required></div>
-                <div style="flex:1;"><label style="font-size:12px;font-weight:500;color:#555;">Correo</label><input type="email" name="correo" id="edit-correo" class="ref-filter-select" style="width:100%;" required></div>
+            <div class="row g-3 mb-3">
+                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">DNI</label><input type="text" name="dni" id="edit-dni" class="ref-filter-select w-100" style="min-height:44px;" required></div>
+                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Correo</label><input type="email" name="correo" id="edit-correo" class="ref-filter-select w-100" style="min-height:44px;" required></div>
             </div>
-            <div class="ref-filters" style="margin-bottom:12px;">
-                <div style="flex:1;"><label style="font-size:12px;font-weight:500;color:#555;">Nombres</label><input type="text" name="nombres" id="edit-nombres" class="ref-filter-select" style="width:100%;" required></div>
-                <div style="flex:1;"><label style="font-size:12px;font-weight:500;color:#555;">Ap. Paterno</label><input type="text" name="apellido_paterno" id="edit-apellido_paterno" class="ref-filter-select" style="width:100%;" required></div>
+            <div class="row g-3 mb-3">
+                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Nombres</label><input type="text" name="nombres" id="edit-nombres" class="ref-filter-select w-100" style="min-height:44px;" required></div>
+                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Ap. Paterno</label><input type="text" name="apellido_paterno" id="edit-apellido_paterno" class="ref-filter-select w-100" style="min-height:44px;" required></div>
             </div>
-            <div class="ref-filters" style="margin-bottom:12px;">
-                <div style="flex:1;"><label style="font-size:12px;font-weight:500;color:#555;">Ap. Materno</label><input type="text" name="apellido_materno" id="edit-apellido_materno" class="ref-filter-select" style="width:100%;" required></div>
-                <div style="flex:1;position:relative;">
+            <div class="row g-3 mb-3">
+                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Ap. Materno</label><input type="text" name="apellido_materno" id="edit-apellido_materno" class="ref-filter-select w-100" style="min-height:44px;" required></div>
+                <div class="col-md-6" style="position:relative;">
                     <label style="font-size:12px;font-weight:500;color:#555;">Nueva Contraseña (opcional)</label>
-                    <input type="password" name="clave" class="ref-filter-select" style="width:100%;padding-right:40px;">
+                    <input type="password" name="clave" class="ref-filter-select w-100" style="min-height:44px;padding-right:40px;">
                     <button type="button" class="password-toggle" onclick="togglePassword(this)"><i class="fas fa-eye"></i></button>
                 </div>
             </div>
-            <div class="ref-filters" style="margin-bottom:12px;">
-                <div style="flex:1;"><label style="font-size:12px;font-weight:500;color:#555;">Grado</label>
-                    <select name="grado_id" id="edit-grado" class="ref-filter-select" style="width:100%;">
+            <div class="row g-3 mb-3">
+                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Grado</label>
+                    <select name="grado_id" id="edit-grado" class="ref-filter-select w-100" style="min-height:44px;">
                         {% for g in grados %}<option value="{{ g.id }}">{{ g.nombre }}</option>{% endfor %}
                     </select>
                 </div>
-                <div style="flex:1;"><label style="font-size:12px;font-weight:500;color:#555;">Sección</label>
-                    <select name="seccion_id" id="edit-seccion" class="ref-filter-select" style="width:100%;">
+                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Sección</label>
+                    <select name="seccion_id" id="edit-seccion" class="ref-filter-select w-100" style="min-height:44px;">
                         {% for s in secciones %}<option value="{{ s.id }}">{{ s.grado.nombre }} {{ s.nombre }}</option>{% endfor %}
                     </select>
                 </div>
@@ -304,39 +265,34 @@
 
 <!-- Modal Registrar Colaborador -->
 <div class="ref-modal-overlay" id="modal-colaborador-crear">
-    <div class="ref-modal" style="max-width:560px;">
+    <div class="ref-modal" style="max-width:560px;max-height:85vh;overflow-y:auto;">
         <span class="close" onclick="document.getElementById('modal-colaborador-crear').style.display='none'">&times;</span>
         <h3>Registrar Nuevo Docente</h3>
         <form method="POST" action="{{ url_for('directora.crear_colaborador') }}">
-            <div class="ref-filters" style="margin-bottom:12px;">
-                <div style="flex:1;"><label style="font-size:12px;font-weight:500;color:#555;">DNI</label><input type="text" name="dni" class="ref-filter-select" style="width:100%;" required></div>
-                <div style="flex:1;"><label style="font-size:12px;font-weight:500;color:#555;">Correo</label><input type="email" name="correo" class="ref-filter-select" style="width:100%;" required></div>
+            <div class="row g-3 mb-3">
+                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">DNI</label><input type="text" name="dni" class="ref-filter-select w-100" style="min-height:44px;" required></div>
+                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Nombres</label><input type="text" name="nombres" class="ref-filter-select w-100" style="min-height:44px;" required></div>
             </div>
-            <div class="ref-filters" style="margin-bottom:12px;">
-                <div style="flex:1;"><label style="font-size:12px;font-weight:500;color:#555;">Nombres</label><input type="text" name="nombres" class="ref-filter-select" style="width:100%;" required></div>
-                <div style="flex:1;"><label style="font-size:12px;font-weight:500;color:#555;">Ap. Paterno</label><input type="text" name="apellido_paterno" class="ref-filter-select" style="width:100%;" required></div>
+            <div class="row g-3 mb-3">
+                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Ap. Paterno</label><input type="text" name="apellido_paterno" class="ref-filter-select w-100" style="min-height:44px;" required></div>
+                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Ap. Materno</label><input type="text" name="apellido_materno" class="ref-filter-select w-100" style="min-height:44px;" required></div>
             </div>
-            <div class="ref-filters" style="margin-bottom:12px;">
-                <div style="flex:1;"><label style="font-size:12px;font-weight:500;color:#555;">Ap. Materno</label><input type="text" name="apellido_materno" class="ref-filter-select" style="width:100%;" required></div>
-                <div style="flex:1;position:relative;">
+            <div class="row g-3 mb-3">
+                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Tel. Principal</label><input type="text" name="telefono_principal" class="ref-filter-select w-100" style="min-height:44px;" maxlength="12"></div>
+                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Tel. Secundario</label><input type="text" name="telefono_secundario" class="ref-filter-select w-100" style="min-height:44px;" maxlength="12"></div>
+            </div>
+            <div class="row g-3 mb-3">
+                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Correo</label><input type="email" name="correo" class="ref-filter-select w-100" style="min-height:44px;" required></div>
+                <div class="col-md-6" style="position:relative;">
                     <label style="font-size:12px;font-weight:500;color:#555;">Contraseña</label>
-                    <input type="password" name="clave" class="ref-filter-select" style="width:100%;padding-right:40px;" required>
+                    <input type="password" name="clave" class="ref-filter-select w-100" style="min-height:44px;padding-right:40px;" required>
                     <button type="button" class="password-toggle" onclick="togglePassword(this)"><i class="fas fa-eye"></i></button>
                 </div>
             </div>
-            <div class="ref-filters" style="margin-bottom:12px;">
-                <div style="flex:1;"><label style="font-size:12px;font-weight:500;color:#555;">Profesión</label><input type="text" name="profesion" class="ref-filter-select" style="width:100%;"></div>
-                <div style="flex:1;"><label style="font-size:12px;font-weight:500;color:#555;">Teléfono</label><input type="text" name="telefono_principal" class="ref-filter-select" style="width:100%;"></div>
-            </div>
-            <div class="ref-filters" style="margin-bottom:12px;">
-                <div style="flex:1;"><label style="font-size:12px;font-weight:500;color:#555;">Rol</label>
-                    <select name="rol" class="ref-filter-select" style="width:100%;" required>
-                        <option value="docente">Docente</option>
-                        <option value="directora">Directora</option>
-                    </select>
-                </div>
-                <div style="flex:1;"><label style="font-size:12px;font-weight:500;color:#555;">Sección</label>
-                    <select name="seccion_id" class="ref-filter-select" style="width:100%;">
+            <div class="row g-3 mb-3">
+                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Profesión</label><input type="text" name="profesion" class="ref-filter-select w-100" style="min-height:44px;"></div>
+                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Sección (Tutor)</label>
+                    <select name="seccion_id" class="ref-filter-select w-100" style="min-height:44px;">
                         <option value="">Sin asignar</option>
                         {% for s in secciones %}<option value="{{ s.id }}">{{ s.grado.nombre }} {{ s.nombre }}</option>{% endfor %}
                     </select>
@@ -344,7 +300,7 @@
             </div>
             <div class="ref-modal-actions">
                 <button type="button" class="ref-btn-outline" onclick="document.getElementById('modal-colaborador-crear').style.display='none'">Cancelar</button>
-                <button class="ref-btn-primary">Guardar Docente</button>
+                <button class="ref-btn-primary"><i class="fas fa-save"></i> Registrar</button>
             </div>
         </form>
     </div>
@@ -361,59 +317,62 @@
     </div>
 
     <div class="ref-filters">
-        <select class="ref-filter-select"><option value="">Todos los Niveles</option>{% for n in niveles %}<option value="{{ n.id }}">{{ n.nombre }}</option>{% endfor %}</select>
-        <select class="ref-filter-select"><option value="">Todos los Grados</option>{% for g in grados %}<option value="{{ g.id }}">{{ g.nombre }}</option>{% endfor %}</select>
-        <select class="ref-filter-select"><option value="">Todas las Secciones</option>{% for s in secciones %}<option value="{{ s.id }}">{{ s.grado.nombre }} {{ s.nombre }}</option>{% endfor %}</select>
+        <select class="ref-filter-select" id="pag-nivel" onchange="filtrarPlanes()"><option value="">Todos los Niveles</option>{% for n in niveles %}<option value="{{ n.id }}">{{ n.nombre }}</option>{% endfor %}</select>
+        <select class="ref-filter-select" id="pag-grado" onchange="filtrarPlanes()"><option value="">Todos los Grados</option>{% for g in grados %}<option value="{{ g.id }}">{{ g.nombre }}</option>{% endfor %}</select>
+        <select class="ref-filter-select" id="pag-seccion" onchange="filtrarPlanes()"><option value="">Todas las Secciones</option>{% for s in secciones %}<option value="{{ s.id }}">{{ s.grado.nombre }} {{ s.nombre }}</option>{% endfor %}</select>
     </div>
 
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-        <div style="background:#fff;border-radius:14px;padding:20px;border:1px solid #f0f2f5;">
+    <div class="row g-3">
+        <div class="col-md-6"><div class="card h-100">
             <h3 style="font-size:16px;font-weight:600;color:#1a1a2e;margin-bottom:12px;">Planes de Pago</h3>
-            <table class="ref-table">
+            <div class="table-responsive"><table class="ref-table">
                 <thead><tr><th>Nombre</th><th>Monto</th><th>Tipo</th><th>Vencimiento</th><th>Estado</th></tr></thead>
                 <tbody>
                     {% for pl in planes if planes %}
-                    <tr><td>{{ pl.nombre }}</td><td>S/ {{ pl.monto }}</td><td>{{ pl.tipo }}</td><td>{{ pl.fecha_vencimiento }}</td><td><span class="ref-badge ref-badge-{{ 'success' if pl.activo else 'danger' }}">{{ 'Activo' if pl.activo else 'Inactivo' }}</span></td></tr>
+                    <tr data-nivel="{{ pl.nivel_id or '' }}" data-grado="{{ pl.grado_id or '' }}"><td>{{ pl.nombre }}</td><td>S/ {{ pl.monto }}</td><td>{{ pl.tipo }}</td><td>{{ pl.fecha_vencimiento }}</td><td><span class="ref-badge ref-badge-{{ 'success' if pl.activo else 'danger' }}">{{ 'Activo' if pl.activo else 'Inactivo' }}</span></td></tr>
                     {% else %}<tr><td colspan="5" style="text-align:center;padding:20px;color:#888;">Sin planes</td></tr>{% endfor %}
                 </tbody>
-            </table>
-        </div>
-        <div style="background:#fff;border-radius:14px;padding:20px;border:1px solid #f0f2f5;">
+            </table></div>
+        </div></div>
+        <div class="col-md-6"><div class="card h-100">
             <h3 style="font-size:16px;font-weight:600;color:#1a1a2e;margin-bottom:12px;">Registrar Pago</h3>
             <form method="POST" action="{{ url_for('directora.pagos') }}">
                 <input type="hidden" name="accion" value="registrar_pago">
-                <div style="margin-bottom:10px;">
-                    <label style="font-size:13px;font-weight:500;color:#555;display:block;margin-bottom:4px;">Estudiante</label>
-                    <select name="estudiante_id" class="ref-filter-select" style="width:100%;" required>
+                <div class="mb-2">
+                    <label class="form-label">Estudiante</label>
+                    <select name="estudiante_id" class="form-select" required>
                         <option value="">Seleccionar</option>{% for e in estudiantes %}<option value="{{ e.id }}">{{ e.nombre_completo }}</option>{% endfor %}
                     </select>
                 </div>
-                <div style="margin-bottom:10px;">
-                    <label style="font-size:13px;font-weight:500;color:#555;display:block;margin-bottom:4px;">Plan</label>
-                    <select name="pago_plan_id" class="ref-filter-select" style="width:100%;" required>
+                <div class="mb-2">
+                    <label class="form-label">Plan</label>
+                    <select name="pago_plan_id" class="form-select" required>
                         <option value="">Seleccionar</option>{% for pl in planes %}<option value="{{ pl.id }}">{{ pl.nombre }} - S/{{ pl.monto }}</option>{% endfor %}
                     </select>
                 </div>
-                <div style="margin-bottom:10px;">
-                    <label style="font-size:13px;font-weight:500;color:#555;display:block;margin-bottom:4px;">Monto</label>
-                    <input type="number" name="monto_pagado" step="0.01" style="width:100%;padding:8px 12px;border:1px solid #e0e0e0;border-radius:8px;font-family:inherit;" required>
+                <div class="mb-2">
+                    <label class="form-label">Monto</label>
+                    <input type="number" name="monto_pagado" step="0.01" class="form-control" required>
                 </div>
-                <button class="ref-btn-primary" style="width:100%;justify-content:center;"><i class="fas fa-save"></i> Registrar</button>
+                <button class="ref-btn-primary w-100 justify-content-center mt-2"><i class="fas fa-save"></i> Registrar</button>
             </form>
-        </div>
+        </div></div>
     </div>
+
+    <div class="mt-3"><button class="ref-btn-outline w-100 justify-content-center" onclick="asignarPlanTodos()"><i class="fas fa-users"></i> Asignar plan activo a todos los estudiantes</button></div>
+    <form method="POST" action="{{ url_for('directora.pagos') }}" id="form-asignar-plan-todos" style="display:none"><input type="hidden" name="accion" value="asignar_plan"><input type="hidden" name="plan_id" id="asignar-plan-id"></form>
 </div>
 
-<!-- ============ NOTAS (Excel-style) ============ -->
+<!-- ============ NOTAS ============ -->
 <div id="panel-notas" class="ref-tab-panel">
     <div class="ref-section-header">
         <div>
             <h2>Registro de Notas</h2>
             <p>Gestiona las calificaciones de los estudiantes</p>
         </div>
-        <div style="display:flex;gap:10px;">
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
             <button class="ref-btn-primary" onclick="guardarNotasMasivo()"><i class="fas fa-save"></i> Guardar Todo</button>
-            <form method="POST" action="{{ url_for('directora.generar_boleta') }}" style="display:inline">
+            <form method="POST" action="{{ url_for('directora.generar_boleta') }}" style="display:inline" id="bol-generar-form">
                 <input type="hidden" name="seccion_id" id="bol-seccion-id" value="">
                 <input type="hidden" name="bimestre_id" id="bol-bimestre-id" value="">
                 <button class="ref-btn-outline" type="button" onclick="generarBoleta()"><i class="fas fa-file-pdf"></i> Generar Boleta</button>
@@ -430,14 +389,14 @@
     </div>
 
     <div class="ref-grade-grid" id="notas-grid">
-        <table>
+        <div class="table-responsive"><table>
             <thead>
                 <tr><th>Estudiante</th><th>Cuaderno (10%)</th><th>Libro (10%)</th><th>Prácticas (20%)</th><th>Exposiciones (10%)</th><th>Examen (50%)</th><th>Promedio</th><th>Letra</th></tr>
             </thead>
             <tbody>
                 <tr><td colspan="8" style="text-align:center;padding:40px;color:#888;">Selecciona un curso y bimestre para ver las notas</td></tr>
             </tbody>
-        </table>
+        </table></div>
     </div>
 </div>
 
@@ -450,43 +409,43 @@
     </div>
 
     <div id="acad-estructura" class="ref-subtab-panel active">
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;">
-            <div style="background:#fff;border-radius:14px;padding:18px;border:1px solid #f0f2f5;">
-                <div class="ref-section-header"><h3 style="font-size:16px;">Niveles</h3><button class="ref-btn-outline ref-btn-sm" onclick="document.getElementById('modal-nivel').style.display='flex'"><i class="fas fa-plus"></i></button></div>
-                <table class="ref-table" style="margin-top:10px;">
+        <div class="row g-3">
+            <div class="col-md-4"><div class="card h-100">
+                <div class="ref-section-header" style="margin-bottom:12px;"><h3 style="font-size:16px;margin:0;">Niveles</h3><button class="ref-btn-outline ref-btn-sm" onclick="document.getElementById('modal-nivel').style.display='flex'"><i class="fas fa-plus"></i></button></div>
+                <div class="table-responsive"><table class="ref-table">
                     {% for n in niveles %}
                     <tr><td>{{ n.nombre }}</td><td><span class="ref-badge ref-badge-{{ 'success' if n.activo else 'danger' }}">{{ 'Activo' if n.activo else 'Inactivo' }}</span></td>
                         <td><form method="POST" action="{{ url_for('directora.niveles_crud') }}" style="display:inline"><input type="hidden" name="accion" value="toggle"><input type="hidden" name="id" value="{{ n.id }}"><button class="ref-header-btn"><i class="fas fa-{{ 'pause' if n.activo else 'play' }}"></i></button></form></td></tr>
                     {% endfor %}
-                </table>
-            </div>
-            <div style="background:#fff;border-radius:14px;padding:18px;border:1px solid #f0f2f5;">
-                <div class="ref-section-header"><h3 style="font-size:16px;">Grados</h3><button class="ref-btn-outline ref-btn-sm" onclick="abrirModalGrado()"><i class="fas fa-plus"></i></button></div>
-                <table class="ref-table" style="margin-top:10px;">
+                </table></div>
+            </div></div>
+            <div class="col-md-4"><div class="card h-100">
+                <div class="ref-section-header" style="margin-bottom:12px;"><h3 style="font-size:16px;margin:0;">Grados</h3><button class="ref-btn-outline ref-btn-sm" onclick="abrirModalGrado()"><i class="fas fa-plus"></i></button></div>
+                <div class="table-responsive"><table class="ref-table">
                     {% for g in grados %}
                     <tr><td>{{ g.nombre }}</td><td>{{ g.nivel_rel.nombre if g.nivel_rel else '-' }}</td><td><span class="ref-badge ref-badge-{{ 'success' if g.activo else 'danger' }}">{{ 'Activo' if g.activo else 'Inactivo' }}</span></td>
                         <td><form method="POST" action="{{ url_for('directora.grados_crud') }}" style="display:inline"><input type="hidden" name="accion" value="toggle"><input type="hidden" name="id" value="{{ g.id }}"><button class="ref-header-btn"><i class="fas fa-{{ 'pause' if g.activo else 'play' }}"></i></button></form></td></tr>
                     {% endfor %}
-                </table>
-            </div>
-            <div style="background:#fff;border-radius:14px;padding:18px;border:1px solid #f0f2f5;">
-                <div class="ref-section-header"><h3 style="font-size:16px;">Secciones</h3><button class="ref-btn-outline ref-btn-sm" onclick="abrirModalSeccion()"><i class="fas fa-plus"></i></button></div>
-                <table class="ref-table" style="margin-top:10px;">
+                </table></div>
+            </div></div>
+            <div class="col-md-4"><div class="card h-100">
+                <div class="ref-section-header" style="margin-bottom:12px;"><h3 style="font-size:16px;margin:0;">Secciones</h3><button class="ref-btn-outline ref-btn-sm" onclick="abrirModalSeccion()"><i class="fas fa-plus"></i></button></div>
+                <div class="table-responsive"><table class="ref-table">
                     {% for s in secciones %}
                     <tr><td>{{ s.grado.nombre }} - {{ s.nombre }}</td><td><span class="ref-badge ref-badge-{{ 'success' if s.activo else 'danger' }}">{{ 'Activo' if s.activo else 'Inactivo' }}</span></td>
                         <td><form method="POST" action="{{ url_for('directora.secciones_crud') }}" style="display:inline"><input type="hidden" name="accion" value="toggle"><input type="hidden" name="id" value="{{ s.id }}"><button class="ref-header-btn"><i class="fas fa-{{ 'pause' if s.activo else 'play' }}"></i></button></form></td></tr>
                     {% endfor %}
-                </table>
-            </div>
+                </table></div>
+            </div></div>
         </div>
     </div>
 
     <div id="acad-cursos" class="ref-subtab-panel">
-        <div class="ref-section-header">
-            <h2 style="font-size:16px;">Cursos</h2>
+        <div class="ref-section-header" style="margin-bottom:12px;">
+            <h2 style="font-size:16px;margin:0;">Cursos</h2>
             <button class="ref-btn-primary ref-btn-sm" onclick="document.getElementById('modal-curso').style.display='flex'"><i class="fas fa-plus"></i> Nuevo Curso</button>
         </div>
-        <table class="ref-table">
+        <div class="table-responsive"><table class="ref-table">
             <thead><tr><th>Nombre</th><th>Código</th><th>Grado</th><th>Sección</th><th>Docente</th><th>Estado</th><th></th></tr></thead>
             <tbody>
                 {% for c in cursos %}
@@ -495,16 +454,16 @@
                     <td><form method="POST" action="{{ url_for('directora.cursos_crud') }}" style="display:inline"><input type="hidden" name="accion" value="toggle"><input type="hidden" name="id" value="{{ c.id }}"><button class="ref-header-btn"><i class="fas fa-{{ 'pause' if c.activo else 'play' }}"></i></button></form></td></tr>
                 {% endfor %}
             </tbody>
-        </table>
+        </table></div>
     </div>
 
     <div id="acad-horarios" class="ref-subtab-panel">
-        <div class="ref-section-header">
-            <h2 style="font-size:16px;">Horarios</h2>
-            <button class="ref-btn-primary ref-btn-sm" onclick="document.getElementById('modal-horario').style.display='flex'"><i class="fas fa-plus"></i> Nuevo Horario</button>
+        <div class="ref-section-header" style="margin-bottom:12px;">
+            <h2 style="font-size:16px;margin:0;">Horarios</h2>
+            <button class="ref-btn-primary ref-btn-sm" onclick="document.getElementById('modal-horario').style.display='flex'"><i class="fas fa-plus"></i> Editor de Horarios</button>
         </div>
         <div class="ref-schedule">
-            <table>
+            <div class="table-responsive"><table>
                 <thead><tr><th>Hora</th><th>Lunes</th><th>Martes</th><th>Miércoles</th><th>Jueves</th><th>Viernes</th></tr></thead>
                 <tbody>
                     {% set horas = ['08:00','09:00','10:00','11:00','12:00','13:00','14:00'] %}
@@ -522,24 +481,27 @@
                     </tr>
                     {% endfor %}
                 </tbody>
-            </table>
+            </table></div>
         </div>
     </div>
 </div>
 
 <!-- ===== SOLICITAR REPORTE MODAL ===== -->
 <div class="ref-modal-overlay" id="modal-solicitar-reporte">
-    <div class="ref-modal">
+    <div class="ref-modal" style="max-height:85vh;overflow-y:auto;">
+        <span class="close" onclick="document.getElementById('modal-solicitar-reporte').style.display='none'">&times;</span>
         <h3>Solicitar Reporte</h3>
         <form method="POST" action="{{ url_for('directora.solicitar_reporte') }}">
-            <div class="form-group"><label>Título</label><input type="text" name="titulo" required></div>
-            <div class="form-group"><label>Descripción</label><textarea name="descripcion" rows="3"></textarea></div>
-            <div class="form-group"><label>Nivel</label><select name="nivel_id" class="ref-filter-select" style="width:100%;">{% for n in niveles %}<option value="{{ n.id }}">{{ n.nombre }}</option>{% endfor %}</select></div>
-            <div class="form-group"><label>Grado</label><select name="grado_id" class="ref-filter-select" style="width:100%;">{% for g in grados %}<option value="{{ g.id }}">{{ g.nombre }}</option>{% endfor %}</select></div>
-            <div class="form-group"><label>Sección</label><select name="seccion_id" class="ref-filter-select" style="width:100%;">{% for s in secciones %}<option value="{{ s.id }}">{{ s.grado.nombre }} {{ s.nombre }}</option>{% endfor %}</select></div>
-            <div class="form-group"><label>Fecha Máxima de Entrega</label><input type="datetime-local" name="fecha_maxima" required></div>
+            <div class="row g-3 mb-3">
+                <div class="col-12"><label style="font-size:12px;font-weight:500;color:#555;">Título</label><input type="text" name="titulo" class="form-control" required></div>
+                <div class="col-12"><label style="font-size:12px;font-weight:500;color:#555;">Descripción</label><textarea name="descripcion" rows="3" class="form-control"></textarea></div>
+                <div class="col-md-4"><label style="font-size:12px;font-weight:500;color:#555;">Nivel</label><select name="nivel_id" class="form-select">{% for n in niveles %}<option value="{{ n.id }}">{{ n.nombre }}</option>{% endfor %}</select></div>
+                <div class="col-md-4"><label style="font-size:12px;font-weight:500;color:#555;">Grado</label><select name="grado_id" class="form-select">{% for g in grados %}<option value="{{ g.id }}">{{ g.nombre }}</option>{% endfor %}</select></div>
+                <div class="col-md-4"><label style="font-size:12px;font-weight:500;color:#555;">Sección</label><select name="seccion_id" class="form-select">{% for s in secciones %}<option value="{{ s.id }}">{{ s.grado.nombre }} {{ s.nombre }}</option>{% endfor %}</select></div>
+                <div class="col-12"><label style="font-size:12px;font-weight:500;color:#555;">Fecha Máxima</label><input type="datetime-local" name="fecha_maxima" class="form-control" required></div>
+            </div>
             <div class="ref-modal-actions">
-                <button type="button" class="ref-btn-outline" onclick="this.closest('.ref-modal-overlay').style.display='none'">Cancelar</button>
+                <button type="button" class="ref-btn-outline" onclick="document.getElementById('modal-solicitar-reporte').style.display='none'">Cancelar</button>
                 <button class="ref-btn-primary">Enviar Solicitud</button>
             </div>
         </form>
@@ -548,12 +510,12 @@
 
 <!-- Modal Revisar Documento -->
 <div class="ref-modal-overlay" id="modal-revisar-doc">
-    <div class="ref-modal">
+    <div class="ref-modal" style="max-height:85vh;overflow-y:auto;">
         <span class="close" onclick="document.getElementById('modal-revisar-doc').style.display='none'">&times;</span>
         <h3 id="rev-doc-title">Revisar Documento</h3>
-        <form method="POST" action="{{ url_for('directora.revisar_documento', id=0) }}" id="form-revisar-doc">
+        <form method="POST" action="" id="form-revisar-doc">
             <input type="hidden" name="accion" id="rev-doc-accion" value="aprobar">
-            <div class="form-group"><label>Comentario (opcional)</label><textarea name="comentario" id="rev-doc-comentario" rows="3" style="width:100%;padding:10px 12px;border:1px solid #e0e0e0;border-radius:8px;font-family:inherit;"></textarea></div>
+            <div class="mb-3"><label class="form-label">Comentario (opcional)</label><textarea name="comentario" rows="3" class="form-control"></textarea></div>
             <div class="ref-modal-actions">
                 <button type="button" class="ref-btn-outline" onclick="document.getElementById('modal-revisar-doc').style.display='none'">Cancelar</button>
                 <button class="ref-btn-primary">Confirmar</button>
@@ -562,13 +524,38 @@
     </div>
 </div>
 
-<!-- ============ MODALES CRUD ============ -->
-<div class="ref-modal-overlay" id="modal-nivel" style="display:none"><div class="ref-modal"><span class="close" onclick="document.getElementById('modal-nivel').style.display='none'">&times;</span><h3>Nuevo Nivel</h3><form method="POST" action="{{ url_for('directora.niveles_crud') }}"><input type="hidden" name="accion" value="crear"><div class="form-group"><label>Nombre</label><input type="text" name="nombre" placeholder="Ej: Inicial, Primaria" required></div><div class="ref-modal-actions"><button type="button" class="ref-btn-outline" onclick="document.getElementById('modal-nivel').style.display='none'">Cancelar</button><button class="ref-btn-primary">Guardar</button></div></form></div></div>
-<div class="ref-modal-overlay" id="modal-grado" style="display:none"><div class="ref-modal"><span class="close" onclick="document.getElementById('modal-grado').style.display='none'">&times;</span><h3>Nuevo Grado</h3><form method="POST" action="{{ url_for('directora.grados_crud') }}"><input type="hidden" name="accion" value="crear"><div class="form-group"><label>Nombre</label><input type="text" name="nombre" placeholder="Ej: 1º Primaria" required></div><div class="form-group"><label>Nivel</label><select name="nivel_id" class="ref-filter-select" style="width:100%;">{% for n in niveles %}<option value="{{ n.id }}">{{ n.nombre }}</option>{% endfor %}</select></div><div class="ref-modal-actions"><button type="button" class="ref-btn-outline" onclick="document.getElementById('modal-grado').style.display='none'">Cancelar</button><button class="ref-btn-primary">Guardar</button></div></form></div></div>
-<div class="ref-modal-overlay" id="modal-seccion" style="display:none"><div class="ref-modal"><span class="close" onclick="document.getElementById('modal-seccion').style.display='none'">&times;</span><h3>Nueva Sección</h3><form method="POST" action="{{ url_for('directora.secciones_crud') }}"><input type="hidden" name="accion" value="crear"><div class="form-group"><label>Nombre</label><input type="text" name="nombre" placeholder="Ej: A, B, C" required></div><div class="form-group"><label>Grado</label><select name="grado_id" class="ref-filter-select" style="width:100%;">{% for g in grados %}<option value="{{ g.id }}">{{ g.nombre }}</option>{% endfor %}</select></div><div class="ref-modal-actions"><button type="button" class="ref-btn-outline" onclick="document.getElementById('modal-seccion').style.display='none'">Cancelar</button><button class="ref-btn-primary">Guardar</button></div></form></div></div>
-<div class="ref-modal-overlay" id="modal-curso" style="display:none"><div class="ref-modal"><span class="close" onclick="document.getElementById('modal-curso').style.display='none'">&times;</span><h3>Nuevo Curso</h3><form method="POST" action="{{ url_for('directora.cursos_crud') }}"><input type="hidden" name="accion" value="crear"><div class="form-group"><label>Nombre</label><input type="text" name="nombre" placeholder="Nombre del curso" required></div><div class="form-group"><label>Código</label><input type="text" name="codigo" placeholder="Código único" required></div><div class="form-group"><label>Descripción</label><textarea name="descripcion" rows="2"></textarea></div><div class="ref-filters" style="margin-top:10px;"><select name="nivel_id" class="ref-filter-select" onchange="cargarGradosRef(this.value,'cur-grado')"><option value="">Nivel</option>{% for n in niveles %}<option value="{{ n.id }}">{{ n.nombre }}</option>{% endfor %}</select><select id="cur-grado" name="grado_id" class="ref-filter-select" onchange="cargarSeccionesRef(this.value,'cur-seccion')"><option value="">Grado</option></select><select id="cur-seccion" name="seccion_id" class="ref-filter-select"><option value="">Sección</option></select></div><div class="ref-filters"><select name="docente_id" class="ref-filter-select" required><option value="">Docente</option>{% for d in docentes %}<option value="{{ d.id }}">{{ d.nombre_completo }}</option>{% endfor %}</select><select name="periodo_academico_id" class="ref-filter-select" required><option value="">Periodo</option>{% for p in periodos %}<option value="{{ p.id }}">{{ p.nombre }}</option>{% endfor %}</select></div><div class="ref-modal-actions"><button type="button" class="ref-btn-outline" onclick="document.getElementById('modal-curso').style.display='none'">Cancelar</button><button class="ref-btn-primary">Guardar</button></div></form></div></div>
-<div class="ref-modal-overlay" id="modal-horario" style="display:none">
-    <div class="ref-modal" style="max-width:820px;">
+<!-- ===== MODALES CRUD ===== -->
+<div class="ref-modal-overlay" id="modal-nivel"><div class="ref-modal" style="max-height:85vh;overflow-y:auto;"><span class="close" onclick="document.getElementById('modal-nivel').style.display='none'">&times;</span><h3>Nuevo Nivel</h3><form method="POST" action="{{ url_for('directora.niveles_crud') }}"><input type="hidden" name="accion" value="crear"><div class="mb-3"><label class="form-label">Nombre</label><input type="text" name="nombre" placeholder="Ej: Inicial, Primaria" class="form-control" required></div><div class="ref-modal-actions"><button type="button" class="ref-btn-outline" onclick="document.getElementById('modal-nivel').style.display='none'">Cancelar</button><button class="ref-btn-primary">Guardar</button></div></form></div></div>
+<div class="ref-modal-overlay" id="modal-grado"><div class="ref-modal" style="max-height:85vh;overflow-y:auto;"><span class="close" onclick="document.getElementById('modal-grado').style.display='none'">&times;</span><h3>Nuevo Grado</h3><form method="POST" action="{{ url_for('directora.grados_crud') }}"><input type="hidden" name="accion" value="crear"><div class="mb-3"><label class="form-label">Nombre</label><input type="text" name="nombre" placeholder="Ej: 1º Primaria" class="form-control" required></div><div class="mb-3"><label class="form-label">Nivel</label><select name="nivel_id" class="form-select">{% for n in niveles %}<option value="{{ n.id }}">{{ n.nombre }}</option>{% endfor %}</select></div><div class="ref-modal-actions"><button type="button" class="ref-btn-outline" onclick="document.getElementById('modal-grado').style.display='none'">Cancelar</button><button class="ref-btn-primary">Guardar</button></div></form></div></div>
+<div class="ref-modal-overlay" id="modal-seccion"><div class="ref-modal" style="max-height:85vh;overflow-y:auto;"><span class="close" onclick="document.getElementById('modal-seccion').style.display='none'">&times;</span><h3>Nueva Sección</h3><form method="POST" action="{{ url_for('directora.secciones_crud') }}"><input type="hidden" name="accion" value="crear"><div class="mb-3"><label class="form-label">Nombre</label><input type="text" name="nombre" placeholder="Ej: A, B, C" class="form-control" required></div><div class="mb-3"><label class="form-label">Grado</label><select name="grado_id" class="form-select">{% for g in grados %}<option value="{{ g.id }}">{{ g.nombre }}</option>{% endfor %}</select></div><div class="ref-modal-actions"><button type="button" class="ref-btn-outline" onclick="document.getElementById('modal-seccion').style.display='none'">Cancelar</button><button class="ref-btn-primary">Guardar</button></div></form></div></div>
+
+<div class="ref-modal-overlay" id="modal-curso">
+    <div class="ref-modal" style="max-height:85vh;overflow-y:auto;">
+        <span class="close" onclick="document.getElementById('modal-curso').style.display='none'">&times;</span>
+        <h3>Nuevo Curso</h3>
+        <form method="POST" action="{{ url_for('directora.cursos_crud') }}">
+            <input type="hidden" name="accion" value="crear">
+            <div class="row g-3 mb-3">
+                <div class="col-md-6"><label class="form-label">Nombre</label><input type="text" name="nombre" placeholder="Nombre del curso" class="form-control" required></div>
+                <div class="col-md-6"><label class="form-label">Código</label><input type="text" name="codigo" placeholder="Código único" class="form-control" required></div>
+            </div>
+            <div class="mb-3"><label class="form-label">Descripción</label><textarea name="descripcion" rows="2" class="form-control"></textarea></div>
+            <div class="row g-3 mb-3">
+                <div class="col-md-4"><select name="nivel_id" class="form-select" onchange="cargarGradosRef(this.value,'cur-grado')"><option value="">Nivel</option>{% for n in niveles %}<option value="{{ n.id }}">{{ n.nombre }}</option>{% endfor %}</select></div>
+                <div class="col-md-4"><select id="cur-grado" name="grado_id" class="form-select" onchange="cargarSeccionesRef(this.value,'cur-seccion')"><option value="">Grado</option></select></div>
+                <div class="col-md-4"><select id="cur-seccion" name="seccion_id" class="form-select"><option value="">Sección</option></select></div>
+            </div>
+            <div class="mb-3"><select name="docente_id" class="form-select" required><option value="">Docente</option>{% for d in docentes %}<option value="{{ d.id }}">{{ d.nombre_completo }}</option>{% endfor %}</select></div>
+            <div class="ref-modal-actions">
+                <button type="button" class="ref-btn-outline" onclick="document.getElementById('modal-curso').style.display='none'">Cancelar</button>
+                <button class="ref-btn-primary">Guardar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="ref-modal-overlay" id="modal-horario">
+    <div class="ref-modal" style="max-width:820px;max-height:85vh;overflow-y:auto;">
         <span class="close" onclick="cerrarModalHorario()">&times;</span>
         <h3>Editor de Horarios</h3>
         <div class="horario-creator">
@@ -584,7 +571,7 @@
                     <option value="">Sección</option>
                 </select>
             </div>
-            <div class="hc-preview" id="horario-preview"><p style="grid-column:1/-1;text-align:center;padding:40px;color:#888;">Selecciona una sección</p></div>
+            <div class="hc-preview" id="horario-preview"><p style="text-align:center;padding:40px;color:#888;">Selecciona una sección</p></div>
             <div class="hc-add-block">
                 <select id="hc-dia">
                     <option value="1">Lunes</option><option value="2">Martes</option><option value="3">Miércoles</option><option value="4">Jueves</option><option value="5">Viernes</option>
@@ -607,7 +594,35 @@
         </div>
     </div>
 </div>
-<div class="ref-modal-overlay" id="modal-pago-plan" style="display:none"><div class="ref-modal"><span class="close" onclick="document.getElementById('modal-pago-plan').style.display='none'">&times;</span><h3>Nuevo Plan de Pago</h3><form method="POST" action="{{ url_for('directora.pagos') }}"><input type="hidden" name="accion" value="crear_plan"><div class="form-group"><label>Nombre</label><input type="text" name="nombre" required></div><div class="ref-filters"><input type="number" name="monto" step="0.01" class="ref-filter-select" placeholder="Monto S/" required style="width:auto;"><select name="tipo" class="ref-filter-select" required><option value="matricula">Matrícula</option><option value="mensualidad">Mensualidad</option><option value="otro">Otro</option></select></div><div class="ref-filters"><select name="periodo_academico_id" class="ref-filter-select" required><option value="">Periodo</option>{% for p in periodos %}<option value="{{ p.id }}">{{ p.nombre }}</option>{% endfor %}</select><select name="nivel_id" class="ref-filter-select"><option value="">Todos los niveles</option>{% for n in niveles %}<option value="{{ n.id }}">{{ n.nombre }}</option>{% endfor %}</select></div><div class="ref-filters"><select name="grado_id" class="ref-filter-select"><option value="">Todos los grados</option>{% for g in grados %}<option value="{{ g.id }}">{{ g.nombre }}</option>{% endfor %}</select><input type="date" name="fecha_vencimiento" class="ref-filter-select" required></div><div class="ref-modal-actions"><button type="button" class="ref-btn-outline" onclick="document.getElementById('modal-pago-plan').style.display='none'">Cancelar</button><button class="ref-btn-primary">Guardar</button></div></form></div></div>
+
+<div class="ref-modal-overlay" id="modal-pago-plan">
+    <div class="ref-modal" style="max-height:85vh;overflow-y:auto;">
+        <span class="close" onclick="document.getElementById('modal-pago-plan').style.display='none'">&times;</span>
+        <h3>Nuevo Plan de Pago</h3>
+        <form method="POST" action="{{ url_for('directora.pagos') }}">
+            <input type="hidden" name="accion" value="crear_plan">
+            <div class="row g-3 mb-3">
+                <div class="col-12"><label class="form-label">Nombre</label><input type="text" name="nombre" class="form-control" required></div>
+            </div>
+            <div class="row g-3 mb-3">
+                <div class="col-md-6"><label class="form-label">Monto S/</label><input type="number" name="monto" step="0.01" class="form-control" required></div>
+                <div class="col-md-6"><label class="form-label">Tipo</label><select name="tipo" class="form-select" required><option value="matricula">Matrícula</option><option value="mensualidad">Mensualidad</option><option value="otro">Otro</option></select></div>
+            </div>
+            <div class="row g-3 mb-3">
+                <div class="col-md-6"><label class="form-label">Periodo</label><select name="periodo_academico_id" class="form-select" required><option value="">Periodo</option>{% for p in periodos %}<option value="{{ p.id }}">{{ p.nombre }}</option>{% endfor %}</select></div>
+                <div class="col-md-6"><label class="form-label">Nivel</label><select name="nivel_id" class="form-select"><option value="">Todos los niveles</option>{% for n in niveles %}<option value="{{ n.id }}">{{ n.nombre }}</option>{% endfor %}</select></div>
+            </div>
+            <div class="row g-3 mb-3">
+                <div class="col-md-6"><label class="form-label">Grado</label><select name="grado_id" class="form-select"><option value="">Todos los grados</option>{% for g in grados %}<option value="{{ g.id }}">{{ g.nombre }}</option>{% endfor %}</select></div>
+                <div class="col-md-6"><label class="form-label">Fecha Vencimiento</label><input type="date" name="fecha_vencimiento" class="form-control" required></div>
+            </div>
+            <div class="ref-modal-actions">
+                <button type="button" class="ref-btn-outline" onclick="document.getElementById('modal-pago-plan').style.display='none'">Cancelar</button>
+                <button class="ref-btn-primary">Guardar</button>
+            </div>
+        </form>
+    </div>
+</div>
 
 <script>
 const API_GRADOS_REF = "{{ url_for('directora.api_grados_por_nivel', nivel_id=0) }}";
@@ -617,20 +632,15 @@ const API_HORARIOS = "{{ url_for('directora.api_horarios_por_seccion', seccion_i
 const API_HOR_CREAR = "{{ url_for('directora.api_horario_crear') }}";
 const API_HOR_ELIMINAR = "{{ url_for('directora.api_horario_eliminar', id=0) }}";
 
-function togglePassword(btn) {
-    var inp = btn.parentElement.querySelector('input');
-    var icon = btn.querySelector('i');
-    if (inp.type === 'password') { inp.type = 'text'; icon.className = 'fas fa-eye-slash'; }
-    else { inp.type = 'password'; icon.className = 'fas fa-eye'; }
-}
-
 function cerrarModalHorario() { document.getElementById('modal-horario').style.display = 'none'; }
+function abrirModalGrado() { document.getElementById('modal-grado').style.display = 'flex'; }
+function abrirModalSeccion() { document.getElementById('modal-seccion').style.display = 'flex'; }
 
 function cargarHorariosBuilder() {
     var secId = document.getElementById('hor-seccion').value;
     var preview = document.getElementById('horario-preview');
-    if (!secId) { preview.innerHTML = '<p style="grid-column:1/-1;text-align:center;padding:40px;color:#888;">Selecciona una secci\u00f3n</p>'; return; }
-    preview.innerHTML = '<p style="grid-column:1/-1;text-align:center;padding:40px;color:#888;">Cargando...</p>';
+    if (!secId) { preview.innerHTML = '<p style="text-align:center;padding:40px;color:#888;">Selecciona una sección</p>'; return; }
+    preview.innerHTML = '<p style="text-align:center;padding:40px;color:#888;">Cargando...</p>';
     fetch(API_HORARIOS.replace('/0', '/' + secId)).then(function(r) { return r.json(); }).then(function(data) {
         bloquesHorario = data;
         renderHorarioPreview();
@@ -660,7 +670,7 @@ function renderHorarioPreview() {
 
 function agregarBloqueHorario() {
     var secId = document.getElementById('hor-seccion').value;
-    if (!secId) { showToast('Selecciona una secci\u00f3n primero','warning'); return; }
+    if (!secId) { showToast('Selecciona una sección primero','warning'); return; }
     var data = {
         seccion_id: parseInt(secId),
         dia_semana: parseInt(document.getElementById('hc-dia').value),
@@ -676,7 +686,7 @@ function agregarBloqueHorario() {
         body: JSON.stringify(data)
     }).then(function(r) { return r.json(); }).then(function(resp) {
         if (resp.success) { showToast('Bloque agregado','success'); cargarHorariosBuilder(); }
-        else showToast('Error al agregar bloque','danger');
+        else showToast(resp.error || 'Error al agregar bloque','danger');
     });
 }
 
@@ -685,6 +695,34 @@ function eliminarBloqueHorario(id, event) {
     if (!confirm('\u00bfEliminar este bloque?')) return;
     fetch(API_HOR_ELIMINAR.replace('/0', '/' + id), {method: 'DELETE'}).then(function(r) { return r.json(); }).then(function(resp) {
         if (resp.success) { showToast('Bloque eliminado','success'); cargarHorariosBuilder(); }
+    });
+}
+
+function cargarGradosRef(nivelId, targetId) {
+    var sel = document.getElementById(targetId);
+    if (!sel) return;
+    sel.innerHTML = '<option value="">Cargando...</option>';
+    fetch(API_GRADOS_REF.replace('/0', '/' + nivelId)).then(function(r) { return r.json(); }).then(function(data) {
+        sel.innerHTML = '<option value="">Seleccionar Grado</option>';
+        data.forEach(function(g) {
+            var o = document.createElement('option');
+            o.value = g.id; o.textContent = g.nombre;
+            sel.appendChild(o);
+        });
+    });
+}
+
+function cargarSeccionesRef(gradoId, targetId) {
+    var sel = document.getElementById(targetId);
+    if (!sel) return;
+    sel.innerHTML = '<option value="">Cargando...</option>';
+    fetch(API_SECCIONES_REF.replace('/0', '/' + gradoId)).then(function(r) { return r.json(); }).then(function(data) {
+        sel.innerHTML = '<option value="">Seleccionar Sección</option>';
+        data.forEach(function(s) {
+            var o = document.createElement('option');
+            o.value = s.id; o.textContent = s.nombre;
+            sel.appendChild(o);
+        });
     });
 }
 
@@ -697,42 +735,32 @@ function showRefTab(tabId, btn) {
 }
 
 function showRefSubtab(subId, btn) {
-    var container = btn.closest('.ref-tab-panel') || document;
-    container.querySelectorAll('.ref-subtab-panel').forEach(function(p) { p.classList.remove('active'); });
-    var target = document.getElementById(subId);
-    if (target) target.classList.add('active');
-    container.querySelectorAll('.ref-subtab').forEach(function(t) { t.classList.remove('active'); });
+    document.querySelectorAll('.ref-subtab-panel').forEach(function(p) { p.classList.remove('active'); });
+    var el = document.getElementById(subId);
+    if (el) el.classList.add('active');
+    document.querySelectorAll('.ref-subtab').forEach(function(t) { t.classList.remove('active'); });
     if (btn) btn.classList.add('active');
 }
 
-function cargarGradosRef(nivelId, targetId) {
-    fetch(API_GRADOS_REF.replace('/0', '/' + nivelId)).then(r => r.json()).then(data => {
-        var sel = document.getElementById(targetId);
-        if (!sel) return;
-        sel.innerHTML = '<option value="">Seleccionar</option>';
-        data.forEach(function(g) { sel.innerHTML += '<option value="' + g.id + '">' + g.nombre + '</option>'; });
-    });
-}
-
-function cargarSeccionesRef(gradoId, targetId) {
-    fetch(API_SECCIONES_REF.replace('/0', '/' + gradoId)).then(r => r.json()).then(data => {
-        var sel = document.getElementById(targetId);
-        if (!sel) return;
-        sel.innerHTML = '<option value="">Seleccionar</option>';
-        data.forEach(function(s) { sel.innerHTML += '<option value="' + s.id + '">' + s.nombre + '</option>'; });
-    });
-}
-
-function abrirModalGrado() { document.getElementById('modal-grado').style.display = 'flex'; }
-function abrirModalSeccion() { document.getElementById('modal-seccion').style.display = 'flex'; }
-
 function guardarNotasMasivo() { alert('Función de guardado masivo implementada próximamente'); }
+
 function generarBoleta() {
     var sec = document.getElementById('notas-seccion');
     var bim = document.getElementById('notas-bimestre');
     document.getElementById('bol-seccion-id').value = sec ? sec.value : '';
     document.getElementById('bol-bimestre-id').value = bim ? bim.value : '';
-    document.querySelector('#panel-notas form[action$=\\/boletas/generar]').submit();
+    document.getElementById('bol-generar-form').submit();
+}
+
+function filtrarPlanes() {
+    var nivel = document.getElementById('pag-nivel').value;
+    var grado = document.getElementById('pag-grado').value;
+    document.querySelectorAll('#panel-pagos .ref-table tbody tr').forEach(function(row) {
+        var show = true;
+        if (nivel && row.getAttribute('data-nivel') != nivel) show = false;
+        if (grado && row.getAttribute('data-grado') != grado) show = false;
+        row.style.display = show ? '' : 'none';
+    });
 }
 
 function filtrarAlumnos() {
@@ -767,6 +795,22 @@ function revisarDocumento(id, accion, titulo) {
     document.getElementById('rev-doc-accion').value = accion;
     document.getElementById('form-revisar-doc').action = '{{ url_for("directora.revisar_documento", id=0) }}'.replace('/0', '/' + id);
     document.getElementById('modal-revisar-doc').style.display = 'flex';
+}
+
+function asignarPlanTodos() {
+    var planId = prompt('ID del plan a asignar a todos los estudiantes:');
+    if (planId) {
+        document.getElementById('asignar-plan-id').value = planId;
+        document.getElementById('form-asignar-plan-todos').submit();
+    }
+}
+
+function filtrarDocentes() {
+    showToast('Filtro de docentes aplicado', 'info');
+}
+
+function filtrarReportes() {
+    showToast('Filtro de reportes aplicado', 'info');
 }
 </script>
 {% endblock %}

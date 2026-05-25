@@ -4,8 +4,8 @@
 <div class="module-header"><h2><i class="fas fa-calendar-check"></i> Mi Asistencia</h2></div>
 <div class="card">
     <form class="filter-form" method="GET">
-        <div class="filter-group"><label>Bimestre</label>
-            <select name="bimestre_id" onchange="this.form.submit()">
+        <div class="filter-group"><label class="form-label">Bimestre</label>
+            <select name="bimestre_id" onchange="this.form.submit()" class="form-select">
                 {% for b in bimestres %}
                 <option value="{{ b.id }}" {{ 'selected' if b.id == bimestre_id }}>{{ b.nombre }}</option>
                 {% endfor %}
@@ -14,7 +14,7 @@
     </form>
 </div>
 <div class="card mt-1">
-    <table class="table">
+    <div class="table-responsive"><table class="table">
         <tr><th>Fecha</th><th>Curso</th><th>Estado</th><th>Justificación</th></tr>
         {% for a in asistencias %}
         <tr>
@@ -38,6 +38,6 @@
         {% else %}
         <tr><td colspan="4" class="text-center">Sin registros</td></tr>
         {% endfor %}
-    </table>
+    </table></div>
 </div>
 {% endblock %}

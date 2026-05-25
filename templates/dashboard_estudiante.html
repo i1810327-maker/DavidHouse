@@ -49,7 +49,7 @@
     </div>
 
     <div class="ref-grade-grid">
-        <table>
+        <div class="table-responsive"><table>
             <thead>
                 <tr>
                     <th>Curso</th>
@@ -89,7 +89,7 @@
                 <tr><td colspan="10" style="text-align:center;padding:40px;color:#888;">No hay notas registradas para este bimestre</td></tr>
                 {% endfor %}
             </tbody>
-        </table>
+        </table></div>
     </div>
 </div>
 
@@ -197,7 +197,7 @@
 
 <!-- MODAL DETALLE NOTAS -->
 <div class="ref-modal-overlay" id="modal-detalle-notas">
-    <div class="ref-modal" style="max-width:650px;">
+    <div class="ref-modal" style="max-width:650px;max-height:85vh;overflow-y:auto;">
         <span class="close" onclick="document.getElementById('modal-detalle-notas').style.display='none'">&times;</span>
         <h3 id="detalle-curso-nombre">Detalle de Notas</h3>
         <div id="detalle-notas-content" style="overflow-x:auto;">
@@ -208,14 +208,16 @@
 
 <!-- JUSTIFICAR MODAL -->
 <div class="ref-modal-overlay" id="modal-justificar">
-    <div class="ref-modal">
+    <div class="ref-modal" style="max-height:85vh;overflow-y:auto;">
         <h3>Justificar Inasistencia</h3>
         <form method="POST" action="{{ url_for('estudiante.asistencia') }}" enctype="multipart/form-data">
             <input type="hidden" name="asistencia_id" id="just-asistencia-id">
             <input type="hidden" name="bimestre_id" value="{{ bimestre_id }}">
-            <div class="form-group"><label>Título *</label><input type="text" name="titulo" required></div>
-            <div class="form-group"><label>Motivo *</label><textarea name="motivo" rows="3" required></textarea></div>
-            <div class="form-group"><label>Archivo * (PDF, Word, imagen)</label><input type="file" name="archivo" required accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"></div>
+            <div class="row g-3 mb-3">
+                <div class="col-12"><label class="form-label">Título *</label><input type="text" name="titulo" class="form-control w-100" style="min-height:44px;" required></div>
+                <div class="col-12"><label class="form-label">Motivo *</label><textarea name="motivo" rows="3" class="form-control w-100" style="min-height:44px;" required></textarea></div>
+                <div class="col-12"><label class="form-label">Archivo * (PDF, Word, imagen)</label><input type="file" name="archivo" required accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" class="form-control w-100" style="min-height:44px;"></div>
+            </div>
             <div class="ref-modal-actions">
                 <button type="button" class="ref-btn-outline" onclick="document.getElementById('modal-justificar').style.display='none'">Cancelar</button>
                 <button class="ref-btn-primary">Enviar Justificación</button>
@@ -246,9 +248,9 @@ function verDetalleNotas(cursoId, cursoNombre) {
     document.getElementById('modal-detalle-notas').style.display = 'flex';
     fetch(API_DETALLE_NOTAS.replace('/0', '/' + cursoId))
         .then(function(r) { return r.json(); })
-        .then(function(data) {
-            if (data.bimestres && data.bimestres.length > 0) {
-                var html = '<table class="ref-table" style="min-width:500px;"><thead><tr><th>Bimestre</th><th>Cuaderno</th><th>Libro</th><th>Prácticas</th><th>Exposiciones</th><th>Examen</th><th>Promedio</th><th>Letra</th></tr></thead><tbody>';
+            .then(function(data) {
+                if (data.bimestres && data.bimestres.length > 0) {
+                    var html = '<div class="table-responsive"><table class="ref-table"><thead><tr><th>Bimestre</th><th>Cuaderno</th><th>Libro</th><th>Prácticas</th><th>Exposiciones</th><th>Examen</th><th>Promedio</th><th>Letra</th></tr></thead><tbody>';
                 data.bimestres.forEach(function(b) {
                     html += '<tr><td><strong>' + b.nombre + '</strong></td>';
                     html += '<td>' + (b.notas.cuaderno || '-') + '</td>';
@@ -259,7 +261,7 @@ function verDetalleNotas(cursoId, cursoNombre) {
                     html += '<td><strong>' + (b.promedio || '-') + '</strong></td>';
                     html += '<td><span class="ref-badge ref-badge-' + (b.letra == 'AD' || b.letra == 'A' ? 'success' : b.letra == 'B' ? 'warning' : 'danger') + '">' + b.letra + '</span></td></tr>';
                 });
-                html += '</tbody></table>';
+                html += '</tbody></table></div>';
                 document.getElementById('detalle-notas-content').innerHTML = html;
             } else {
                 document.getElementById('detalle-notas-content').innerHTML = '<p style="text-align:center;padding:20px;color:#888;">Sin datos disponibles</p>';

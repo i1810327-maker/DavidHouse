@@ -5,7 +5,7 @@
 <div class="grid-2 mt-1">
     <div class="card">
         <div class="card-head"><h3>Pagos Realizados</h3></div>
-        <table class="table">
+        <div class="table-responsive"><table class="table">
             <tr><th>Plan</th><th>Monto</th><th>Vencimiento</th><th>Fecha Pago</th><th>Estado</th></tr>
             {% for p in pagos %}
             <tr>
@@ -18,11 +18,11 @@
             {% else %}
             <tr><td colspan="5" class="text-center">Sin pagos registrados</td></tr>
             {% endfor %}
-        </table>
+        </table></div>
     </div>
     <div class="card">
         <div class="card-head"><h3>Planes Activos</h3></div>
-        <table class="table">
+        <div class="table-responsive"><table class="table">
             <tr><th>Nombre</th><th>Monto</th><th>Vencimiento</th></tr>
             {% for pl in planes %}
             <tr>
@@ -33,7 +33,7 @@
             {% else %}
             <tr><td colspan="3" class="text-center">Sin planes activos</td></tr>
             {% endfor %}
-        </table>
+        </table></div>
         <div class="mt-1 text-center text-muted">
             <i class="fas fa-qrcode fa-3x"></i>
             <p>Próximamente: Pago con QR</p>

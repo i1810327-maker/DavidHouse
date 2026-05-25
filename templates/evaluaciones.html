@@ -8,8 +8,8 @@
 
 <div class="card">
     <form class="filter-form" method="GET" action="{{ url_for('docente.evaluaciones_curso', curso_id=curso.id) }}">
-        <div class="filter-group"><label>Bimestre</label>
-            <select name="bimestre_id" onchange="this.form.submit()">
+        <div class="filter-group">                <label class="form-label">Bimestre</label>
+            <select name="bimestre_id" onchange="this.form.submit()" class="form-select">
                 {% for b in bimestres %}
                 <option value="{{ b.id }}" {{ 'selected' if b.id == bimestre_id }}>{{ b.nombre }}</option>
                 {% endfor %}
@@ -25,15 +25,15 @@
         <form method="POST" action="{{ url_for('docente.evaluaciones_curso', curso_id=curso.id) }}" class="filter-form">
             <input type="hidden" name="accion" value="guardar">
             <input type="hidden" name="bimestre_id" value="{{ bimestre_id }}">
-            <div class="filter-group"><label>Estudiante</label>
-                <select name="estudiante_id" required>
+            <div class="filter-group"><label class="form-label">Estudiante</label>
+                <select name="estudiante_id" required class="form-select">
                     {% for e in estudiantes %}
                     <option value="{{ e.id }}">{{ e.apellido_paterno }} {{ e.apellido_materno }}, {{ e.nombres }}</option>
                     {% endfor %}
                 </select>
             </div>
-            <div class="filter-group"><label>Tipo</label>
-                <select name="tipo" required>
+            <div class="filter-group"><label class="form-label">Tipo</label>
+                <select name="tipo" required class="form-select">
                     <option value="cuaderno">Cuaderno (10%)</option>
                     <option value="libro">Libro (10%)</option>
                     <option value="practicas">Prácticas (20%)</option>
@@ -41,11 +41,11 @@
                     <option value="examen">Examen (50%)</option>
                 </select>
             </div>
-            <div class="filter-group"><label>Nota (0-20)</label>
-                <input type="number" name="calificacion" min="0" max="20" step="0.5" required>
+            <div class="filter-group"><label class="form-label">Nota (0-20)</label>
+                <input type="number" name="calificacion" min="0" max="20" step="0.5" required class="form-control">
             </div>
-            <div class="filter-group"><label>Observaciones</label>
-                <input type="text" name="observaciones" placeholder="Opcional">
+            <div class="filter-group"><label class="form-label">Observaciones</label>
+                <input type="text" name="observaciones" placeholder="Opcional" class="form-control">
             </div>
             <button class="btn btn-primary btn-sm"><i class="fas fa-save"></i> Guardar</button>
         </form>
@@ -58,8 +58,8 @@
         <a href="#" class="btn btn-sm btn-secondary" onclick="descargarPlantilla()"><i class="fas fa-download"></i> Descargar Plantilla</a>
         <form method="POST" action="{{ url_for('docente.evaluaciones_curso', curso_id=curso.id) }}" enctype="multipart/form-data" class="mt-1">
             <input type="hidden" name="accion" value="importar">
-            <div class="filter-group"><label>Archivo .xlsx</label>
-                <input type="file" name="archivo" accept=".xlsx" required>
+            <div class="filter-group"><label class="form-label">Archivo .xlsx</label>
+                <input type="file" name="archivo" accept=".xlsx" required class="form-control">
             </div>
             <button class="btn btn-primary btn-sm"><i class="fas fa-upload"></i> Importar</button>
         </form>
@@ -69,7 +69,7 @@
 <!-- Tabla de notas -->
 <div class="card mt-1">
     <div class="card-head"><h3>Notas Registradas</h3></div>
-    <table class="table">
+    <div class="table-responsive"><table class="table">
         <tr>
             <th>Estudiante</th>
             <th>Cuaderno</th>
@@ -95,7 +95,7 @@
             </span></td>
         </tr>
         {% endfor %}
-    </table>
+    </table></div>
 </div>
 
 <script>
