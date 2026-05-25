@@ -1,139 +1,273 @@
 {% extends "base.html" %}
-{% block title %}Mi Panel - Estudiante{% endblock %}
+{% block title %}Mi Portal{% endblock %}
 {% block content %}
-<div class="dashboard-container">
-    <div class="module-header">
-        <h2><i class="fas fa-user-graduate"></i> {{ estudiante.nombre_completo }}</h2>
-        <p>Grado: {{ estudiante.grado_rel.nombre if estudiante.grado_rel else '-' }} | Sección: {{ estudiante.seccion_rel.nombre if estudiante.seccion_rel else '-' }}</p>
-    </div>
 
-    <div class="summary-row">
-        <div class="summary-card-dir">
-            <div class="summary-card-dir-icon" style="background:#e3f2fd;color:#1565c0;"><i class="fas fa-book"></i></div>
-            <div class="summary-card-dir-body">
-                <div class="summary-card-dir-value">{{ cursos|length }}</div>
-                <div class="summary-card-dir-label">Cursos</div>
-            </div>
-        </div>
-        <div class="summary-card-dir">
-            <div class="summary-card-dir-icon" style="background:#fff3e0;color:#e65100;"><i class="fas fa-star"></i></div>
-            <div class="summary-card-dir-body">
-                <div class="summary-card-dir-value">
-                    {% set ns = namespace(total=0, count=0) %}
-                    {% for c in cursos %}
-                        {% set p = promedios[c.id]['promedio'] if c.id in promedios else None %}
-                        {% if p is not none %}{% set ns.total = ns.total + p %}{% set ns.count = ns.count + 1 %}{% endif %}
-                    {% endfor %}
-                    {{ '%.1f'|format(ns.total / ns.count) if ns.count > 0 else '-' }}
-                </div>
-                <div class="summary-card-dir-label">Promedio General</div>
-            </div>
-        </div>
-        <div class="summary-card-dir">
-            <div class="summary-card-dir-icon" style="background:#e8f5e9;color:#2e7d32;"><i class="fas fa-money-bill"></i></div>
-            <div class="summary-card-dir-body">
-                <div class="summary-card-dir-value">{{ pagos_pendientes }}</div>
-                <div class="summary-card-dir-label">Pagos Pendientes</div>
-            </div>
-        </div>
-        <div class="summary-card-dir">
-            <div class="summary-card-dir-icon" style="background:#ffebee;color:#c62828;"><i class="fas fa-exclamation-triangle"></i></div>
-            <div class="summary-card-dir-body">
-                <div class="summary-card-dir-value">{{ pagos_atrasados }}</div>
-                <div class="summary-card-dir-label">Atrasados</div>
-            </div>
-        </div>
+<div class="ref-student-stats">
+    <div class="ref-student-stat">
+        <div class="ref-student-stat-value" style="color:#1565c0;">{{ promedios.values()|map(attribute='promedio')|select('ne',None)|list|length }}</div>
+        <div class="ref-student-stat-label">Materias</div>
     </div>
-
-    <div class="teacher-grid">
-        {% set colores = ['#1565c0','#2e7d32','#e65100','#6a1b9a','#c62828','#00838f','#4e342e','#37474f','#558b2f','#ad1457'] %}
-        {% for c in cursos %}
-        {% set p = promedios[c.id] if c.id in promedios else None %}
-        <div class="dashboard-course-card" style="border-top: 4px solid {{ colores[loop.index0 % colores|length] }};">
-            <div class="course-card-head">
-                <div class="course-icon" style="background:{{ colores[loop.index0 % colores|length] }}20;color:{{ colores[loop.index0 % colores|length] }};">
-                    <i class="fas fa-{{ 'book-open' if loop.index0 % 3 == 0 else 'calculator' if loop.index0 % 3 == 1 else 'flask' }}"></i>
-                </div>
-                <div class="course-info">
-                    <h4>{{ c.nombre }}</h4>
-                    <p>{{ c.docente.nombre_completo if c.docente else '-' }}</p>
-                </div>
-            </div>
-            <div class="flex-between">
-                <div>
-                    <span style="font-size:13px;color:#666;">Promedio:</span>
-                    <strong style="font-size:18px;color:{{ '#28a745' if p and p.promedio >= 14 else '#ff9800' if p and p.promedio >= 12 else '#dc3545' }};">{{ p.promedio if p else '-' }}</strong>
-                </div>
-                <div>
-                    <span class="badge-dir badge-dir-{{ 'success' if p and p.promedio >= 14 else 'warning' if p and p.promedio >= 12 else 'danger' }}" style="font-size:14px;padding:6px 16px;">
-                        {{ p.letra if p else '-' }}
-                    </span>
-                </div>
-            </div>
-            <div style="margin-top:8px;font-size:12px;color:#888;">
-                Asistencia: <strong>{{ p.asistencia if p else '0' }}%</strong>
-            </div>
-        </div>
-        {% endfor %}
+    <div class="ref-student-stat">
+        <div class="ref-student-stat-value" style="color:#2e7d32;">{{ promedios.values()|map(attribute='promedio')|select('ne',None)|list|sum / (promedios.values()|map(attribute='promedio')|select('ne',None)|list|length or 1) | round(1) }}</div>
+        <div class="ref-student-stat-label">Promedio General</div>
     </div>
-
-    <div class="action-grid mt-3" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;">
-        <a href="{{ url_for('estudiante_horario') }}" class="action-card" style="text-align:center;background:#e3f2fd;border-color:#bbdefb;">
-            <i class="fas fa-clock" style="font-size:28px;color:#1565c0;display:block;margin-bottom:6px;"></i>
-            <h4 style="color:#1565c0;font-size:14px;margin:0;">Mi Horario</h4>
-        </a>
-        <a href="{{ url_for('estudiante_notas') }}" class="action-card" style="text-align:center;background:#fff3e0;border-color:#ffe0b2;">
-            <i class="fas fa-star" style="font-size:28px;color:#e65100;display:block;margin-bottom:6px;"></i>
-            <h4 style="color:#e65100;font-size:14px;margin:0;">Mis Notas</h4>
-        </a>
-        <a href="{{ url_for('estudiante_asistencia') }}" class="action-card" style="text-align:center;background:#e8f5e9;border-color:#c8e6c9;">
-            <i class="fas fa-calendar-check" style="font-size:28px;color:#2e7d32;display:block;margin-bottom:6px;"></i>
-            <h4 style="color:#2e7d32;font-size:14px;margin:0;">Asistencia</h4>
-        </a>
-        <a href="{{ url_for('estudiante_comentarios') }}" class="action-card" style="text-align:center;background:#f3e5f5;border-color:#e1bee7;">
-            <i class="fas fa-comment" style="font-size:28px;color:#6a1b9a;display:block;margin-bottom:6px;"></i>
-            <h4 style="color:#6a1b9a;font-size:14px;margin:0;">Comentarios</h4>
-        </a>
-        <a href="{{ url_for('estudiante_pagos') }}" class="action-card" style="text-align:center;background:#fce4ec;border-color:#f8bbd0;">
-            <i class="fas fa-money-bill" style="font-size:28px;color:#c62828;display:block;margin-bottom:6px;"></i>
-            <h4 style="color:#c62828;font-size:14px;margin:0;">Pagos</h4>
-        </a>
+    <div class="ref-student-stat">
+        <div class="ref-student-stat-value" style="color:#e65100;">{{ promedios.values()|map(attribute='asistencia')|select('ne',None)|list|sum / (promedios.values()|map(attribute='asistencia')|select('ne',None)|list|length or 1) | round(0) }}%</div>
+        <div class="ref-student-stat-label">Asistencia</div>
+    </div>
+    <div class="ref-student-stat">
+        <div class="ref-student-stat-value" style="color:#6a1b9a;">{{ estudiante.grado_rel.nombre if estudiante.grado_rel else '-' }} {{ estudiante.seccion_rel.nombre if estudiante.seccion_rel else '' }}</div>
+        <div class="ref-student-stat-label">Grado</div>
     </div>
 </div>
 
-<style>
-.dashboard-course-card {
-    background: white;
-    border-radius: 14px;
-    padding: 20px;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.04);
-    border: 1px solid #f0f0f0;
-    transition: all 0.2s;
+<div class="ref-tabs">
+    <button class="ref-tab active" onclick="showRefTab('notas',this)"><i class="fas fa-star"></i> Notas</button>
+    <button class="ref-tab" onclick="showRefTab('asistencia',this)"><i class="fas fa-calendar-check"></i> Asistencia</button>
+    <button class="ref-tab" onclick="showRefTab('comentarios',this)"><i class="fas fa-comment"></i> Comentarios</button>
+    <button class="ref-tab" onclick="showRefTab('pagos',this)"><i class="fas fa-money-bill"></i> Pagos</button>
+</div>
+
+<!-- ============ NOTAS ============ -->
+<div id="panel-notas" class="ref-tab-panel active">
+    <div class="ref-section-header">
+        <div>
+            <h2>Mis Calificaciones</h2>
+            <p>Revisa tus notas por curso y bimestre</p>
+        </div>
+    </div>
+
+    <div class="ref-filters">
+        <select class="ref-filter-select" onchange="window.location='?bimestre_id=' + this.value">
+            {% for b in bimestres %}
+            <option value="{{ b.id }}" {{ 'selected' if b.id == bimestre_id }}>{{ b.nombre }}</option>
+            {% endfor %}
+        </select>
+        <span style="font-size:13px;color:#888;">
+            <strong>Leyenda:</strong> AD (18-20) | A (15-17) | B (12-14) | C (0-11)
+        </span>
+    </div>
+
+    <div class="ref-grade-grid">
+        <table>
+            <thead>
+                <tr>
+                    <th>Curso</th>
+                    <th>Docente</th>
+                    <th>Cuaderno (10%)</th>
+                    <th>Libro (10%)</th>
+                    <th>Prácticas (20%)</th>
+                    <th>Exposiciones (10%)</th>
+                    <th>Examen (50%)</th>
+                    <th>Promedio</th>
+                    <th>Letra</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in cursos %}
+                {% set p = promedios.get(c.id, {}) %}
+                {% set ev = evaluaciones_por_curso.get(c.id, {}) %}
+                <tr>
+                    <td><strong>{{ c.nombre }}</strong></td>
+                    <td style="font-size:13px;color:#888;">{{ c.docente.nombre_completo if c.docente else '-' }}</td>
+                    <td>{{ ev.get('cuaderno', '-') }}</td>
+                    <td>{{ ev.get('libro', '-') }}</td>
+                    <td>{{ ev.get('practicas', '-') }}</td>
+                    <td>{{ ev.get('exposiciones', '-') }}</td>
+                    <td>{{ ev.get('examen', '-') }}</td>
+                    <td><strong>{{ p.get('promedio', '-') if p.get('promedio') is not none else '-' }}</strong></td>
+                    <td>
+                        {% set letra = p.get('letra', '-') %}
+                        <span class="ref-badge ref-badge-{{ 'success' if letra in ('AD','A') else 'warning' if letra == 'B' else 'danger' if letra == 'C' else 'info' }}">{{ letra }}</span>
+                    </td>
+                    <td>
+                        <button class="ref-btn-outline ref-btn-sm" onclick="verDetalleNotas({{ c.id }}, '{{ c.nombre }}')"><i class="fas fa-eye"></i> Ver más detalle</button>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="10" style="text-align:center;padding:40px;color:#888;">No hay notas registradas para este bimestre</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ============ ASISTENCIA ============ -->
+<div id="panel-asistencia" class="ref-tab-panel">
+    <div class="ref-section-header">
+        <div>
+            <h2>Mi Asistencia</h2>
+            <p>Revisa tus asistencias, tardanzas y faltas</p>
+        </div>
+    </div>
+
+    <div class="ref-filters">
+        <select class="ref-filter-select" onchange="window.location='?bimestre_id=' + this.value">
+            {% for b in bimestres %}
+            <option value="{{ b.id }}" {{ 'selected' if b.id == bimestre_id }}>{{ b.nombre }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="ref-attendance-grid">
+        {% for a in asistencias %}
+        <div class="ref-attendance-row">
+            <div>
+                <strong>{{ a.curso.nombre }}</strong>
+                <div style="font-size:12px;color:#888;">{{ a.fecha }}</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;">
+                <span class="ref-badge ref-badge-{{ 'success' if a.estado == 'presente' else 'warning' if a.estado == 'tarde' else 'danger' if a.estado == 'falta' else 'info' }}">
+                    {{ a.estado|title }}
+                </span>
+                {% if a.estado == 'falta' and a.id not in justificadas %}
+                <button class="ref-btn-outline ref-btn-sm" onclick="mostrarJustificar({{ a.id }})"><i class="fas fa-pen"></i> Justificar</button>
+                {% elif a.id in justificadas %}
+                <span class="ref-badge ref-badge-info">Justificado</span>
+                {% endif %}
+            </div>
+        </div>
+        {% else %}
+        <p style="text-align:center;padding:40px;color:#888;">Sin registros de asistencia</p>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- ============ COMENTARIOS ============ -->
+<div id="panel-comentarios" class="ref-tab-panel">
+    <div class="ref-section-header">
+        <div>
+            <h2>Comentarios de Docentes</h2>
+            <p>Revisa los comentarios que tus docentes han dejado</p>
+        </div>
+    </div>
+    <div class="ref-comment-list">
+        {% for c in comentarios %}
+        <div class="ref-comment-card">
+            <div class="ref-comment-header">
+                <div class="ref-comment-author">{{ c.docente.nombre_completo if c.docente else '-' }}</div>
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <span class="ref-badge ref-badge-{{ 'success' if c.tipo == 'positivo' or c.tipo == 'comportamiento' else 'warning' if c.tipo == 'recomendacion' else 'info' }}">{{ c.tipo|title }}</span>
+                    <span class="ref-comment-date">{{ c.fecha_creacion.strftime('%d/%m/%Y') }}</span>
+                </div>
+            </div>
+            <div class="ref-comment-text">{{ c.contenido }}</div>
+        </div>
+        {% else %}
+        <p style="text-align:center;padding:40px;color:#888;">No tienes comentarios aún</p>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- ============ PAGOS ============ -->
+<div id="panel-pagos" class="ref-tab-panel">
+    <div class="ref-section-header">
+        <div>
+            <h2>Mis Pagos</h2>
+            <p>Revisa el estado de tus pagos</p>
+        </div>
+    </div>
+
+    <div class="ref-payment-list">
+        {% for p in pagos %}
+        <div class="ref-payment-item">
+            <div class="ref-payment-left">
+                <div class="ref-payment-icon" style="background:{{ '#e8f5e9' if p.estado == 'pagado' else '#fff3e0' if p.estado == 'pendiente' else '#fbe9e7' }};color:{{ '#2e7d32' if p.estado == 'pagado' else '#e65100' if p.estado == 'pendiente' else '#c62828' }};">
+                    <i class="fas fa-{{ 'check-circle' if p.estado == 'pagado' else 'clock' if p.estado == 'pendiente' else 'exclamation-circle' }}"></i>
+                </div>
+                <div class="ref-payment-info">
+                    <h4>{{ p.plan.nombre if p.plan else 'Pago' }}</h4>
+                    <p>Vence: {{ p.plan.fecha_vencimiento if p.plan else '-' }}</p>
+                    {% if p.mora_acumulada and p.mora_acumulada > 0 %}
+                    <p style="color:#c62828;font-size:12px;">Mora: S/ {{ p.mora_acumulada }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            <div style="text-align:right;">
+                <div class="ref-payment-amount">S/ {{ p.monto_pagado }}</div>
+                <span class="ref-badge ref-badge-{{ 'success' if p.estado == 'pagado' else 'warning' if p.estado == 'pendiente' else 'danger' }}">{{ p.estado|title }}</span>
+            </div>
+        </div>
+        {% else %}
+        <p style="text-align:center;padding:40px;color:#888;">No hay pagos registrados</p>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- MODAL DETALLE NOTAS -->
+<div class="ref-modal-overlay" id="modal-detalle-notas">
+    <div class="ref-modal" style="max-width:650px;">
+        <span class="close" onclick="document.getElementById('modal-detalle-notas').style.display='none'">&times;</span>
+        <h3 id="detalle-curso-nombre">Detalle de Notas</h3>
+        <div id="detalle-notas-content" style="overflow-x:auto;">
+            <p style="text-align:center;padding:20px;color:#888;">Cargando...</p>
+        </div>
+    </div>
+</div>
+
+<!-- JUSTIFICAR MODAL -->
+<div class="ref-modal-overlay" id="modal-justificar">
+    <div class="ref-modal">
+        <h3>Justificar Inasistencia</h3>
+        <form method="POST" action="{{ url_for('estudiante.asistencia') }}" enctype="multipart/form-data">
+            <input type="hidden" name="asistencia_id" id="just-asistencia-id">
+            <input type="hidden" name="bimestre_id" value="{{ bimestre_id }}">
+            <div class="form-group"><label>Título *</label><input type="text" name="titulo" required></div>
+            <div class="form-group"><label>Motivo *</label><textarea name="motivo" rows="3" required></textarea></div>
+            <div class="form-group"><label>Archivo * (PDF, Word, imagen)</label><input type="file" name="archivo" required accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"></div>
+            <div class="ref-modal-actions">
+                <button type="button" class="ref-btn-outline" onclick="document.getElementById('modal-justificar').style.display='none'">Cancelar</button>
+                <button class="ref-btn-primary">Enviar Justificación</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+const API_DETALLE_NOTAS = "{{ url_for('estudiante.api_detalle_notas', curso_id=0) }}";
+
+function showRefTab(tabId, btn) {
+    document.querySelectorAll('.ref-tab-panel').forEach(function(p) { p.classList.remove('active'); });
+    var el = document.getElementById('panel-' + tabId);
+    if (el) el.classList.add('active');
+    document.querySelectorAll('.ref-tab').forEach(function(t) { t.classList.remove('active'); });
+    if (btn) btn.classList.add('active');
 }
 
-.dashboard-course-card:hover {
-    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-    transform: translateY(-1px);
+function mostrarJustificar(asistenciaId) {
+    document.getElementById('just-asistencia-id').value = asistenciaId;
+    document.getElementById('modal-justificar').style.display = 'flex';
 }
 
-.course-card-head {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    margin-bottom: 14px;
+function verDetalleNotas(cursoId, cursoNombre) {
+    document.getElementById('detalle-curso-nombre').textContent = 'Detalle: ' + cursoNombre;
+    document.getElementById('detalle-notas-content').innerHTML = '<p style="text-align:center;padding:20px;color:#888;">Cargando...</p>';
+    document.getElementById('modal-detalle-notas').style.display = 'flex';
+    fetch(API_DETALLE_NOTAS.replace('/0', '/' + cursoId))
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.bimestres && data.bimestres.length > 0) {
+                var html = '<table class="ref-table" style="min-width:500px;"><thead><tr><th>Bimestre</th><th>Cuaderno</th><th>Libro</th><th>Prácticas</th><th>Exposiciones</th><th>Examen</th><th>Promedio</th><th>Letra</th></tr></thead><tbody>';
+                data.bimestres.forEach(function(b) {
+                    html += '<tr><td><strong>' + b.nombre + '</strong></td>';
+                    html += '<td>' + (b.notas.cuaderno || '-') + '</td>';
+                    html += '<td>' + (b.notas.libro || '-') + '</td>';
+                    html += '<td>' + (b.notas.practicas || '-') + '</td>';
+                    html += '<td>' + (b.notas.exposiciones || '-') + '</td>';
+                    html += '<td>' + (b.notas.examen || '-') + '</td>';
+                    html += '<td><strong>' + (b.promedio || '-') + '</strong></td>';
+                    html += '<td><span class="ref-badge ref-badge-' + (b.letra == 'AD' || b.letra == 'A' ? 'success' : b.letra == 'B' ? 'warning' : 'danger') + '">' + b.letra + '</span></td></tr>';
+                });
+                html += '</tbody></table>';
+                document.getElementById('detalle-notas-content').innerHTML = html;
+            } else {
+                document.getElementById('detalle-notas-content').innerHTML = '<p style="text-align:center;padding:20px;color:#888;">Sin datos disponibles</p>';
+            }
+        })
+        .catch(function() {
+            document.getElementById('detalle-notas-content').innerHTML = '<p style="text-align:center;padding:20px;color:#888;">Error al cargar datos</p>';
+        });
 }
-
-.course-icon {
-    width: 44px; height: 44px;
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 18px;
-    flex-shrink: 0;
-}
-
-.course-info h4 { font-size: 15px; color: #1a1a2e; margin-bottom: 2px; }
-.course-info p { font-size: 12px; color: #888; margin: 0; }
-</style>
+</script>
 {% endblock %}

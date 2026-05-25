@@ -1,123 +1,461 @@
 {% extends "base.html" %}
 {% block title %}Panel Docente{% endblock %}
 {% block content %}
-<div class="dashboard-container">
-    <div class="module-header">
-        <h2><i class="fas fa-chalkboard-teacher"></i> Bienvenido, {{ docente.nombre_completo }}</h2>
-        <p>Panel de gestión académica</p>
-    </div>
 
-    <div class="summary-row">
-        <div class="summary-card-dir">
-            <div class="summary-card-dir-icon" style="background:#e3f2fd;color:#1565c0;"><i class="fas fa-book"></i></div>
-            <div class="summary-card-dir-body">
-                <div class="summary-card-dir-value">{{ cursos|length }}</div>
-                <div class="summary-card-dir-label">Mis Cursos</div>
-            </div>
-        </div>
-        <div class="summary-card-dir">
-            <div class="summary-card-dir-icon" style="background:#e8f5e9;color:#2e7d32;"><i class="fas fa-users"></i></div>
-            <div class="summary-card-dir-body">
-                <div class="summary-card-dir-value">{{ total_estudiantes if total_estudiantes else '-' }}</div>
-                <div class="summary-card-dir-label">Estudiantes Totales</div>
-            </div>
-        </div>
+<div class="ref-stats">
+    <div class="ref-stat-card">
+        <div class="ref-stat-icon" style="background:#e3f2fd;color:#1565c0;"><i class="fas fa-book"></i></div>
+        <div><div class="ref-stat-value">{{ cursos|length }}</div><div class="ref-stat-label">Mis Clases</div></div>
     </div>
-
-    {% if cursos %}
-    <div class="teacher-grid">
-        {% set colores = ['#1565c0','#2e7d32','#e65100','#6a1b9a','#c62828','#00838f','#4e342e','#37474f','#558b2f','#ad1457'] %}
-        {% for c in cursos %}
-        <div class="dashboard-course-card" style="border-top: 4px solid {{ colores[loop.index0 % colores|length] }};">
-            <div class="course-card-head">
-                <div class="course-icon" style="background:{{ colores[loop.index0 % colores|length] }}20;color:{{ colores[loop.index0 % colores|length] }};">
-                    <i class="fas fa-{{ 'book-open' if loop.index0 % 3 == 0 else 'calculator' if loop.index0 % 3 == 1 else 'flask' }}"></i>
-                </div>
-                <div class="course-info">
-                    <h4>{{ c.nombre }}</h4>
-                    <p>{{ c.grado_rel.nombre if c.grado_rel else '-' }} - Sección {{ c.seccion_rel.nombre if c.seccion_rel else '-' }}</p>
-                    <small>{{ c.periodo.nombre if c.periodo else '-' }}</small>
-                </div>
-            </div>
-            <div class="course-card-actions">
-                <a href="{{ url_for('evaluaciones_curso', curso_id=c.id) }}" class="btn-dir-primary btn-dir-sm"><i class="fas fa-star"></i> Notas</a>
-                <a href="{{ url_for('asistencia_curso', curso_id=c.id) }}" class="btn-dir-secondary btn-dir-sm"><i class="fas fa-calendar-check"></i> Asistencia</a>
-            </div>
-        </div>
-        {% endfor %}
+    <div class="ref-stat-card">
+        <div class="ref-stat-icon" style="background:#e8f5e9;color:#2e7d32;"><i class="fas fa-users"></i></div>
+        <div><div class="ref-stat-value">{{ total_estudiantes if total_estudiantes else 0 }}</div><div class="ref-stat-label">Total Estudiantes</div></div>
     </div>
-
-    <div class="action-grid mt-3">
-        <a href="{{ url_for('comentarios_docente') }}" class="action-card" style="background:#fff3e0;border-color:#ffe0b2;">
-            <h4 style="color:#e65100;"><i class="fas fa-comment"></i> Comentarios</h4>
-            <p>Agrega y revisa comentarios sobre tus estudiantes</p>
-        </a>
-        <a href="{{ url_for('documentos_docente') }}" class="action-card" style="background:#e3f2fd;border-color:#bbdefb;">
-            <h4 style="color:#1565c0;"><i class="fas fa-upload"></i> Subir Documentos</h4>
-            <p>Entrega documentos requeridos por la dirección</p>
-        </a>
+    <div class="ref-stat-card">
+        <div class="ref-stat-icon" style="background:#fff3e0;color:#e65100;"><i class="fas fa-star"></i></div>
+        <div><div class="ref-stat-value">--</div><div class="ref-stat-label">Promedio General</div></div>
     </div>
-    {% else %}
-    <div class="empty-state"><p>No tienes cursos asignados aún</p></div>
-    {% endif %}
+    <div class="ref-stat-card">
+        <div class="ref-stat-icon" style="background:#f3e5f5;color:#6a1b9a;"><i class="fas fa-calendar-check"></i></div>
+        <div><div class="ref-stat-value">--</div><div class="ref-stat-label">Asistencia Promedio</div></div>
+    </div>
 </div>
 
-<style>
-.dashboard-course-card {
-    background: white;
-    border-radius: 14px;
-    padding: 20px;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.04);
-    border: 1px solid #f0f0f0;
-    transition: all 0.2s;
-    margin-bottom: 16px;
+<div class="ref-tabs">
+    <button class="ref-tab active" onclick="showRefTab('alumnos',this)"><i class="fas fa-user-graduate"></i> Alumnos</button>
+    <button class="ref-tab" onclick="showRefTab('notas',this)"><i class="fas fa-star"></i> Notas</button>
+    <button class="ref-tab" onclick="showRefTab('asistencia',this)"><i class="fas fa-calendar-check"></i> Asistencia</button>
+    <button class="ref-tab" onclick="showRefTab('reportes',this)"><i class="fas fa-upload"></i> Reportes</button>
+    <button class="ref-tab" onclick="showRefTab('horario',this)"><i class="fas fa-clock"></i> Horario</button>
+</div>
+
+<!-- ============ NOTAS ============ -->
+<div id="panel-notas" class="ref-tab-panel">
+    <div class="ref-section-header">
+        <div>
+            <h2>Registro de Notas</h2>
+            <p>Gestiona calificaciones en formato Excel (0-20)</p>
+        </div>
+        <div style="display:flex;gap:10px;">
+            <button class="ref-btn-outline" onclick="descargarPlantillaNotas()"><i class="fas fa-file-download"></i> Descargar Plantilla</button>
+            <button class="ref-btn-outline" onclick="document.getElementById('import-notas-input').click()"><i class="fas fa-file-import"></i> Importar Excel</button>
+            <button class="ref-btn-primary" onclick="guardarNotasDocente()"><i class="fas fa-save"></i> Guardar Todo</button>
+        </div>
+    </div>
+    <form id="import-notas-form" method="POST" enctype="multipart/form-data" style="display:none">
+        <input type="file" id="import-notas-input" name="archivo" accept=".xlsx" onchange="importarNotasExcel(this)">
+    </form>
+
+    <div class="ref-filters">
+        <select class="ref-filter-select" id="docnotas-nivel" onchange="cargarGradosRef(this.value,'docnotas-grado')"><option value="">Todos los Niveles</option>{% for n in niveles %}<option value="{{ n.id }}">{{ n.nombre }}</option>{% endfor %}</select>
+        <select class="ref-filter-select" id="docnotas-grado" onchange="cargarSeccionesRef(this.value,'docnotas-seccion')"><option value="">Todos los Grados</option></select>
+        <select class="ref-filter-select" id="docnotas-seccion" onchange="cargarNotasDocente()"><option value="">Todas las Secciones</option>{% for s in secciones %}<option value="{{ s.id }}">{{ s.grado.nombre }} {{ s.nombre }}</option>{% endfor %}</select>
+        <select class="ref-filter-select" id="docnotas-curso" onchange="cargarNotasDocente()">
+            <option value="">Seleccionar Curso</option>
+            {% for c in cursos %}
+            <option value="{{ c.id }}">{{ c.grado_rel.nombre if c.grado_rel else '' }} - Sección {{ c.seccion_rel.nombre if c.seccion_rel else '' }} • {{ c.nombre }}</option>
+            {% endfor %}
+        </select>
+        <select class="ref-filter-select" id="docnotas-bimestre">
+            {% for b in bimestres %}
+            <option value="{{ b.id }}">{{ b.nombre }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="ref-grade-grid" id="docnotas-grid">
+        <table>
+            <thead>
+                <tr><th>Estudiante</th><th>Cuaderno (10%)</th><th>Libro (10%)</th><th>Prácticas (20%)</th><th>Exposiciones (10%)</th><th>Examen (50%)</th><th>Promedio</th><th>Letra</th></tr>
+            </thead>
+            <tbody>
+                <tr><td colspan="8" style="text-align:center;padding:40px;color:#888;">Selecciona un curso y bimestre para ver las notas</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ============ ALUMNOS ============ -->
+<div id="panel-alumnos" class="ref-tab-panel active">
+    <div class="ref-section-header">
+        <div>
+            <h2>Mis Alumnos</h2>
+            <p>Lista de estudiantes a tu cargo por curso</p>
+        </div>
+    </div>
+
+    <div class="ref-filters">
+        <select class="ref-filter-select" onchange="filtrarDocenteAlumnos()" id="dal-curso">
+            <option value="">Todos los Cursos</option>
+            {% for c in cursos %}
+            <option value="{{ c.id }}">{{ c.grado_rel.nombre if c.grado_rel else '' }} - Sección {{ c.seccion_rel.nombre if c.seccion_rel else '' }} • {{ c.nombre }}</option>
+            {% endfor %}
+        </select>
+        <input type="text" class="ref-filter-select" id="dal-search" placeholder="Buscar estudiante..." onkeyup="filtrarDocenteAlumnos()" style="min-width:200px;">
+    </div>
+
+    {% for c in cursos %}
+    {% set estudiantes_curso = estudiantes_por_curso.get(c.id, []) %}
+    <div class="dal-curso-group" data-curso="{{ c.id }}">
+        <h3 style="font-size:15px;font-weight:600;color:#1a1a2e;margin:16px 0 8px;">
+            <i class="fas fa-book" style="color:#003D82;"></i> {{ c.grado_rel.nombre if c.grado_rel else '' }} - Sección {{ c.seccion_rel.nombre if c.seccion_rel else '' }} • {{ c.nombre }}
+            <span style="font-weight:400;font-size:13px;color:#888;margin-left:8px;">({{ estudiantes_curso|length }} estudiantes)</span>
+        </h3>
+        <table class="ref-table">
+            <thead><tr><th>DNI</th><th>Nombre Completo</th><th>Correo</th></tr></thead>
+            <tbody>
+                {% for e in estudiantes_curso %}
+                <tr class="dal-row" data-nombre="{{ e.nombre_completo|lower }}">
+                    <td>{{ e.dni }}</td><td><strong>{{ e.nombre_completo }}</strong></td><td>{{ e.correo }}</td>
+                </tr>
+                {% else %}
+                <tr><td colspan="3" style="text-align:center;padding:20px;color:#888;">Sin estudiantes en este curso</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p style="text-align:center;padding:40px;color:#888;">No tienes cursos asignados</p>
+    {% endfor %}
+</div>
+
+<!-- ============ ASISTENCIA ============ -->
+<div id="panel-asistencia" class="ref-tab-panel">
+    <div class="ref-section-header">
+        <div>
+            <h2>Registro de Asistencia</h2>
+            <p>Marca la asistencia de tus estudiantes por curso</p>
+        </div>
+    </div>
+
+    <div class="ref-filters">
+        <select class="ref-filter-select" id="asis-nivel" onchange="cargarGradosRef(this.value,'asis-grado')">
+            <option value="">Todos los Niveles</option>
+            {% for n in niveles %}
+            <option value="{{ n.id }}">{{ n.nombre }}</option>
+            {% endfor %}
+        </select>
+        <select class="ref-filter-select" id="asis-grado" onchange="cargarSeccionesRef(this.value,'asis-seccion')">
+            <option value="">Todos los Grados</option>
+        </select>
+        <select class="ref-filter-select" id="asis-seccion">
+            <option value="">Todas las Secciones</option>
+            {% for s in secciones %}
+            <option value="{{ s.id }}">{{ s.grado.nombre }} {{ s.nombre }}</option>
+            {% endfor %}
+        </select>
+        <input type="date" class="ref-filter-select" id="asis-fecha" value="{{ now().strftime('%Y-%m-%d') }}">
+        <select class="ref-filter-select" id="asis-bimestre">
+            {% for b in bimestres %}
+            <option value="{{ b.id }}">{{ b.nombre }}</option>
+            {% endfor %}
+        </select>
+        <button class="ref-btn-outline ref-btn-sm" onclick="marcarTodos()"><i class="fas fa-check-double"></i> Marcar Todos Presente</button>
+        <button class="ref-btn-primary ref-btn-sm" onclick="cargarAsistencia()"><i class="fas fa-search"></i> Cargar</button>
+        <button class="ref-btn-success ref-btn-sm" onclick="guardarAsistencia()"><i class="fas fa-save"></i> Guardar</button>
+    </div>
+
+    <div class="ref-attendance-grid" id="asis-grid">
+        <p style="text-align:center;padding:40px;color:#888;">Selecciona nivel, grado, sección, fecha y haz clic en Cargar</p>
+    </div>
+</div>
+
+<!-- ============ REPORTES ============ -->
+<div id="panel-reportes" class="ref-tab-panel">
+    <div class="ref-section-header">
+        <div>
+            <h2>Reportes</h2>
+            <p>Responde a las solicitudes de reporte de la dirección</p>
+        </div>
+    </div>
+
+    <div class="ref-request-list">
+        {% for s in solicitudes %}
+        <div class="ref-request-card">
+            <div class="ref-request-header">
+                <div class="ref-request-title">{{ s.titulo }}</div>
+                <span class="ref-badge ref-badge-{{ 'success' if s.fecha_maxima > now() else 'danger' }}">
+                    {{ 'Plazo vigente' if s.fecha_maxima > now() else 'Vencido' }}
+                </span>
+            </div>
+            <div class="ref-request-desc">{{ s.descripcion }}</div>
+            <div class="ref-request-deadline">Fecha máxima: {{ s.fecha_maxima.strftime('%d/%m/%Y %H:%M') }}</div>
+            {% if s.fecha_maxima > now() %}
+            <button class="ref-btn-primary ref-btn-sm" onclick="abrirModalReporte({{ s.id }}, '{{ s.titulo }}')" style="margin-top:10px;"><i class="fas fa-upload"></i> Subir Reporte</button>
+            {% else %}
+            <p style="color:#c62828;font-size:13px;margin-top:8px;"><i class="fas fa-times-circle"></i> Fecha de entrega vencida</p>
+            {% endif %}
+        </div>
+        {% else %}
+        <p style="text-align:center;padding:40px;color:#888;">No hay solicitudes de reporte activas</p>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Modal Subir Reporte -->
+<div class="ref-modal-overlay" id="modal-subir-reporte">
+    <div class="ref-modal" style="max-width:500px;">
+        <span class="close" onclick="document.getElementById('modal-subir-reporte').style.display='none'">&times;</span>
+        <h3 id="modal-reporte-title">Subir Reporte</h3>
+        <form method="POST" action="{{ url_for('docente.documentos') }}" enctype="multipart/form-data">
+            <input type="hidden" name="solicitud_reporte_id" id="reporte-solicitud-id" value="">
+            <div class="form-group"><label>Título *</label><input type="text" name="titulo" required></div>
+            <div class="form-group"><label>Descripción</label><textarea name="descripcion" rows="3"></textarea></div>
+            <div class="form-group"><label>Archivo * (PDF o Word)</label><input type="file" name="archivo" accept=".pdf,.doc,.docx" required></div>
+            <div class="ref-modal-actions">
+                <button type="button" class="ref-btn-outline" onclick="document.getElementById('modal-subir-reporte').style.display='none'">Cancelar</button>
+                <button class="ref-btn-primary"><i class="fas fa-upload"></i> Subir</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ============ HORARIO ============ -->
+<div id="panel-horario" class="ref-tab-panel">
+    <div class="ref-section-header">
+        <div>
+            <h2>Mi Horario</h2>
+            <p>Horario de clases semanal</p>
+        </div>
+    </div>
+    <div class="ref-schedule">
+        <table>
+            <thead><tr><th>Hora</th><th>Lunes</th><th>Martes</th><th>Miércoles</th><th>Jueves</th><th>Viernes</th></tr></thead>
+            <tbody>
+                {% set horas = ['08:00','09:00','10:00','11:00','12:00','13:00'] %}
+                {% for h in horas %}
+                <tr>
+                    <td class="time-slot">{{ h }} - {{ '%02d:00'|format(h.split(':')[0]|int + 1) }}</td>
+                    {% for dia in range(1,6) %}
+                    <td>
+                        {% set clases = horarios | selectattr('dia_semana', 'equalto', dia) | selectattr('hora_inicio.strftime', 'equalto', h + ':00') | list %}
+                        {% for c in clases %}
+                        <div class="class-cell"><strong>{{ c.curso.nombre }}</strong><small>{{ c.seccion.grado.nombre }} {{ c.seccion.nombre }}</small></div>
+                        {% endfor %}
+                    </td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+const API_GRADOS_REF = "{{ url_for('directora.api_grados_por_nivel', nivel_id=0) }}";
+const API_SECCIONES_REF = "{{ url_for('directora.api_secciones_por_grado', grado_id=0) }}";
+const API_ASISTENCIA = "{{ url_for('docente.api_asistencia_estudiantes') }}";
+const API_EVALS = "{{ url_for('docente.api_evaluaciones') }}";
+const API_PLANTILLA = "{{ url_for('docente.descargar_plantilla_notas') }}";
+const API_IMPORT = "{{ url_for('docente.importar_notas_excel') }}";
+
+function showRefTab(tabId, btn) {
+    document.querySelectorAll('.ref-tab-panel').forEach(function(p) { p.classList.remove('active'); });
+    var el = document.getElementById('panel-' + tabId);
+    if (el) el.classList.add('active');
+    document.querySelectorAll('.ref-tab').forEach(function(t) { t.classList.remove('active'); });
+    if (btn) btn.classList.add('active');
 }
 
-.dashboard-course-card:hover {
-    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-    transform: translateY(-1px);
+function cargarGradosRef(nivelId, targetId) {
+    fetch(API_GRADOS_REF.replace('/0', '/' + nivelId)).then(r => r.json()).then(function(data) {
+        var sel = document.getElementById(targetId);
+        if (!sel) return;
+        sel.innerHTML = '<option value="">Seleccionar</option>';
+        data.forEach(function(g) { sel.innerHTML += '<option value="' + g.id + '">' + g.nombre + '</option>'; });
+    });
 }
 
-.course-card-head {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    margin-bottom: 16px;
+function cargarSeccionesRef(gradoId, targetId) {
+    fetch(API_SECCIONES_REF.replace('/0', '/' + gradoId)).then(r => r.json()).then(function(data) {
+        var sel = document.getElementById(targetId);
+        if (!sel) return;
+        sel.innerHTML = '<option value="">Seleccionar</option>';
+        data.forEach(function(s) { sel.innerHTML += '<option value="' + s.id + '">' + s.nombre + '</option>'; });
+    });
 }
 
-.course-icon {
-    width: 48px;
-    height: 48px;
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 20px;
-    flex-shrink: 0;
+function abrirModalReporte(id, titulo) {
+    document.getElementById('reporte-solicitud-id').value = id;
+    document.getElementById('modal-reporte-title').textContent = 'Subir Reporte: ' + titulo;
+    document.getElementById('modal-subir-reporte').style.display = 'flex';
 }
 
-.course-info h4 {
-    font-size: 16px;
-    color: #1a1a2e;
-    margin-bottom: 2px;
+function filtrarDocenteAlumnos() {
+    var curso = document.getElementById('dal-curso').value;
+    var search = document.getElementById('dal-search').value.toLowerCase();
+    document.querySelectorAll('.dal-curso-group').forEach(function(g) {
+        var matchCurso = !curso || g.getAttribute('data-curso') == curso;
+        g.style.display = matchCurso ? '' : 'none';
+        if (search) {
+            g.querySelectorAll('.dal-row').forEach(function(r) {
+                r.style.display = r.getAttribute('data-nombre').indexOf(search) > -1 ? '' : 'none';
+            });
+        }
+    });
 }
 
-.course-info p {
-    font-size: 13px;
-    color: #888;
-    margin: 0;
+function cargarNotasDocente() {
+    var cursoId = document.getElementById('docnotas-curso').value;
+    var bimId = document.getElementById('docnotas-bimestre').value;
+    var grid = document.getElementById('docnotas-grid').querySelector('tbody');
+    if (!cursoId || !bimId) {
+        grid.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:40px;color:#888;">Selecciona un curso y bimestre</td></tr>';
+        return;
+    }
+    grid.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:40px;color:#888;">Cargando...</td></tr>';
+    fetch(API_EVALS + '?curso_id=' + cursoId + '&bimestre_id=' + bimId)
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.estudiantes && data.estudiantes.length > 0) {
+                var html = '';
+                data.estudiantes.forEach(function(e) {
+                    var c = e.notas || {};
+                    var prom = e.promedio ? e.promedio.toFixed(2) : '-';
+                    var letra = e.letra || '-';
+                    html += '<tr>';
+                    html += '<td class="student-name">' + e.nombre + '</td>';
+                    html += '<td><input type="number" class="ref-grade-input" min="0" max="20" step="0.5" value="' + (c.cuaderno || '') + '" onchange="calcularPromedioFila(this)" data-est="' + e.id + '" data-tipo="cuaderno"></td>';
+                    html += '<td><input type="number" class="ref-grade-input" min="0" max="20" step="0.5" value="' + (c.libro || '') + '" onchange="calcularPromedioFila(this)" data-est="' + e.id + '" data-tipo="libro"></td>';
+                    html += '<td><input type="number" class="ref-grade-input" min="0" max="20" step="0.5" value="' + (c.practicas || '') + '" onchange="calcularPromedioFila(this)" data-est="' + e.id + '" data-tipo="practicas"></td>';
+                    html += '<td><input type="number" class="ref-grade-input" min="0" max="20" step="0.5" value="' + (c.exposiciones || '') + '" onchange="calcularPromedioFila(this)" data-est="' + e.id + '" data-tipo="exposiciones"></td>';
+                    html += '<td><input type="number" class="ref-grade-input" min="0" max="20" step="0.5" value="' + (c.examen || '') + '" onchange="calcularPromedioFila(this)" data-est="' + e.id + '" data-tipo="examen"></td>';
+                    html += '<td class="promedio-cell">' + prom + '</td>';
+                    html += '<td class="letra-cell">' + letra + '</td>';
+                    html += '</tr>';
+                });
+                grid.innerHTML = html;
+            } else {
+                grid.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:40px;color:#888;">Sin datos para este curso y bimestre</td></tr>';
+            }
+        });
 }
 
-.course-info small {
-    color: #aaa;
-    font-size: 11px;
+function calcularPromedioFila(input) {
+    var row = input.closest('tr');
+    var inputs = row.querySelectorAll('.ref-grade-input');
+    var vals = [];
+    inputs.forEach(function(inp) { var v = parseFloat(inp.value); vals.push(isNaN(v) ? 0 : Math.min(20, Math.max(0, v))); });
+    var prom = vals[0]*0.10 + vals[1]*0.10 + vals[2]*0.20 + vals[3]*0.10 + vals[4]*0.50;
+    row.querySelector('.promedio-cell').textContent = prom.toFixed(2);
+    row.querySelector('.letra-cell').textContent = prom >= 18 ? 'AD' : prom >= 15 ? 'A' : prom >= 12 ? 'B' : 'C';
 }
 
-.course-card-actions {
-    display: flex;
-    gap: 10px;
-    padding-top: 12px;
-    border-top: 1px solid #f0f0f0;
+function guardarNotasDocente() {
+    var cursoId = document.getElementById('docnotas-curso').value;
+    var bimId = document.getElementById('docnotas-bimestre').value;
+    if (!cursoId || !bimId) { showToast('Selecciona curso y bimestre', 'warning'); return; }
+    var datos = [];
+    document.querySelectorAll('#docnotas-grid tbody tr').forEach(function(row) {
+        var inputs = row.querySelectorAll('.ref-grade-input');
+        if (inputs.length > 0) {
+            var estId = inputs[0].getAttribute('data-est');
+            var notas = {};
+            inputs.forEach(function(inp) { notas[inp.getAttribute('data-tipo')] = Math.min(20, Math.max(0, parseFloat(inp.value) || 0)); });
+            datos.push({estudiante_id: parseInt(estId), notas: notas});
+        }
+    });
+    if (datos.length === 0) { showToast('No hay datos para guardar', 'warning'); return; }
+    fetch(API_EVALS, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({curso_id: parseInt(cursoId), bimestre_id: parseInt(bimId), estudiantes: datos})
+    }).then(function(r) { return r.json(); }).then(function(resp) {
+        if (resp.success) { showToast('Notas guardadas correctamente', 'success'); cargarNotasDocente(); }
+        else showToast('Error al guardar notas', 'danger');
+    });
 }
-</style>
+
+function descargarPlantillaNotas() {
+    var cursoId = document.getElementById('docnotas-curso').value;
+    if (!cursoId) { showToast('Selecciona un curso primero', 'warning'); return; }
+    window.location.href = API_PLANTILLA + '?curso_id=' + cursoId;
+}
+
+function importarNotasExcel(input) {
+    var archivo = input.files[0];
+    if (!archivo) return;
+    var fd = new FormData();
+    fd.append('archivo', archivo);
+    fd.append('curso_id', document.getElementById('docnotas-curso').value);
+    fd.append('bimestre_id', document.getElementById('docnotas-bimestre').value);
+    fetch(API_IMPORT, {method: 'POST', body: fd})
+        .then(function(r) { return r.json(); })
+        .then(function(resp) {
+            if (resp.success) { showToast('Notas importadas correctamente', 'success'); cargarNotasDocente(); }
+            else showToast('Error al importar: ' + (resp.error || 'desconocido'), 'danger');
+            input.value = '';
+        });
+}
+
+function marcarTodos() {
+    document.querySelectorAll('.ref-att-btn[data-value="presente"]').forEach(function(b) {
+        b.click();
+    });
+}
+
+function seleccionarAsistencia(btn, valor) {
+    var container = btn.closest('.ref-attendance-options');
+    container.querySelectorAll('.ref-att-btn').forEach(function(b) {
+        b.className = 'ref-att-btn';
+    });
+    btn.classList.add('selected-' + valor);
+    btn.closest('.ref-attendance-row').querySelector('.asis-estado-input').value = valor;
+}
+
+function cargarAsistencia() {
+    var seccion = document.getElementById('asis-seccion').value;
+    var fecha = document.getElementById('asis-fecha').value;
+    var bimestre = document.getElementById('asis-bimestre').value;
+    if (!seccion || !fecha) {
+        document.getElementById('asis-grid').innerHTML = '<p style="text-align:center;padding:40px;color:#888;">Selecciona una sección, fecha y bimestre</p>';
+        return;
+    }
+    var grid = document.getElementById('asis-grid');
+    grid.innerHTML = '<p style="text-align:center;padding:40px;color:#888;">Cargando estudiantes...</p>';
+    fetch(API_ASISTENCIA + '?seccion_id=' + seccion + '&fecha=' + fecha + '&bimestre_id=' + bimestre)
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.length === 0) {
+                grid.innerHTML = '<p style="text-align:center;padding:40px;color:#888;">No hay estudiantes en esta sección</p>';
+                return;
+            }
+            var html = '';
+            var colores = ['#1565c0','#2e7d32','#e65100','#6a1b9a','#c62828','#00838f'];
+            data.forEach(function(e, i) {
+                html += '<div class="ref-attendance-row">';
+                html += '<div class="ref-attendance-student">';
+                html += '<div class="avatar-mini" style="background:' + colores[i % colores.length] + ';">' + e.iniciales + '</div>';
+                html += '<strong>' + e.nombre + '</strong></div>';
+                html += '<input type="hidden" class="asis-estado-input" data-estudiante="' + e.id + '" value="presente">';
+                html += '<div class="ref-attendance-options">';
+                html += '<button type="button" class="ref-att-btn selected-presente" onclick="seleccionarAsistencia(this,\'presente\')"><i class="fas fa-check"></i> Presente</button>';
+                html += '<button type="button" class="ref-att-btn" onclick="seleccionarAsistencia(this,\'tarde\')"><i class="fas fa-clock"></i> Tarde</button>';
+                html += '<button type="button" class="ref-att-btn" onclick="seleccionarAsistencia(this,\'falta\')"><i class="fas fa-times"></i> Falta</button>';
+                html += '</div></div>';
+            });
+            grid.innerHTML = html;
+        });
+}
+
+function guardarAsistencia() {
+    var seccion = document.getElementById('asis-seccion').value;
+    var fecha = document.getElementById('asis-fecha').value;
+    var bimestre = document.getElementById('asis-bimestre').value;
+    if (!seccion || !fecha) { showToast('Selecciona sección y fecha', 'danger'); return; }
+    var estudiantes = [];
+    document.querySelectorAll('.asis-estado-input').forEach(function(inp) {
+        estudiantes.push({id: parseInt(inp.getAttribute('data-estudiante')), estado: inp.value});
+    });
+    if (estudiantes.length === 0) { showToast('No hay estudiantes para guardar', 'warning'); return; }
+    fetch(API_ASISTENCIA, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({seccion_id: parseInt(seccion), fecha: fecha, bimestre_id: parseInt(bimestre), estudiantes: estudiantes})
+    }).then(function(r) { return r.json(); }).then(function(resp) {
+        if (resp.success) showToast('Asistencia guardada correctamente', 'success');
+        else showToast('Error al guardar asistencia', 'danger');
+    });
+}
+</script>
 {% endblock %}

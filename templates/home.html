@@ -134,6 +134,46 @@
         </div>
     </section>
 
+    <!-- EVENTOS -->
+    {% if eventos %}
+    <section id="eventos" class="home-section home-eventos reveal">
+        <div class="home-container">
+            <div class="text-center mb-5">
+                <span class="section-badge">Próximos Eventos</span>
+                <h2 class="section-title">Nuestros <span>eventos</span></h2>
+                <p class="section-desc">Actividades y fechas importantes de nuestra institución.</p>
+            </div>
+            <div class="eventos-carousel">
+                <div class="eventos-track">
+                    {% for e in eventos %}
+                    <div class="evento-card">
+                        {% if e.imagen_url %}
+                        <div class="evento-img" style="background-image: url('{{ e.imagen_url }}');"></div>
+                        {% endif %}
+                        <div class="evento-body">
+                            <h4>{{ e.titulo }}</h4>
+                            {% if e.descripcion %}<p>{{ e.descripcion[:120] }}{% if e.descripcion|length > 120 %}...{% endif %}</p>{% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                    <!-- Duplicate for seamless loop -->
+                    {% for e in eventos %}
+                    <div class="evento-card">
+                        {% if e.imagen_url %}
+                        <div class="evento-img" style="background-image: url('{{ e.imagen_url }}');"></div>
+                        {% endif %}
+                        <div class="evento-body">
+                            <h4>{{ e.titulo }}</h4>
+                            {% if e.descripcion %}<p>{{ e.descripcion[:120] }}{% if e.descripcion|length > 120 %}...{% endif %}</p>{% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
     <!-- MISIÓN Y VISIÓN -->
     <section id="mision-vision" class="home-section reveal">
         <div class="home-container">
@@ -148,7 +188,7 @@
                     <p>Proporcionar una educación integral de excelencia que forme personas íntegras, con sólidos valores éticos y morales, capaces de enfrentar los desafíos del mundo actual y contribuir positivamente a la sociedad.</p>
                 </div>
                 <div class="mv-card">
-                    <span class="mv-icon"><i class="fas fa-telescope"></i></span>
+                    <span class="mv-icon"><i class="fas fa-eye"></i></span>
                     <h3>Visión</h3>
                     <p>Ser una institución educativa líder reconocida por su calidad académica, innovación pedagógica y formación en valores, formando ciudadanos comprometidos con el desarrollo sostenible de su comunidad y del país.</p>
                 </div>
@@ -242,8 +282,51 @@
         </div>
     </section>
 
+    <!-- CONTACTO -->
+    <section id="contacto" class="home-section home-contacto reveal">
+        <div class="home-container">
+            <div class="text-center mb-5">
+                <span class="section-badge">Contáctanos</span>
+                <h2 class="section-title">Solicita <span>información</span></h2>
+                <p class="section-desc">Déjanos tus datos y nos pondremos en contacto contigo a la brevedad.</p>
+            </div>
+            <div class="contacto-grid">
+                <div class="contacto-info">
+                    <div class="contacto-info-item">
+                        <span class="contacto-info-icon"><i class="fas fa-map-marker-alt"></i></span>
+                        <div><h4>Dirección</h4><p>Av. Educación 123, Lima</p></div>
+                    </div>
+                    <div class="contacto-info-item">
+                        <span class="contacto-info-icon"><i class="fas fa-phone"></i></span>
+                        <div><h4>Teléfono</h4><p>+51 123 456 789</p></div>
+                    </div>
+                    <div class="contacto-info-item">
+                        <span class="contacto-info-icon"><i class="fas fa-envelope"></i></span>
+                        <div><h4>Email</h4><p>contacto@davidhouse.edu.pe</p></div>
+                    </div>
+                    <div class="contacto-info-item">
+                        <span class="contacto-info-icon"><i class="fas fa-clock"></i></span>
+                        <div><h4>Horario</h4><p>Lun - Vie: 8:00 AM - 2:00 PM</p></div>
+                    </div>
+                </div>
+                <form class="contacto-form" method="POST" action="{{ url_for('contacto') }}">
+                    <div class="contacto-form-row">
+                        <input type="text" name="nombre" placeholder="Nombre completo" required>
+                        <input type="email" name="correo" placeholder="Correo electrónico" required>
+                    </div>
+                    <div class="contacto-form-row">
+                        <input type="tel" name="telefono" placeholder="Teléfono" required>
+                        <input type="text" name="interes" placeholder="Nivel de interés (Inicial / Primaria)">
+                    </div>
+                    <textarea name="mensaje" rows="4" placeholder="Mensaje (opcional)"></textarea>
+                    <button type="submit" class="btn-primary" style="width:100%;justify-content:center;"><i class="fas fa-paper-plane"></i> Enviar Solicitud</button>
+                </form>
+            </div>
+        </div>
+    </section>
+
     <!-- FOOTER -->
-    <footer id="contacto" class="home-footer">
+    <footer class="home-footer">
         <div class="footer-grid">
             <div class="footer-brand">
                 <a href="{{ url_for('index') }}" class="brand-logo">
@@ -297,12 +380,14 @@
 
 <script>
 function toggleMenu() {
-    document.getElementById('navMenu').classList.toggle('show');
+    var nav = document.querySelector('.home-header .main-nav');
+    if (nav) nav.classList.toggle('show');
 }
 
 document.querySelectorAll('.nav-link').forEach(function(link) {
     link.addEventListener('click', function() {
-        document.getElementById('navMenu').classList.remove('show');
+        var nav = document.querySelector('.home-header .main-nav');
+        if (nav) nav.classList.remove('show');
     });
 });
 

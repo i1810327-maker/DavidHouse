@@ -1,0 +1,9 @@
+{% macro tab_nav(tabs, active_tab, prefix='panel-') %}
+<div class="ref-tabs">
+    {% for id, label, icon in tabs %}
+    <button class="ref-tab {{ 'active' if id == active_tab }}" onclick="showRefTab('{{ id }}', this, '{{ prefix }}')">
+        {% if icon %}<i class="fas {{ icon }}"></i> {% endif %}{{ label }}
+    </button>
+    {% endfor %}
+</div>
+{% endmacro %}

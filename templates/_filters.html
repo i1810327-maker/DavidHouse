@@ -1,0 +1,22 @@
+{% macro filter_row(niveles, grados, secciones, nivel_id=None, grado_id=None, seccion_id=None) %}
+<div class="ref-filters">
+    <select class="ref-filter-select" onchange="window.location=updateFilterParam('nivel_id', this.value)">
+        <option value="">Todos los Niveles</option>
+        {% for n in niveles %}
+        <option value="{{ n.id }}" {{ 'selected' if nivel_id|string == n.id|string }}>{{ n.nombre }}</option>
+        {% endfor %}
+    </select>
+    <select class="ref-filter-select" onchange="window.location=updateFilterParam('grado_id', this.value)">
+        <option value="">Todos los Grados</option>
+        {% for g in grados %}
+        <option value="{{ g.id }}" {{ 'selected' if grado_id|string == g.id|string }}>{{ g.nombre }}</option>
+        {% endfor %}
+    </select>
+    <select class="ref-filter-select" onchange="window.location=updateFilterParam('seccion_id', this.value)">
+        <option value="">Todas las Secciones</option>
+        {% for s in secciones %}
+        <option value="{{ s.id }}" {{ 'selected' if seccion_id|string == s.id|string }}>{{ s.grado.nombre }} {{ s.nombre }}</option>
+        {% endfor %}
+    </select>
+</div>
+{% endmacro %}

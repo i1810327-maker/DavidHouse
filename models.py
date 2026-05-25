@@ -1,6 +1,32 @@
 from db import db
 from datetime import datetime
 
+# ===== EVENTO (carrusel landing page) =====
+class Evento(db.Model):
+    __tablename__ = 'eventos'
+    id = db.Column(db.Integer, primary_key=True)
+    titulo = db.Column(db.String(200), nullable=False)
+    descripcion = db.Column(db.Text)
+    imagen_url = db.Column(db.String(500))
+    activo = db.Column(db.Boolean, default=True)
+    fecha_publicacion = db.Column(db.DateTime, default=datetime.utcnow)
+    orden = db.Column(db.Integer, default=0)
+
+# ===== SOLICITUD REPORTE (director solicita, docente sube) =====
+class SolicitudReporte(db.Model):
+    __tablename__ = 'solicitudes_reportes'
+    id = db.Column(db.Integer, primary_key=True)
+    nivel_id = db.Column(db.Integer, db.ForeignKey('niveles.id'))
+    grado_id = db.Column(db.Integer, db.ForeignKey('grados.id'))
+    seccion_id = db.Column(db.Integer, db.ForeignKey('secciones.id'))
+    titulo = db.Column(db.String(200), nullable=False)
+    descripcion = db.Column(db.Text)
+    fecha_maxima = db.Column(db.DateTime, nullable=False)
+    activa = db.Column(db.Boolean, default=True)
+    creado_por = db.Column(db.Integer, db.ForeignKey('colaboradores.id'), nullable=False)
+    fecha_creacion = db.Column(db.DateTime, default=datetime.utcnow)
+    creador = db.relationship('Colaborador', backref='solicitudes_creadas', lazy=True)
+
 # ===== NIVEL =====
 class Nivel(db.Model):
     __tablename__ = 'niveles'
@@ -219,8 +245,10 @@ class Justificacion(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     asistencia_id = db.Column(db.Integer, db.ForeignKey('asistencias.id'), nullable=False)
     estudiante_id = db.Column(db.Integer, db.ForeignKey('estudiantes.id'), nullable=False)
+    titulo = db.Column(db.String(200), default='')
     motivo = db.Column(db.Text, nullable=False)
     archivo_ruta = db.Column(db.String(500))
+    archivo_nombre = db.Column(db.String(255))
     estado = db.Column(db.Enum('pendiente', 'aprobado', 'rechazado'), default='pendiente')
     revisado_por = db.Column(db.Integer, db.ForeignKey('colaboradores.id'))
     comentario_revision = db.Column(db.Text)
@@ -236,7 +264,7 @@ class Comentario(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     docente_id = db.Column(db.Integer, db.ForeignKey('colaboradores.id'), nullable=False)
     estudiante_id = db.Column(db.Integer, db.ForeignKey('estudiantes.id'), nullable=False)
-    tipo = db.Column(db.Enum('positivo', 'negativo', 'neutral', 'informativo'), nullable=False)
+    tipo = db.Column(db.Enum('positivo', 'negativo', 'neutral', 'informativo', 'comportamiento', 'recomendacion', 'otro'), nullable=False)
     contenido = db.Column(db.Text, nullable=False)
     bimestre_id = db.Column(db.Integer, db.ForeignKey('bimestres.id'))
     fecha_creacion = db.Column(db.DateTime, default=datetime.utcnow)
@@ -269,6 +297,7 @@ class PagoRealizado(db.Model):
     monto_pagado = db.Column(db.Numeric(8, 2), nullable=False)
     fecha_pago = db.Column(db.DateTime, default=datetime.utcnow)
     estado = db.Column(db.Enum('pagado', 'pendiente', 'atrasado'), default='pendiente')
+    mora_acumulada = db.Column(db.Numeric(8, 2), default=0)
     observaciones = db.Column(db.Text)
     estudiante = db.relationship('Estudiante', backref='pagos', lazy=True)
     plan = db.relationship('PagoPlan', backref='pagos_realizados', lazy=True)
@@ -291,8 +320,9 @@ class CarpetaDocente(db.Model):
 class DocumentoDocente(db.Model):
     __tablename__ = 'documentos_docentes'
     id = db.Column(db.Integer, primary_key=True)
-    carpeta_id = db.Column(db.Integer, db.ForeignKey('carpetas_docentes.id'), nullable=False)
+    carpeta_id = db.Column(db.Integer, db.ForeignKey('carpetas_docentes.id'))
     docente_id = db.Column(db.Integer, db.ForeignKey('colaboradores.id'), nullable=False)
+    solicitud_reporte_id = db.Column(db.Integer, db.ForeignKey('solicitudes_reportes.id'))
     titulo = db.Column(db.String(200), nullable=False)
     descripcion = db.Column(db.Text)
     archivo_nombre = db.Column(db.String(255), nullable=False)
@@ -303,6 +333,7 @@ class DocumentoDocente(db.Model):
     fecha_revision = db.Column(db.DateTime)
     carpeta = db.relationship('CarpetaDocente', backref='documentos', lazy=True)
     docente = db.relationship('Colaborador', backref='documentos', lazy=True)
+    solicitud = db.relationship('SolicitudReporte', backref='documentos', lazy=True)
 
 # ===== LOG ACCESO (existente, modificado) =====
 class LogAcceso(db.Model):

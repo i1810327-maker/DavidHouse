@@ -7,7 +7,7 @@
 </div>
 
 <div class="card">
-    <form class="filter-form" method="GET" action="{{ url_for('asistencia_curso', curso_id=curso.id) }}">
+    <form class="filter-form" method="GET" action="{{ url_for('docente.asistencia_curso', curso_id=curso.id) }}">
         <div class="filter-group"><label>Bimestre</label>
             <select name="bimestre_id" onchange="this.form.submit()">
                 {% for b in bimestres %}
@@ -22,7 +22,7 @@
 </div>
 
 <div class="card mt-1">
-    <form method="POST" action="{{ url_for('asistencia_curso', curso_id=curso.id) }}" id="asistencia-form">
+    <form method="POST" action="{{ url_for('docente.asistencia_curso', curso_id=curso.id) }}" id="asistencia-form">
         <input type="hidden" name="fecha" value="{{ fecha }}">
         <input type="hidden" name="bimestre_id" value="{{ bimestre_id }}">
         <div class="flex-between mb-1">

@@ -22,10 +22,12 @@
             <td><span class="badge badge-{{ 'success' if a.estado == 'presente' else 'warning' if a.estado == 'tarde' else 'danger' if a.estado == 'falta' else 'info' }}">{{ a.estado|title }}</span></td>
             <td>
                 {% if a.estado == 'falta' and a.id not in justificadas %}
-                <form method="POST" action="{{ url_for('estudiante_asistencia') }}" style="display:inline">
+                <form method="POST" action="{{ url_for('estudiante.asistencia') }}" enctype="multipart/form-data" style="display:inline">
                     <input type="hidden" name="asistencia_id" value="{{ a.id }}">
                     <input type="hidden" name="bimestre_id" value="{{ bimestre_id }}">
+                    <input type="text" name="titulo" placeholder="Título" required size="15">
                     <input type="text" name="motivo" placeholder="Motivo" required size="20">
+                    <input type="file" name="archivo" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif,.txt" required style="font-size:0.8em;max-width:140px">
                     <button class="btn btn-sm btn-primary"><i class="fas fa-paper-plane"></i> Justificar</button>
                 </form>
                 {% elif a.id in justificadas %}

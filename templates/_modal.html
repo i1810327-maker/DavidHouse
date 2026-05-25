@@ -1,0 +1,15 @@
+{% macro modal(id, title, action='', method='POST') %}
+<div class="ref-modal-overlay" id="modal-{{ id }}">
+    <div class="ref-modal">
+        <span class="close" onclick="document.getElementById('modal-{{ id }}').style.display='none'">&times;</span>
+        <h3>{{ title }}</h3>
+        <form method="{{ method }}" action="{{ action }}">
+            {{ caller() }}
+            <div class="ref-modal-actions">
+                <button type="button" class="ref-btn-outline" onclick="document.getElementById('modal-{{ id }}').style.display='none'">Cancelar</button>
+                <button class="ref-btn-primary">Guardar</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endmacro %}

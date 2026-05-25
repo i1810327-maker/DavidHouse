@@ -12,6 +12,20 @@
 </head>
 <body>
     <div class="login-wrapper">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="login-notification">
+                    {% for category, message in messages %}
+                        <div class="login-notification-item login-notification-{{ category }}">
+                            {% if category == 'danger' %}<i class="fas fa-triangle-exclamation"></i>{% elif category == 'success' %}<i class="fas fa-check-circle"></i>{% endif %}
+                            {{ message }}
+                            <button type="button" class="login-notification-close" onclick="this.parentElement.remove()">&times;</button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
         <div class="login-left">
             <div class="login-bg-grid"></div>
             <div class="login-left-content">
@@ -53,17 +67,6 @@
                 </div>
 
                 <p class="login-form-desc">Ingresa tus credenciales para acceder</p>
-
-                {% with messages = get_flashed_messages(with_categories=true) %}
-                    {% if messages %}
-                        {% for category, message in messages %}
-                            <div class="alert alert-{{ category }}">
-                                {% if category == 'danger' %}<i class="fas fa-triangle-exclamation"></i>{% elif category == 'success' %}<i class="fas fa-check-circle"></i>{% endif %}
-                                {{ message }}
-                            </div>
-                        {% endfor %}
-                    {% endif %}
-                {% endwith %}
 
                 <form method="POST" action="{{ url_for('login') }}" onsubmit="return disableSubmitButton(this)">
                     <div class="login-form-group">

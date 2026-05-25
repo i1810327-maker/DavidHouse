@@ -9,45 +9,40 @@
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/reference.css') }}">
 </head>
 <body>
-    <header role="banner">
-        {% block header %}
-        <div class="default-header-content">
-            <div class="header-left">
-                <h1><i class="fas fa-school" style="margin-right:10px;color:var(--color-accent);"></i>David House - Camino de Vida</h1>
+    {% if session.get('usuario_id') %}
+    <header class="ref-header">
+        <div class="ref-header-left">
+            <div class="brand-icon">DH</div>
+            <div>
+                <div class="brand-text">David House</div>
+                <small style="font-size:11px;color:#aaa;display:block;">Camino de Vida</small>
             </div>
-            {% if session.get('usuario_id') %}
-            <nav class="header-right" aria-label="Navegación principal" role="navigation">
-                <div class="user-info">
-                    <div class="user-text">
-                        <span class="user-name">{{ session.nombres }}</span>
-                        <span class="user-role">({{ session.rol|title }})</span>
-                    </div>
-                </div>
-                <div class="header-actions">
-                    {% if session.rol == 'directora' %}
-                    <a href="{{ url_for('directora_dashboard') }}" class="btn btn-perfil" aria-label="Inicio"><i class="fas fa-home"></i> Inicio</a>
-                    {% elif session.rol == 'docente' %}
-                    <a href="{{ url_for('docente_dashboard') }}" class="btn btn-perfil" aria-label="Inicio"><i class="fas fa-home"></i> Inicio</a>
-                    {% elif session.rol == 'alumno' %}
-                    <a href="{{ url_for('estudiante_dashboard') }}" class="btn btn-perfil" aria-label="Inicio"><i class="fas fa-home"></i> Inicio</a>
-                    {% endif %}
-                    <a href="{{ url_for('perfil') }}" class="btn btn-perfil" aria-label="Perfil de usuario"><i class="fas fa-user"></i> Perfil</a>
-                    <a href="{{ url_for('logout') }}" class="btn btn-logout" aria-label="Cerrar sesión"><i class="fas fa-sign-out-alt"></i> Salir</a>
-                </div>
-            </nav>
-            {% endif %}
         </div>
-        {% endblock %}
+        <div class="ref-header-right">
+            <div class="user-info">
+                <div class="user-avatar">
+                    {{ session.nombres[:1] }}{{ session.get('apellido_paterno','')[:1] if session.get('apellido_paterno') else '' }}
+                </div>
+                <div>
+                    <div class="user-name">{{ session.nombres }}</div>
+                    <div class="user-role">{{ {'directora':'Directora','docente':'Docente','alumno':'Estudiante'}.get(session.rol, session.rol) }}</div>
+                </div>
+            </div>
+            <a href="{{ url_for('perfil') }}" class="ref-header-btn" title="Configuración"><i class="fas fa-cog"></i></a>
+            <a href="{{ url_for('logout') }}" class="ref-header-btn" title="Cerrar Sesión"><i class="fas fa-sign-out-alt"></i></a>
+        </div>
     </header>
+    {% endif %}
 
-    <main role="main">
-    <div class="container" id="main-content">
+    <main>
+    <div class="ref-page" id="main-content">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
-                    <div class="alert alert-{{ category }}" role="alert">
+                    <div class="alert alert-{{ category }}" role="alert" style="margin-bottom:16px;">
                         <i class="fas fa-{{ 'check-circle' if category == 'success' else 'exclamation-triangle' if category == 'danger' else 'info-circle' }}"></i> {{ message }}
                     </div>
                 {% endfor %}
@@ -57,7 +52,15 @@
     </div>
     </main>
 
+{% include '_toast.html' %}
 <script>
+function togglePassword(btn) {
+    var inp = btn.parentElement.querySelector('input');
+    var icon = btn.querySelector('i');
+    if (inp.type === 'password') { inp.type = 'text'; icon.className = 'fas fa-eye-slash'; }
+    else { inp.type = 'password'; icon.className = 'fas fa-eye'; }
+}
+
 function disableSubmitButton(form) {
     var btn = form.querySelector('button[type="submit"], input[type="submit"]');
     if (btn) {
@@ -70,7 +73,6 @@ function disableSubmitButton(form) {
     }
     return true;
 }
-
 document.querySelectorAll('.alert').forEach(function(a) {
     setTimeout(function() {
         a.style.transition = 'opacity 0.5s';

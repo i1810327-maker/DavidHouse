@@ -9,7 +9,7 @@
     </p>
     <div class="divider"></div>
 
-    <form method="POST" action="{{ url_for('registrar_alumno') }}" onsubmit="return disableSubmitButton(this)">
+    <form method="POST" action="{{ url_for('directora.registrar_alumno') }}" onsubmit="return disableSubmitButton(this)">
         <!-- SECCION APODERADO -->
         <div style="background: #e8f5e9; border-left: 4px solid #4caf50; padding: 20px; margin-bottom: 30px; border-radius: 8px;">
             <h3 style="color: #2e7d32; margin-bottom: 15px;"><i class="fas fa-user-tie"></i> Información del Apoderado</h3>
@@ -63,7 +63,10 @@
                 </div>
                 <div class="form-group">
                     <label for="clave">* Contraseña *</label>
-                    <input type="password" id="clave" name="clave" placeholder="Contraseña segura" required maxlength="50" oninput="validarClaveInput(this)">
+                    <div style="position:relative;">
+                        <input type="password" id="clave" name="clave" placeholder="Contraseña segura" required maxlength="50" oninput="validarClaveInput(this)" style="padding-right:40px;">
+                        <button type="button" class="password-toggle" onclick="togglePassword(this)"><i class="fas fa-eye"></i></button>
+                    </div>
                 </div>
                 <div class="form-group">
                     <label for="nivel_id">* Nivel *</label>
@@ -94,7 +97,7 @@
 
         <div class="btn-group" style="margin-top: 30px;">
             <button type="submit" class="btn"><i class="fas fa-save"></i> Registrar Estudiante</button>
-            <a href="{{ url_for('directora_dashboard') }}" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Cancelar</a>
+            <a href="{{ url_for('directora.dashboard') }}" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Cancelar</a>
         </div>
     </form>
 </div>

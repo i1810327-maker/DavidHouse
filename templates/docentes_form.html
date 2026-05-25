@@ -1,111 +1,118 @@
 {% extends "base.html" %}
-{% block title %}Registrar Docente - ColegioSys{% endblock %}
+{% block title %}Registrar Docente - David House{% endblock %}
 
 {% block content %}
-<div class="card" style="max-width: 800px; margin: 0 auto;">
-    <h2> Registrar Nuevo Docente</h2>
-    <p style="color: #666; margin-bottom: 25px;">
-        Complete todos los campos para crear una nueva cuenta de docente en el sistema.
-    </p>
-    <div class="divider"></div>
-
-    <form method="POST" action="{{ url_for('registrar_docente') }}" onsubmit="return disableSubmitButton(this)">
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-            <!-- Fila 1 -->
-            <div class="form-group">
-                <label for="dni">* DNI *</label>
-                <input type="text" id="dni" name="dni" placeholder="12345678" required maxlength="9" pattern="[0-9]*" oninput="validarDni(this)">
-            </div>
-            <div class="form-group">
-                <label for="nombres">* Nombres *</label>
-                <input type="text" id="nombres" name="nombres" placeholder="Juan" required maxlength="60" pattern="[A-Za-zÁÉÍÓÚáéíóúÑñ\s]*" oninput="validarNombre(this)">
-            </div>
-
-            <!-- Fila 2 -->
-            <div class="form-group">
-                <label for="apellido_paterno">* Apellido Paterno *</label>
-                <input type="text" id="apellido_paterno" name="apellido_paterno" placeholder="García" required maxlength="40" pattern="[A-Za-zÁÉÍÓÚáéíóúÑñ\s]*" oninput="validarNombre(this)">
-            </div>
-            <div class="form-group">
-                <label for="apellido_materno">* Apellido Materno *</label>
-                <input type="text" id="apellido_materno" name="apellido_materno" placeholder="López" required maxlength="40" pattern="[A-Za-zÁÉÍÓÚáéíóúÑñ\s]*" oninput="validarNombre(this)">
-            </div>
-
-            <!-- Fila 3 -->
-            <div class="form-group">
-                <label for="telefono_principal">Teléfono Principal</label>
-                <input type="text" id="telefono_principal" name="telefono_principal" placeholder="987654321" maxlength="12" oninput="validarTelefono(this, 'Teléfono Principal')">
-            </div>
-            <div class="form-group">
-                <label for="telefono_secundario">Teléfono Secundario</label>
-                <input type="text" id="telefono_secundario" name="telefono_secundario" placeholder="912345678" maxlength="12" oninput="validarTelefono(this, 'Teléfono Secundario')" autocomplete="off">
-            </div>
-
-            <!-- Fila 4 -->
-            <div class="form-group">
-                <label for="correo">* Correo Electrónico *</label>
-                <input type="email" id="correo" name="correo" placeholder="docente@colegio.edu.pe" required maxlength="100" oninput="validarCorreo(this)">
-            </div>
-            <div class="form-group">
-                <label for="clave">* Contraseña *</label>
-                <input type="password" id="clave" name="clave" placeholder="Contraseña segura" required maxlength="50" oninput="validarClaveInput(this)">
-            </div>
-
-            <!-- Fila 5 -->
-            <div class="form-group">
-                <label for="profesion">* Profesión *</label>
-                <input type="text" id="profesion" name="profesion" placeholder="Licenciado en Educación" required maxlength="100" pattern="[A-Za-zÁÉÍÓÚáéíóúÑñ\s\-\']*" oninput="validarNombre(this)">
-            </div>
-            <div class="form-group" style="display: flex; align-items: flex-end;">
-                <label style="margin: 0; display: flex; align-items: center; cursor: pointer;">
-                    <input type="checkbox" id="tiene_especialidad" name="tiene_especialidad" value="1"
-                           onchange="mostrarEspecialidad(this.checked)"
-                           style="width: auto; margin-right: 8px;">
-                    <span>¿Tiene especialidad?</span>
-                </label>
-            </div>
-
-            <!-- Fila 6: Nivel, Grado y Sección -->
-            <div class="form-group">
-                <label for="nivel_docente">* Nivel *</label>
-                <select id="nivel_docente" name="nivel_docente" onchange="filtrarGradosDocente()" required>
-                    <option value="">-- Selecciona un nivel --</option>
-                    <option value="inicial">Inicial</option>
-                    <option value="primaria">Primaria</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="grado_docente_id">* Grado *</label>
-                <select id="grado_docente_id" name="grado_docente_id" onchange="filtrarSeccionesDocente()" required disabled>
-                    <option value="">-- Primero selecciona un nivel --</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="seccion_docente_id">* Sección *</label>
-                <select id="seccion_docente_id" name="seccion_docente_id" required disabled>
-                    <option value="">-- Primero selecciona un grado --</option>
-                </select>
+<div class="form-container">
+    <div style="background:white;border-radius:var(--radius-lg);padding:32px;box-shadow:var(--shadow-sm);">
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:6px;">
+            <div style="width:48px;height:48px;background:linear-gradient(135deg,var(--accent),var(--accent-light));border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;color:white;font-size:20px;"><i class="fas fa-chalkboard-teacher"></i></div>
+            <div>
+                <h2 style="font-size:20px;color:var(--text);margin:0;">Registrar Nuevo Docente</h2>
+                <p style="color:var(--text-secondary);font-size:13px;margin:2px 0 0 0;">Complete todos los campos obligatorios para crear una cuenta de docente</p>
             </div>
         </div>
+        <div style="border-bottom:1px solid var(--border);margin:16px 0 24px;"></div>
 
-        <!-- Campo de especialidad (oculto por defecto) -->
-        <div id="campo_especialidad" style="display: none; margin-top: 20px;">
-            <div class="form-group">
-                <label for="descripcion_especialidad"> Descripción de Especialidad *</label>
-                <textarea id="descripcion_especialidad" name="descripcion_especialidad"
-                          placeholder="Describe tu área de especialidad, certificaciones o experiencia..."></textarea>
+        <form method="POST" action="{{ url_for('directora.registrar_docente') }}" onsubmit="return disableSubmitButton(this)">
+            <h3 style="font-size:15px;color:var(--primary);margin-bottom:16px;"><i class="fas fa-user"></i> Datos Personales</h3>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="dni">DNI *</label>
+                    <input type="text" id="dni" name="dni" placeholder="12345678" required maxlength="9" pattern="[0-9]*" oninput="validarDni(this)">
+                </div>
+                <div class="form-group">
+                    <label for="correo">Correo Electrónico *</label>
+                    <input type="email" id="correo" name="correo" placeholder="docente@colegio.edu.pe" required maxlength="100" oninput="validarCorreo(this)">
+                </div>
+                <div class="form-group">
+                    <label for="nombres">Nombres *</label>
+                    <input type="text" id="nombres" name="nombres" placeholder="Juan" required maxlength="60" pattern="[A-Za-zÁÉÍÓÚáéíóúÑñ\s]*" oninput="validarNombre(this)">
+                </div>
+                <div class="form-group">
+                    <label for="apellido_paterno">Apellido Paterno *</label>
+                    <input type="text" id="apellido_paterno" name="apellido_paterno" placeholder="García" required maxlength="40" pattern="[A-Za-zÁÉÍÓÚáéíóúÑñ\s]*" oninput="validarNombre(this)">
+                </div>
+                <div class="form-group">
+                    <label for="apellido_materno">Apellido Materno *</label>
+                    <input type="text" id="apellido_materno" name="apellido_materno" placeholder="López" required maxlength="40" pattern="[A-Za-zÁÉÍÓÚáéíóúÑñ\s]*" oninput="validarNombre(this)">
+                </div>
+                <div class="form-group">
+                    <label for="profesion">Profesión *</label>
+                    <input type="text" id="profesion" name="profesion" placeholder="Licenciado en Educación" required maxlength="100" pattern="[A-Za-zÁÉÍÓÚáéíóúÑñ\s\-\']*" oninput="validarNombre(this)">
+                </div>
             </div>
-        </div>
 
-        <div style="background: #f0f7ff; border-left: 4px solid #0066CC; padding: 15px; border-radius: 4px; margin: 20px 0;">
-            <strong> Nota:</strong> Si el docente tiene especialidad, debe completar la descripción. De lo contrario, dejar sin marcar.
-        </div>
+            <h3 style="font-size:15px;color:var(--primary);margin:24px 0 16px;"><i class="fas fa-phone"></i> Contacto</h3>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="telefono_principal">Teléfono Principal</label>
+                    <input type="text" id="telefono_principal" name="telefono_principal" placeholder="987654321" maxlength="12" oninput="validarTelefono(this, 'Teléfono Principal')">
+                </div>
+                <div class="form-group">
+                    <label for="telefono_secundario">Teléfono Secundario</label>
+                    <input type="text" id="telefono_secundario" name="telefono_secundario" placeholder="912345678" maxlength="12" oninput="validarTelefono(this, 'Teléfono Secundario')" autocomplete="off">
+                </div>
+            </div>
 
-        <div class="btn-group" style="margin-top: 30px;">
-            <button type="submit" class="btn"> Registrar Docente</button>
-            <a href="{{ url_for('directora_dashboard') }}" class="btn btn-secondary"> Cancelar</a>
-        </div>
-    </form>
+            <h3 style="font-size:15px;color:var(--primary);margin:24px 0 16px;"><i class="fas fa-lock"></i> Acceso al Sistema</h3>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="clave">Contraseña *</label>
+                    <div style="position:relative;">
+                        <input type="password" id="clave" name="clave" placeholder="Contraseña segura" required maxlength="50" oninput="validarClaveInput(this)" style="padding-right:40px;">
+                        <button type="button" class="password-toggle" onclick="togglePassword(this)"><i class="fas fa-eye"></i></button>
+                    </div>
+                </div>
+                <div class="form-group" style="display:flex;align-items:flex-end;padding-bottom:4px;">
+                    <label style="margin:0;display:flex;align-items:center;cursor:pointer;gap:8px;font-size:14px;color:var(--text);">
+                        <input type="checkbox" id="tiene_especialidad" name="tiene_especialidad" value="1" onchange="mostrarEspecialidad(this.checked)" style="width:auto;margin:0;">
+                        <span><i class="fas fa-certificate" style="color:var(--accent);"></i> ¿Tiene especialidad?</span>
+                    </label>
+                </div>
+            </div>
+
+            <div id="campo_especialidad" style="display:none;margin-bottom:20px;">
+                <div class="form-group">
+                    <label for="descripcion_especialidad">Descripción de Especialidad *</label>
+                    <textarea id="descripcion_especialidad" name="descripcion_especialidad" placeholder="Describe tu área de especialidad, certificaciones o experiencia..." style="min-height:80px;"></textarea>
+                </div>
+            </div>
+
+            <h3 style="font-size:15px;color:var(--primary);margin:24px 0 16px;"><i class="fas fa-graduation-cap"></i> Asignación Académica</h3>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="nivel_docente">Nivel *</label>
+                    <select id="nivel_docente" name="nivel_docente" onchange="filtrarGradosDocente()" required>
+                        <option value="">-- Selecciona un nivel --</option>
+                        <option value="inicial">Inicial</option>
+                        <option value="primaria">Primaria</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="grado_docente_id">Grado *</label>
+                    <select id="grado_docente_id" name="grado_docente_id" onchange="filtrarSeccionesDocente()" required disabled>
+                        <option value="">-- Primero selecciona un nivel --</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="seccion_docente_id">Sección (principal) *</label>
+                    <select id="seccion_docente_id" name="seccion_docente_id" required disabled>
+                        <option value="">-- Primero selecciona un grado --</option>
+                    </select>
+                    <p style="font-size:11px;color:var(--text-muted);margin-top:4px;">Sección principal asignada. Luego puedes asignar más cursos desde "Académico > Cursos".</p>
+                </div>
+            </div>
+
+            <div style="background:#fff3e0;border-left:4px solid var(--accent);padding:14px 18px;border-radius:var(--radius-sm);margin:20px 0;">
+                <p style="font-size:13px;color:var(--text-secondary);margin:0;"><strong style="color:var(--accent);"><i class="fas fa-info-circle"></i> Nota:</strong> Si el docente tiene especialidad, marca la casilla y completa la descripción. Las asignaciones adicionales de cursos se realizan desde el panel Académico.</p>
+            </div>
+
+            <div style="display:flex;gap:12px;margin-top:28px;padding-top:20px;border-top:1px solid var(--border);">
+                <button type="submit" class="btn-primary"><i class="fas fa-save"></i> Registrar Docente</button>
+                <a href="{{ url_for('directora.dashboard') }}" class="btn-secondary"><i class="fas fa-arrow-left"></i> Cancelar</a>
+            </div>
+        </form>
+    </div>
 </div>
 
 <script>

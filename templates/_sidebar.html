@@ -1,0 +1,9 @@
+<div class="ref-sidebar">
+    <div class="ref-sidebar-user">
+        <div class="ref-sidebar-avatar">{{ session.nombres[:1] }}{{ session.get('apellido_paterno','')[:1] if session.get('apellido_paterno') else '' }}</div>
+        <div class="ref-sidebar-name">{{ session.nombres }}</div>
+        <span class="ref-badge ref-badge-{{ 'success' if session.rol == 'directora' else 'info' if session.rol == 'docente' else 'warning' }}">
+            {{ {'directora':'Directora','docente':'Docente','alumno':'Estudiante'}.get(session.rol, session.rol) }}
+        </span>
+    </div>
+</div>

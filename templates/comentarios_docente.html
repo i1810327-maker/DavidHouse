@@ -3,7 +3,7 @@
 {% block content %}
 <div class="module-header"><h2><i class="fas fa-comment"></i> Comentarios a Estudiantes</h2></div>
 <div class="card">
-    <form method="POST" action="{{ url_for('comentarios_docente') }}" class="filter-form">
+    <form method="POST" action="{{ url_for('docente.comentarios') }}" class="filter-form">
         <div class="filter-group"><label>Curso</label>
             <select name="curso_id" id="sel-curso" required onchange="cargarEstudiantes(this.value)">
                 <option value="">Seleccionar</option>
@@ -56,11 +56,12 @@
     {% endfor %}
 </div>
 <script>
+const API_EST = "{{ url_for('directora.api_estudiantes_por_curso', curso_id=0) }}";
 function cargarEstudiantes(cursoId) {
     var sel = document.getElementById('sel-estudiante');
     sel.innerHTML = '<option value="">Cargando...</option>';
     if (!cursoId) { sel.innerHTML = '<option value="">Primero selecciona un curso</option>'; return; }
-    fetch('/api/estudiantes_por_curso/' + cursoId)
+    fetch(API_EST.replace('/0', '/' + cursoId))
         .then(r => r.json())
         .then(data => {
             sel.innerHTML = '<option value="">Seleccionar</option>';

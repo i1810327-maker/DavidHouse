@@ -7,7 +7,7 @@
 </div>
 
 <div class="card">
-    <form class="filter-form" method="GET" action="{{ url_for('evaluaciones_curso', curso_id=curso.id) }}">
+    <form class="filter-form" method="GET" action="{{ url_for('docente.evaluaciones_curso', curso_id=curso.id) }}">
         <div class="filter-group"><label>Bimestre</label>
             <select name="bimestre_id" onchange="this.form.submit()">
                 {% for b in bimestres %}
@@ -22,7 +22,7 @@
     <!-- Formulario de nota individual -->
     <div class="card">
         <div class="card-head"><h3>Registrar Nota</h3></div>
-        <form method="POST" action="{{ url_for('evaluaciones_curso', curso_id=curso.id) }}" class="filter-form">
+        <form method="POST" action="{{ url_for('docente.evaluaciones_curso', curso_id=curso.id) }}" class="filter-form">
             <input type="hidden" name="accion" value="guardar">
             <input type="hidden" name="bimestre_id" value="{{ bimestre_id }}">
             <div class="filter-group"><label>Estudiante</label>
@@ -56,7 +56,7 @@
         <div class="card-head"><h3>Importar desde Excel</h3></div>
         <p>Descarga la plantilla, llénala y súbela.</p>
         <a href="#" class="btn btn-sm btn-secondary" onclick="descargarPlantilla()"><i class="fas fa-download"></i> Descargar Plantilla</a>
-        <form method="POST" action="{{ url_for('evaluaciones_curso', curso_id=curso.id) }}" enctype="multipart/form-data" class="mt-1">
+        <form method="POST" action="{{ url_for('docente.evaluaciones_curso', curso_id=curso.id) }}" enctype="multipart/form-data" class="mt-1">
             <input type="hidden" name="accion" value="importar">
             <div class="filter-group"><label>Archivo .xlsx</label>
                 <input type="file" name="archivo" accept=".xlsx" required>

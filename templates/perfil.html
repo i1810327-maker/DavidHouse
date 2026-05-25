@@ -40,11 +40,11 @@
     </div>
     <div class="profile-actions">
         {% if session.rol == 'directora' %}
-            <a href="{{ url_for('directora_dashboard') }}" class="btn btn-primary"><i class="fas fa-home"></i> Volver al inicio</a>
+            <a href="{{ url_for('directora.dashboard') }}" class="btn btn-primary"><i class="fas fa-home"></i> Volver al inicio</a>
         {% elif session.rol == 'docente' %}
-            <a href="{{ url_for('docente_dashboard') }}" class="btn btn-primary"><i class="fas fa-home"></i> Volver al inicio</a>
+            <a href="{{ url_for('docente.dashboard') }}" class="btn btn-primary"><i class="fas fa-home"></i> Volver al inicio</a>
         {% elif session.rol == 'alumno' %}
-            <a href="{{ url_for('estudiante_dashboard') }}" class="btn btn-primary"><i class="fas fa-home"></i> Volver al inicio</a>
+            <a href="{{ url_for('estudiante.dashboard') }}" class="btn btn-primary"><i class="fas fa-home"></i> Volver al inicio</a>
         {% endif %}
         <button class="btn btn-secondary" onclick="document.getElementById('form-cambiar-clave').style.display='block'"><i class="fas fa-key"></i> Cambiar Contraseña</button>
     </div>
@@ -52,11 +52,26 @@
         <div class="card-head"><h3>Cambiar Contraseña</h3></div>
         <form method="POST" action="{{ url_for('cambiar_clave') }}" onsubmit="return validarCambioClave()">
             <div class="filter-form">
-                <div class="filter-group"><label>Contraseña actual</label><input type="password" id="clave_actual" name="clave_actual" required class="form-input"></div>
+                <div class="filter-group"><label>Contraseña actual</label>
+                    <div style="position:relative;">
+                        <input type="password" id="clave_actual" name="clave_actual" required class="form-input" style="padding-right:40px;">
+                        <button type="button" class="password-toggle" onclick="togglePassword(this)"><i class="fas fa-eye"></i></button>
+                    </div>
+                </div>
             </div>
             <div class="filter-form">
-                <div class="filter-group"><label>Nueva contraseña</label><input type="password" id="clave_nueva" name="clave_nueva" required class="form-input" minlength="8" onkeyup="medirSeguridad()"></div>
-                <div class="filter-group"><label>Confirmar nueva</label><input type="password" id="clave_confirmar" name="clave_confirmar" required class="form-input" minlength="8" onkeyup="medirSeguridad()"></div>
+                <div class="filter-group"><label>Nueva contraseña</label>
+                    <div style="position:relative;">
+                        <input type="password" id="clave_nueva" name="clave_nueva" required class="form-input" minlength="8" onkeyup="medirSeguridad()" style="padding-right:40px;">
+                        <button type="button" class="password-toggle" onclick="togglePassword(this)"><i class="fas fa-eye"></i></button>
+                    </div>
+                </div>
+                <div class="filter-group"><label>Confirmar nueva</label>
+                    <div style="position:relative;">
+                        <input type="password" id="clave_confirmar" name="clave_confirmar" required class="form-input" minlength="8" onkeyup="medirSeguridad()" style="padding-right:40px;">
+                        <button type="button" class="password-toggle" onclick="togglePassword(this)"><i class="fas fa-eye"></i></button>
+                    </div>
+                </div>
             </div>
             <div id="password-strength" class="mt-1" style="display:none">
                 <div class="strength-bar" id="strength-bar" style="height:6px;border-radius:4px;transition:all 0.3s"></div>

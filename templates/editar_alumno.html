@@ -12,7 +12,7 @@
 
     <p>Actualiza la información del estudiante y su apoderado.</p>
 
-    <a href="{{ url_for('listar_alumnos') }}" class="btn btn-sm">? Volver a la Lista</a>
+    <a href="{{ url_for('directora.listar_alumnos') }}" class="btn btn-sm">? Volver a la Lista</a>
 
 </div>
 
@@ -20,7 +20,7 @@
 
 <div class="card">
 
-     <form method="POST" action="{{ url_for('editar_alumno', id=alumno.id) }}" onsubmit="return disableSubmitButton(this)">
+     <form method="POST" action="{{ url_for('directora.editar_alumno', id=alumno.id) }}" onsubmit="return disableSubmitButton(this)">
 
          <!-- SECCIÓN APODERADO -->
 

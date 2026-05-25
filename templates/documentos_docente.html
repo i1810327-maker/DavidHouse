@@ -3,7 +3,7 @@
 {% block content %}
 <div class="module-header"><h2><i class="fas fa-upload"></i> Subir Documentos</h2></div>
 <div class="card">
-    <form method="POST" action="{{ url_for('documentos_docente') }}" enctype="multipart/form-data" class="filter-form">
+    <form method="POST" action="{{ url_for('docente.documentos') }}" enctype="multipart/form-data" class="filter-form">
         <div class="filter-group"><label>Carpeta</label>
             <select name="carpeta_id" required>
                 {% for c in carpetas %}
