@@ -1,0 +1,275 @@
+{% extends "base.html" %}
+{% block title %}Mi Portal{% endblock %}
+{% block content %}
+
+<div class="ref-student-stats">
+    <div class="ref-student-stat">
+        <div class="ref-student-stat-value" style="color:#1565c0;">{{ promedios.values()|map(attribute='promedio')|select('ne',None)|list|length }}</div>
+        <div class="ref-student-stat-label">Materias</div>
+    </div>
+    <div class="ref-student-stat">
+        <div class="ref-student-stat-value" style="color:#2e7d32;">{{ promedios.values()|map(attribute='promedio')|select('ne',None)|list|sum / (promedios.values()|map(attribute='promedio')|select('ne',None)|list|length or 1) | round(1) }}</div>
+        <div class="ref-student-stat-label">Promedio General</div>
+    </div>
+    <div class="ref-student-stat">
+        <div class="ref-student-stat-value" style="color:#e65100;">{{ promedios.values()|map(attribute='asistencia')|select('ne',None)|list|sum / (promedios.values()|map(attribute='asistencia')|select('ne',None)|list|length or 1) | round(0) }}%</div>
+        <div class="ref-student-stat-label">Asistencia</div>
+    </div>
+    <div class="ref-student-stat">
+        <div class="ref-student-stat-value" style="color:#6a1b9a;">{{ estudiante.grado_rel.nombre if estudiante.grado_rel else '-' }} {{ estudiante.seccion_rel.nombre if estudiante.seccion_rel else '' }}</div>
+        <div class="ref-student-stat-label">Grado</div>
+    </div>
+</div>
+
+<div class="ref-tabs">
+    <button class="ref-tab active" onclick="showRefTab('notas',this)"><i class="fas fa-star"></i> Notas</button>
+    <button class="ref-tab" onclick="showRefTab('asistencia',this)"><i class="fas fa-calendar-check"></i> Asistencia</button>
+    <button class="ref-tab" onclick="showRefTab('comentarios',this)"><i class="fas fa-comment"></i> Comentarios</button>
+    <button class="ref-tab" onclick="showRefTab('pagos',this)"><i class="fas fa-money-bill"></i> Pagos</button>
+</div>
+
+<!-- ============ NOTAS ============ -->
+<div id="panel-notas" class="ref-tab-panel active">
+    <div class="ref-section-header">
+        <div>
+            <h2>Mis Calificaciones</h2>
+            <p>Revisa tus notas por curso y bimestre</p>
+        </div>
+    </div>
+
+    <div class="ref-filters">
+        <select class="ref-filter-select" onchange="window.location='?bimestre_id=' + this.value">
+            {% for b in bimestres %}
+            <option value="{{ b.id }}" {{ 'selected' if b.id == bimestre_id }}>{{ b.nombre }}</option>
+            {% endfor %}
+        </select>
+        <span style="font-size:13px;color:#888;">
+            <strong>Leyenda:</strong> AD (18-20) | A (15-17) | B (12-14) | C (0-11)
+        </span>
+    </div>
+
+    <div class="ref-grade-grid">
+        <div class="table-responsive"><table>
+            <thead>
+                <tr>
+                    <th>Curso</th>
+                    <th>Docente</th>
+                    <th>Cuaderno (10%)</th>
+                    <th>Libro (10%)</th>
+                    <th>Prácticas (20%)</th>
+                    <th>Exposiciones (10%)</th>
+                    <th>Examen (50%)</th>
+                    <th>Promedio</th>
+                    <th>Letra</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in cursos %}
+                {% set p = promedios.get(c.id, {}) %}
+                {% set ev = evaluaciones_por_curso.get(c.id, {}) %}
+                <tr>
+                    <td><strong>{{ c.nombre }}</strong></td>
+                    <td style="font-size:13px;color:#888;">{{ c.docente.nombre_completo if c.docente else '-' }}</td>
+                    <td>{{ ev.get('cuaderno', '-') }}</td>
+                    <td>{{ ev.get('libro', '-') }}</td>
+                    <td>{{ ev.get('practicas', '-') }}</td>
+                    <td>{{ ev.get('exposiciones', '-') }}</td>
+                    <td>{{ ev.get('examen', '-') }}</td>
+                    <td><strong>{{ p.get('promedio', '-') if p.get('promedio') is not none else '-' }}</strong></td>
+                    <td>
+                        {% set letra = p.get('letra', '-') %}
+                        <span style="background:{{ '#e6fffa' if letra in ('AD','A') else '#fff3cd' if letra == 'B' else '#fff5f5' if letra == 'C' else '#e3f2fd' }};color:{{ '#234e52' if letra in ('AD','A') else '#856404' if letra == 'B' else '#9b2c2c' if letra == 'C' else '#1565c0' }};padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">{{ letra }}</span>
+                    </td>
+                    <td>
+                        <button class="ref-btn-outline ref-btn-sm" onclick="verDetalleNotas({{ c.id }}, '{{ c.nombre }}')"><i class="fas fa-eye"></i> Ver más detalle</button>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="10" style="text-align:center;padding:40px;color:#888;">No hay notas registradas para este bimestre</td></tr>
+                {% endfor %}
+            </tbody>
+        </table></div>
+    </div>
+</div>
+
+<!-- ============ ASISTENCIA ============ -->
+<div id="panel-asistencia" class="ref-tab-panel">
+    <div class="ref-section-header">
+        <div>
+            <h2>Mi Asistencia</h2>
+            <p>Revisa tus asistencias, tardanzas y faltas</p>
+        </div>
+    </div>
+
+    <div class="ref-filters">
+        <select class="ref-filter-select" onchange="window.location='?bimestre_id=' + this.value">
+            {% for b in bimestres %}
+            <option value="{{ b.id }}" {{ 'selected' if b.id == bimestre_id }}>{{ b.nombre }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="ref-attendance-grid">
+        {% for a in asistencias %}
+        <div class="ref-attendance-row">
+            <div>
+                <strong>{{ a.curso.nombre }}</strong>
+                <div style="font-size:12px;color:#888;">{{ a.fecha }}</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;">
+                <span style="background:{{ '#e6fffa' if a.estado == 'presente' else '#fff3cd' if a.estado == 'tarde' else '#fff5f5' if a.estado == 'falta' else '#e3f2fd' }};color:{{ '#234e52' if a.estado == 'presente' else '#856404' if a.estado == 'tarde' else '#9b2c2c' if a.estado == 'falta' else '#1565c0' }};padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">
+                    {{ a.estado|title }}
+                </span>
+                {% if a.estado == 'falta' and a.id not in justificadas %}
+                <button class="ref-btn-outline ref-btn-sm" onclick="mostrarJustificar({{ a.id }})"><i class="fas fa-pen"></i> Justificar</button>
+                {% elif a.id in justificadas %}
+                <span style="background:#e3f2fd;color:#1565c0;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">Justificado</span>
+                {% endif %}
+            </div>
+        </div>
+        {% else %}
+        <p style="text-align:center;padding:40px;color:#888;">Sin registros de asistencia</p>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- ============ COMENTARIOS ============ -->
+<div id="panel-comentarios" class="ref-tab-panel">
+    <div class="ref-section-header">
+        <div>
+            <h2>Comentarios de Docentes</h2>
+            <p>Revisa los comentarios que tus docentes han dejado</p>
+        </div>
+    </div>
+    <div class="ref-comment-list">
+        {% for c in comentarios %}
+        <div class="ref-comment-card">
+            <div class="ref-comment-header">
+                <div class="ref-comment-author">{{ c.docente.nombre_completo if c.docente else '-' }}</div>
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <span style="background:{{ '#e6fffa' if c.tipo == 'positivo' or c.tipo == 'comportamiento' else '#fff3cd' if c.tipo == 'recomendacion' else '#e3f2fd' }};color:{{ '#234e52' if c.tipo == 'positivo' or c.tipo == 'comportamiento' else '#856404' if c.tipo == 'recomendacion' else '#1565c0' }};padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">{{ c.tipo|title }}</span>
+                    <span class="ref-comment-date">{{ c.fecha_creacion.strftime('%d/%m/%Y') }}</span>
+                </div>
+            </div>
+            <div class="ref-comment-text">{{ c.contenido }}</div>
+        </div>
+        {% else %}
+        <p style="text-align:center;padding:40px;color:#888;">No tienes comentarios aún</p>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- ============ PAGOS ============ -->
+<div id="panel-pagos" class="ref-tab-panel">
+    <div class="ref-section-header">
+        <div>
+            <h2>Mis Pagos</h2>
+            <p>Revisa el estado de tus pagos</p>
+        </div>
+    </div>
+
+    <div class="ref-payment-list">
+        {% for p in pagos %}
+        <div class="ref-payment-item">
+            <div class="ref-payment-left">
+                <div class="ref-payment-icon" style="background:{{ '#e8f5e9' if p.estado == 'pagado' else '#fff3e0' if p.estado == 'pendiente' else '#fbe9e7' }};color:{{ '#2e7d32' if p.estado == 'pagado' else '#e65100' if p.estado == 'pendiente' else '#c62828' }};">
+                    <i class="fas fa-{{ 'check-circle' if p.estado == 'pagado' else 'clock' if p.estado == 'pendiente' else 'exclamation-circle' }}"></i>
+                </div>
+                <div class="ref-payment-info">
+                    <h4>{{ p.plan.nombre if p.plan else 'Pago' }}</h4>
+                    <p>Vence: {{ p.plan.fecha_vencimiento if p.plan else '-' }}</p>
+                    {% if p.mora_acumulada and p.mora_acumulada > 0 %}
+                    <p style="color:#c62828;font-size:12px;">Mora: S/ {{ p.mora_acumulada }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            <div style="text-align:right;">
+                <div class="ref-payment-amount">S/ {{ p.monto_pagado }}</div>
+                <span style="background:{{ '#e6fffa' if p.estado == 'pagado' else '#fff3cd' if p.estado == 'pendiente' else '#fff5f5' }};color:{{ '#234e52' if p.estado == 'pagado' else '#856404' if p.estado == 'pendiente' else '#9b2c2c' }};padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">{{ p.estado|title }}</span>
+            </div>
+        </div>
+        {% else %}
+        <p style="text-align:center;padding:40px;color:#888;">No hay pagos registrados</p>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- MODAL DETALLE NOTAS -->
+<div class="ref-modal-overlay" id="modal-detalle-notas">
+    <div class="ref-modal" style="max-width:650px;max-height:85vh;overflow-y:auto;">
+        <span class="close" onclick="document.getElementById('modal-detalle-notas').style.display='none'">&times;</span>
+        <h3 id="detalle-curso-nombre">Detalle de Notas</h3>
+        <div id="detalle-notas-content" style="overflow-x:auto;">
+            <p style="text-align:center;padding:20px;color:#888;">Cargando...</p>
+        </div>
+    </div>
+</div>
+
+<!-- JUSTIFICAR MODAL -->
+<div class="ref-modal-overlay" id="modal-justificar">
+    <div class="ref-modal" style="max-height:85vh;overflow-y:auto;">
+        <h3>Justificar Inasistencia</h3>
+        <form method="POST" action="{{ url_for('estudiante.asistencia') }}" enctype="multipart/form-data">
+            <input type="hidden" name="asistencia_id" id="just-asistencia-id">
+            <input type="hidden" name="bimestre_id" value="{{ bimestre_id }}">
+            <div class="row g-3 mb-3">
+                <div class="col-12"><label class="form-label">Título *</label><input type="text" name="titulo" class="form-control w-100" style="min-height:44px;" required></div>
+                <div class="col-12"><label class="form-label">Motivo *</label><textarea name="motivo" rows="3" class="form-control w-100" style="min-height:44px;" required></textarea></div>
+                <div class="col-12"><label class="form-label">Archivo * (PDF, Word, imagen)</label><input type="file" name="archivo" required accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" class="form-control w-100" style="min-height:44px;"></div>
+            </div>
+            <div class="ref-modal-actions">
+                <button type="button" class="ref-btn-outline" onclick="document.getElementById('modal-justificar').style.display='none'">Cancelar</button>
+                <button class="ref-btn-primary">Enviar Justificación</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+const API_DETALLE_NOTAS = "{{ url_for('estudiante.api_detalle_notas', curso_id=0) }}";
+
+function showRefTab(tabId, btn) {
+    document.querySelectorAll('.ref-tab-panel').forEach(function(p) { p.classList.remove('active'); });
+    var el = document.getElementById('panel-' + tabId);
+    if (el) el.classList.add('active');
+    document.querySelectorAll('.ref-tab').forEach(function(t) { t.classList.remove('active'); });
+    if (btn) btn.classList.add('active');
+}
+
+function mostrarJustificar(asistenciaId) {
+    document.getElementById('just-asistencia-id').value = asistenciaId;
+    document.getElementById('modal-justificar').style.display = 'flex';
+}
+
+function verDetalleNotas(cursoId, cursoNombre) {
+    document.getElementById('detalle-curso-nombre').textContent = 'Detalle: ' + cursoNombre;
+    document.getElementById('detalle-notas-content').innerHTML = '<p style="text-align:center;padding:20px;color:#888;">Cargando...</p>';
+    document.getElementById('modal-detalle-notas').style.display = 'flex';
+    fetch(API_DETALLE_NOTAS.replace('/0', '/' + cursoId))
+        .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.bimestres && data.bimestres.length > 0) {
+                    var html = '<div class="table-responsive"><table class="ref-table"><thead><tr><th>Bimestre</th><th>Cuaderno</th><th>Libro</th><th>Prácticas</th><th>Exposiciones</th><th>Examen</th><th>Promedio</th><th>Letra</th></tr></thead><tbody>';
+                data.bimestres.forEach(function(b) {
+                    html += '<tr><td><strong>' + b.nombre + '</strong></td>';
+                    html += '<td>' + (b.notas.cuaderno || '-') + '</td>';
+                    html += '<td>' + (b.notas.libro || '-') + '</td>';
+                    html += '<td>' + (b.notas.practicas || '-') + '</td>';
+                    html += '<td>' + (b.notas.exposiciones || '-') + '</td>';
+                    html += '<td>' + (b.notas.examen || '-') + '</td>';
+                    html += '<td><strong>' + (b.promedio || '-') + '</strong></td>';
+                    html += '<td><span style="background:' + (b.letra == 'AD' || b.letra == 'A' ? '#e6fffa' : b.letra == 'B' ? '#fff3cd' : '#fff5f5') + ';color:' + (b.letra == 'AD' || b.letra == 'A' ? '#234e52' : b.letra == 'B' ? '#856404' : '#9b2c2c') + ';padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">' + b.letra + '</span></td></tr>';
+                });
+                html += '</tbody></table></div>';
+                document.getElementById('detalle-notas-content').innerHTML = html;
+            } else {
+                document.getElementById('detalle-notas-content').innerHTML = '<p style="text-align:center;padding:20px;color:#888;">Sin datos disponibles</p>';
+            }
+        })
+        .catch(function() {
+            document.getElementById('detalle-notas-content').innerHTML = '<p style="text-align:center;padding:20px;color:#888;">Error al cargar datos</p>';
+        });
+}
+</script>
+{% endblock %}

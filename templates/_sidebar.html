@@ -1,0 +1,9 @@
+<div class="ref-sidebar">
+    <div class="ref-sidebar-user">
+        <div class="ref-sidebar-avatar">{{ session.nombres[:1] }}{{ session.get('apellido_paterno','')[:1] if session.get('apellido_paterno') else '' }}</div>
+        <div class="ref-sidebar-name">{{ session.nombres }}</div>
+        <span style="background:{{ '#e6fffa' if session.rol == 'directora' else '#e3f2fd' if session.rol == 'docente' else '#fff3cd' }};color:{{ '#234e52' if session.rol == 'directora' else '#1565c0' if session.rol == 'docente' else '#856404' }};padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">
+            {{ {'directora':'Directora','docente':'Docente','alumno':'Estudiante'}.get(session.rol, session.rol) }}
+        </span>
+    </div>
+</div>

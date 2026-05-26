@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Mis Notas{% endblock %}
+{% block content %}
+<div class="module-header"><h2><i class="fas fa-star"></i> Mis Notas</h2></div>
+<div class="card">
+    <form class="filter-form" method="GET">
+        <div class="filter-group"><label class="form-label">Bimestre</label>
+            <select name="bimestre_id" onchange="this.form.submit()" class="form-select">
+                {% for b in bimestres %}
+                <option value="{{ b.id }}" {{ 'selected' if b.id == bimestre_id }}>{{ b.nombre }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </form>
+</div>
+<div class="card mt-1">
+    <div class="table-responsive"><table class="table">
+        <tr><th>Curso</th><th>Promedio</th><th>Letra</th><th>Asistencia</th></tr>
+        {% for cid, data in notas.items() %}
+        <tr>
+            <td>{{ data.curso.nombre }}</td>
+            <td><strong>{{ data.promedio if data.promedio is not none else '-' }}</strong></td>
+            <td><span style="background:{{ '#e6fffa' if data.letra in ('AD','A') else '#fff3cd' if data.letra == 'B' else '#fff5f5' }};color:{{ '#234e52' if data.letra in ('AD','A') else '#856404' if data.letra == 'B' else '#9b2c2c' }};padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">{{ data.letra }}</span></td>
+            <td>{{ data.asistencia }}%</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="4" class="text-center">Sin notas registradas</td></tr>
+        {% endfor %}
+    </table></div>
+</div>
+{% endblock %}

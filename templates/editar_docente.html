@@ -1,121 +1,198 @@
 {% extends "base.html" %}
-{% block title %}Editar Docente - ColegioSys{% endblock %}
+
+{% block title %}Editar Docente - David House{% endblock %}
 
 {% block content %}
+
 <div class="card" style="max-width: 800px; margin: 0 auto;">
-    <h2> Editar Docente</h2>
-    <p style="color: #666; margin-bottom: 25px;">
-        Actualiza la información del docente en el sistema.
-    </p>
-    <div class="divider"></div>
-
-    <form method="POST">
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-            <!-- Fila 1 -->
-            <div class="form-group">
-                <label for="dni">* DNI *</label>
-                <input type="text" id="dni" name="dni" value="{{ docente.dni }}" placeholder="12345678" required>
-            </div>
-
-            <div class="form-group">
-                <label for="nombres">* Nombres *</label>
-                <input type="text" id="nombres" name="nombres" value="{{ docente.nombres }}" placeholder="Juan" required>
-            </div>
-
-            <!-- Fila 2 -->
-            <div class="form-group">
-                <label for="apellido_paterno">* Apellido Paterno *</label>
-                <input type="text" id="apellido_paterno" name="apellido_paterno" value="{{ docente.apellido_paterno }}" placeholder="García" required>
-            </div>
-
-            <div class="form-group">
-                <label for="apellido_materno">* Apellido Materno *</label>
-                <input type="text" id="apellido_materno" name="apellido_materno" value="{{ docente.apellido_materno }}" placeholder="López" required>
-            </div>
-
-            <!-- Fila 3 -->
-            <div class="form-group">
-                <label for="correo">* Correo Electrónico *</label>
-                <input type="email" id="correo" name="correo" value="{{ docente.correo }}" placeholder="docente@colegio.edu.pe" required>
-            </div>
-
-            <div class="form-group">
-                <label for="telefono_principal"> Teléfono Principal</label>
-                <input type="text" id="telefono_principal" name="telefono_principal" value="{{ docente.telefono_principal or '' }}" placeholder="987654321" maxlength="20">
-            </div>
-
-            <!-- Fila 4 -->
-            <div class="form-group">
-                <label for="telefono_secundario"> Teléfono Secundario</label>
-                <input type="text" id="telefono_secundario" name="telefono_secundario" value="{{ docente.telefono_secundario or '' }}" placeholder="912345678" maxlength="20">
-            </div>
-
-            <div class="form-group">
-                <label for="profesion">* Profesión *</label>
-                <input type="text" id="profesion" name="profesion" value="{{ docente.profesion or '' }}" placeholder="Licenciado en Educación" required>
-            </div>
-
-            <!-- Fila 5 -->
-            <div class="form-group" style="display: flex; align-items: flex-end;">
-                <label style="margin: 0; display: flex; align-items: center; cursor: pointer;">
-                    <input type="checkbox" id="tiene_especialidad" name="tiene_especialidad" value="1" 
-                           {% if docente.tiene_especialidad %}checked{% endif %}
-                           onchange="mostrarEspecialidad(this.checked)"
-                           style="width: auto; margin-right: 8px;">
-                    <span>¿Tiene especialidad?</span>
-                </label>
-            </div>
-
-            <!-- Fila 6: Nivel, Grado y Sección (Tutoría) -->
-            <div class="form-group">
-                <label for="nivel_docente">* Nivel *</label>
-                <select id="nivel_docente" name="nivel_docente" onchange="filtrarGradosDocente()" required>
-                    <option value="">-- Selecciona un nivel --</option>
-                    <option value="inicial" {% if docente.seccion_rel and docente.seccion_rel.grado.nivel == 'inicial' %}selected{% endif %}>Inicial</option>
-                    <option value="primaria" {% if docente.seccion_rel and docente.seccion_rel.grado.nivel == 'primaria' %}selected{% endif %}>Primaria</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label for="grado_docente_id">* Grado *</label>
-                <select id="grado_docente_id" name="grado_docente_id" onchange="filtrarSeccionesDocente()" required disabled>
-                    <option value="">-- Primero selecciona un nivel --</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label for="seccion_docente_id">* Sección *</label>
-                <select id="seccion_docente_id" name="seccion_docente_id" required disabled>
-                    <option value="">-- Primero selecciona un grado --</option>
-                </select>
-            </div>
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:6px;">
+        <div style="width:48px;height:48px;background:linear-gradient(135deg,var(--accent),var(--accent-light));border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;color:white;font-size:20px;"><i class="fas fa-chalkboard-teacher"></i></div>
+        <div>
+            <h2 style="font-size:20px;color:var(--text);margin:0;">{{ docente.nombre_completo }}</h2>
+            <p style="color:var(--text-secondary);font-size:13px;margin:2px 0 0 0;">Actualiza la información del docente</p>
         </div>
+    </div>
+    <div style="border-bottom:1px solid var(--border);margin:16px 0 24px;"></div>
 
-        <!-- Campo de especialidad (oculto por defecto) -->
-        <div id="campo_especialidad" {% if not docente.tiene_especialidad %}hidden{% endif %} style="margin-top: 20px;">
-            <div class="form-group">
-                <label for="descripcion_especialidad"> Descripción de Especialidad *</label>
-                <textarea id="descripcion_especialidad" name="descripcion_especialidad" 
-                          placeholder="Describe tu área de especialidad, certificaciones o experiencia...">{{ docente.descripcion_especialidad or '' }}</textarea>
-            </div>
-        </div>
+     <form method="POST" action="{{ url_for('directora.editar_docente', id=docente.id) }}" onsubmit="return disableSubmitButton(this)">
+         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+             <div class="form-group">
+                 <label for="dni" class="form-label">DNI *</label>
+                   <input type="text" id="dni" name="dni" value="{{ docente.dni }}" placeholder="12345678" required maxlength="8" pattern="[0-9]{1,8}" oninput="this.value=this.value.replace(/[^0-9]/g,'')" class="form-control" title="Solo números (8 dígitos máximo)">
+             </div>
+             <div class="form-group">
+                 <label for="nombres" class="form-label">Nombres *</label>
+                  <input type="text" id="nombres" name="nombres" value="{{ docente.nombres }}" placeholder="Juan" required maxlength="60" pattern="[A-Za-zÁÉÍÓÚáéíóúñÑüÜ\s]+" oninput="this.value=this.value.replace(/[^A-Za-zÁÉÍÓÚáéíóúñÑüÜ\s]/g,'')" class="form-control" title="Solo letras y espacios">
+             </div>
+             <div class="form-group">
+                 <label for="apellido_paterno" class="form-label">Apellido Paterno *</label>
+                  <input type="text" id="apellido_paterno" name="apellido_paterno" value="{{ docente.apellido_paterno }}" placeholder="García" required maxlength="40" pattern="[A-Za-zÁÉÍÓÚáéíóúñÑüÜ\s]+" oninput="this.value=this.value.replace(/[^A-Za-zÁÉÍÓÚáéíóúñÑüÜ\s]/g,'')" class="form-control" title="Solo letras y espacios">
+             </div>
+             <div class="form-group">
+                 <label for="apellido_materno" class="form-label">Apellido Materno *</label>
+                  <input type="text" id="apellido_materno" name="apellido_materno" value="{{ docente.apellido_materno }}" placeholder="López" required maxlength="40" pattern="[A-Za-zÁÉÍÓÚáéíóúñÑüÜ\s]+" oninput="this.value=this.value.replace(/[^A-Za-zÁÉÍÓÚáéíóúñÑüÜ\s]/g,'')" class="form-control" title="Solo letras y espacios">
+             </div>
+             <div class="form-group">
+                 <label for="correo" class="form-label">Correo Electrónico *</label>
+                  <input type="email" id="correo" name="correo" value="{{ docente.correo }}" placeholder="docente@colegio.edu.pe" required maxlength="100" class="form-control">
+             </div>
+             <div class="form-group">
+                 <label for="clave" class="form-label">Nueva Contraseña (dejar vacío para mantener)</label>
+                  <div style="position:relative;">
+                      <input type="password" id="clave" name="clave" placeholder="••••••••" maxlength="50" style="padding-right:40px;" class="form-control">
+                     <button type="button" class="password-toggle" onclick="togglePassword(this)"><i class="fas fa-eye"></i></button>
+                 </div>
+             </div>
+             <div class="form-group">
+                 <label for="telefono_principal" class="form-label">Teléfono Principal</label>
+                  <input type="text" id="telefono_principal" name="telefono_principal" value="{{ docente.telefono_principal or '' }}" placeholder="987654321" maxlength="12" pattern="[0-9]+" oninput="this.value=this.value.replace(/[^0-9]/g,'')" class="form-control" title="Solo números">
+             </div>
+             <div class="form-group">
+                 <label for="telefono_secundario" class="form-label">Teléfono Secundario</label>
+                  <input type="text" id="telefono_secundario" name="telefono_secundario" value="{{ docente.telefono_secundario or '' }}" placeholder="912345678" maxlength="12" pattern="[0-9]+" oninput="this.value=this.value.replace(/[^0-9]/g,'')" autocomplete="off" class="form-control" title="Solo números">
+             </div>
+             <div class="form-group">
+                 <label for="profesion" class="form-label">Profesión *</label>
+                  <input type="text" id="profesion" name="profesion" value="{{ docente.profesion or '' }}" placeholder="Licenciado en Educación" required maxlength="100" pattern="[A-Za-zÁÉÍÓÚáéíóúÑñ\s\-\']*" oninput="validarNombre(this)" class="form-control">
+             </div>
+             <div class="form-group" style="display:flex;align-items:flex-end;">
+                 <label style="margin:0;display:flex;align-items:center;cursor:pointer;gap:8px;font-size:14px;color:var(--text);">
+                     <input type="checkbox" id="tiene_especialidad" name="tiene_especialidad" value="1"
+                            {% if docente.tiene_especialidad %}checked{% endif %}
+                            onchange="mostrarEspecialidad(this.checked)" style="width:auto;margin:0;">
+                     <span><i class="fas fa-certificate" style="color:var(--accent);"></i> ¿Tiene especialidad?</span>
+                 </label>
+             </div>
+         </div>
 
-        <div class="divider"></div>
+         <div id="campo_especialidad" {% if not docente.tiene_especialidad %}style="display:none;margin-top:16px"{% else %}style="margin-top:16px"{% endif %}>
+             <div class="form-group">
+                 <label for="descripcion_especialidad" class="form-label">Descripción de Especialidad</label>
+                  <textarea id="descripcion_especialidad" name="descripcion_especialidad"
+                            placeholder="Describe tu área de especialidad, certificaciones o experiencia..." style="min-height:80px;" class="form-control">{{ docente.descripcion_especialidad or '' }}</textarea>
+             </div>
+         </div>
 
-        <div style="display: flex; gap: 15px; justify-content: flex-end;">
-            <a href="{{ url_for('listar_docentes') }}" class="btn btn-secondary">Cancelar</a>
-            <button type="submit" class="btn btn-primary">Guardar Cambios</button>
-        </div>
-    </form>
+         <h3 style="font-size:15px;color:var(--primary);margin:20px 0 12px;"><i class="fas fa-graduation-cap"></i> Asignación de Sección (Tutoría)</h3>
+         <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px;">
+             <div class="form-group">
+                 <label for="nivel_docente" class="form-label">Nivel *</label>
+                  <select id="nivel_docente" name="nivel_docente" onchange="filtrarGradosDocente()" required class="form-select">
+                      <option value="">-- Selecciona un nivel --</option>
+                      {% for n in niveles %}<option value="{{ n.id }}" {% if docente.seccion_rel and docente.seccion_rel.grado.nivel_id == n.id %}selected{% endif %}>{{ n.nombre }}</option>{% endfor %}
+                  </select>
+             </div>
+             <div class="form-group">
+                 <label for="grado_docente_id" class="form-label">Grado *</label>
+                  <select id="grado_docente_id" name="grado_docente_id" onchange="filtrarSeccionesDocente()" required disabled class="form-select">
+                     <option value="">-- Primero selecciona un nivel --</option>
+                 </select>
+             </div>
+             <div class="form-group">
+                 <label for="seccion_docente_id" class="form-label">Sección *</label>
+                  <select id="seccion_docente_id" name="seccion_docente_id" required disabled class="form-select">
+                     <option value="">-- Primero selecciona un grado --</option>
+                 </select>
+             </div>
+         </div>
+
+         <div style="display:flex;gap:12px;margin-top:28px;padding-top:20px;border-top:1px solid var(--border);">
+             <button type="submit" class="btn-primary"><i class="fas fa-save"></i> Guardar Cambios</button>
+             <a href="{{ url_for('directora.listar_docentes') }}" class="btn-secondary"><i class="fas fa-arrow-left"></i> Cancelar</a>
+         </div>
+     </form>
 </div>
 
+<div class="card" style="max-width: 800px; margin: 24px auto;">
+    <h3 style="font-size:17px;color:var(--primary);margin-bottom:4px;"><i class="fas fa-book"></i> Asignación de Clases</h3>
+    <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px;">Defina las clases que corresponden a cada grado para este colaborador.</p>
+
+    <div id="cursos-asignados-list">
+        {% for curso in cursos_asignados %}
+        <div class="ref-teacher-card" id="curso-{{ curso.id }}" style="margin-bottom:8px;">
+            <span style="font-size:13px;color:var(--text-muted);font-weight:600;min-width:28px;">#{{ loop.index }}</span>
+            <span style="font-size:13px;color:var(--text);min-width:80px;">{{ curso.grado_rel.nivel | capitalize }}</span>
+            <span style="font-size:13px;color:var(--text);min-width:50px;">{{ curso.grado_rel.nombre }}</span>
+            <span style="font-size:13px;color:var(--text);min-width:40px;">{{ curso.seccion_rel.nombre }}</span>
+            <span style="font-size:13px;color:var(--text);font-weight:600;flex:1;">{{ curso.nombre }}</span>
+            <button class="ref-header-btn" onclick="removerCurso({{ curso.id }})" title="Remover" style="flex-shrink:0;"><i class="fas fa-times" style="color:#c62828;"></i></button>
+        </div>
+        {% else %}
+        <p style="text-align:center;padding:20px;color:#888;">No hay clases asignadas</p>
+        {% endfor %}
+    </div>
+
+    <div style="display:flex;align-items:center;gap:10px;margin-top:12px;padding-top:14px;border-top:1px solid var(--border);flex-wrap:wrap;">
+        <span style="font-size:13px;color:var(--text-muted);font-weight:600;min-width:28px;">#{{ (cursos_asignados|length) + 1 }}</span>
+        <select id="asignar-nivel" style="flex:1;min-width:120px;padding:9px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;" onchange="cargarGradosRef(this.value,'asignar-grado');limpiarSelect('asignar-seccion','Sección');limpiarSelect('asignar-curso','Curso / Asignatura');document.getElementById('asignar-curso').disabled=true;">
+            <option value="">Nivel</option>
+            {% for n in niveles %}<option value="{{ n.id }}">{{ n.nombre }}</option>{% endfor %}
+        </select>
+        <select id="asignar-grado" style="flex:1;min-width:120px;padding:9px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;" onchange="cargarSeccionesRef(this.value,'asignar-seccion');limpiarSelect('asignar-curso','Curso / Asignatura');document.getElementById('asignar-curso').disabled=true;" disabled>
+            <option value="">Primero selecciona nivel</option>
+        </select>
+        <select id="asignar-seccion" style="flex:1;min-width:120px;padding:9px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;" onchange="filtrarCursosAsignar()" disabled>
+            <option value="">Sección</option>
+        </select>
+        <select id="asignar-curso" style="flex:1;min-width:120px;padding:9px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;" disabled>
+            <option value="">Curso / Asignatura</option>
+        </select>
+        <button class="ref-btn-primary" onclick="asignarCurso()" style="white-space:nowrap;"><i class="fas fa-plus"></i> Asignar Clase</button>
+    </div>
+</div>
 
 {% set valor_grado = docente.seccion_rel.grado_id if docente.seccion_rel else None %}
 {% set valor_seccion = docente.seccion_id if docente.seccion_id else None %}
+
 <script>
-    // Datos de grados y secciones desde el backend
+    const API_GRADOS_REF = "{{ url_for('directora.api_grados_por_nivel', nivel_id=0) }}";
+    const API_SECCIONES_REF = "{{ url_for('directora.api_secciones_por_grado', grado_id=0) }}";
     const gradosData = JSON.parse('{{ grados_data | default([]) | tojson | safe }}');
+    const cursosData = JSON.parse('{{ cursos_data | default([]) | tojson | safe }}');
     const datosActuales = JSON.parse('{{ {"gradoId": valor_grado, "seccionId": valor_seccion} | tojson | safe }}');
+
+    function cargarGradosRef(nivelId, targetId, placeholder, callback) {
+        var sel = document.getElementById(targetId);
+        if (!sel) return;
+        var ph = placeholder || 'Seleccionar Grado';
+        sel.innerHTML = '<option value="">Cargando...</option>';
+        sel.disabled = true;
+        if (!nivelId) { sel.innerHTML = '<option value="">' + ph + '</option>'; return; }
+        fetch(API_GRADOS_REF.replace('/0', '/' + nivelId)).then(function(r) { return r.json(); }).then(function(data) {
+            sel.innerHTML = '<option value="">' + ph + '</option>';
+            sel.disabled = false;
+            data.forEach(function(g) {
+                var o = document.createElement('option');
+                o.value = g.id; o.textContent = g.nombre;
+                sel.appendChild(o);
+            });
+            if (callback) callback();
+        });
+    }
+
+    function cargarSeccionesRef(gradoId, targetId, placeholder, callback) {
+        var sel = document.getElementById(targetId);
+        if (!sel) return;
+        var ph = placeholder || 'Seleccionar Sección';
+        sel.innerHTML = '<option value="">Cargando...</option>';
+        sel.disabled = true;
+        if (!gradoId) { sel.innerHTML = '<option value="">' + ph + '</option>'; return; }
+        fetch(API_SECCIONES_REF.replace('/0', '/' + gradoId)).then(function(r) { return r.json(); }).then(function(data) {
+            sel.innerHTML = '<option value="">' + ph + '</option>';
+            sel.disabled = false;
+            data.forEach(function(s) {
+                var o = document.createElement('option');
+                o.value = s.id; o.textContent = s.nombre;
+                sel.appendChild(o);
+            });
+            if (callback) callback();
+        });
+    }
+
+    function limpiarSelect(id, texto) {
+        var sel = document.getElementById(id);
+        if (sel) { sel.innerHTML = '<option value="">' + (texto || 'Seleccionar') + '</option>'; sel.disabled = true; }
+    }
 
     function mostrarEspecialidad(mostrar) {
         document.getElementById('campo_especialidad').style.display = mostrar ? 'block' : 'none';
@@ -126,22 +203,16 @@
         const gradoSelect = document.getElementById('grado_docente_id');
         const seccionSelect = document.getElementById('seccion_docente_id');
         const nivelSeleccionado = nivelSelect.value;
-
-        // Limpiar opciones
         gradoSelect.innerHTML = '';
         seccionSelect.innerHTML = '';
         gradoSelect.disabled = true;
         seccionSelect.disabled = true;
-
         if (!nivelSeleccionado) {
             gradoSelect.innerHTML = '<option value="">-- Primero selecciona un nivel --</option>';
             seccionSelect.innerHTML = '<option value="">-- Primero selecciona un grado --</option>';
             return;
         }
-
-        // Filtrar grados por nivel
-        const gradosFiltrados = gradosData.filter(grado => grado.nivel === nivelSeleccionado);
-
+        const gradosFiltrados = gradosData.filter(grado => grado.nivel_id === parseInt(nivelSeleccionado));
         if (gradosFiltrados.length === 0) {
             gradoSelect.innerHTML = '<option value="">No hay grados disponibles</option>';
         } else {
@@ -162,19 +233,13 @@
         const gradoSelect = document.getElementById('grado_docente_id');
         const seccionSelect = document.getElementById('seccion_docente_id');
         const gradoSeleccionado = gradoSelect.value;
-
-        // Limpiar opciones actuales
         seccionSelect.innerHTML = '';
-
         if (!gradoSeleccionado) {
             seccionSelect.innerHTML = '<option value="">-- Primero selecciona un grado --</option>';
             seccionSelect.disabled = true;
             return;
         }
-
-        // Buscar el grado seleccionado
         const grado = gradosData.find(g => g.id === parseInt(gradoSeleccionado));
-        
         if (!grado || !grado.secciones || grado.secciones.length === 0) {
             seccionSelect.innerHTML = '<option value="">No hay secciones disponibles</option>';
             seccionSelect.disabled = true;
@@ -191,9 +256,121 @@
         }
     }
 
-    // Inicializar selects al cargar la página
     window.addEventListener('DOMContentLoaded', function() {
         filtrarGradosDocente();
     });
-</script>
+
+    function asignarCurso() {
+        const gradoSelect = document.getElementById('asignar-grado');
+        const seccionSelect = document.getElementById('asignar-seccion');
+        const cursoSelect = document.getElementById('asignar-curso');
+        const gradoId = gradoSelect.value;
+        const seccionId = seccionSelect.value;
+        const cursoId = cursoSelect.value;
+        if (!gradoId || !seccionId || !cursoId) {
+            alert('Selecciona grado, sección y curso');
+            return;
+        }
+        fetch('{{ url_for("directora.asignar_curso_docente", id=docente.id) }}', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: 'curso_id=' + cursoId
+        }).then(r => r.json()).then(data => {
+            if (data.ok) {
+                location.reload();
+            } else {
+                alert('Error: ' + (data.error || 'desconocido'));
+            }
+        }).catch(function() { alert('Error de conexión'); });
+    }
+
+    function filtrarCursosAsignar() {
+        const seccionSelect = document.getElementById('asignar-seccion');
+        const cursoSelect = document.getElementById('asignar-curso');
+        const seccionId = parseInt(seccionSelect.value);
+        cursoSelect.innerHTML = '<option value="">Curso / Asignatura</option>';
+        if (!seccionId) { cursoSelect.disabled = true; return; }
+        const filtrados = cursosData.filter(function(c) { return c.seccion_id === seccionId; });
+        if (filtrados.length === 0) {
+            cursoSelect.innerHTML = '<option value="">No hay cursos disponibles</option>';
+            cursoSelect.disabled = true;
+        } else {
+            filtrados.forEach(function(c) {
+                var opt = document.createElement('option');
+                opt.value = c.id; opt.textContent = c.nombre;
+                cursoSelect.appendChild(opt);
+            });
+            cursoSelect.disabled = false;
+        }
+    }
+
+    function removerCurso(cursoId) {
+        if (!confirm('¿Remover este curso del docente?')) return;
+        fetch('{{ url_for("directora.remover_curso_docente", id=docente.id, curso_id=0) }}'.replace('0', cursoId), {
+            method: 'POST'
+        }).then(r => r.json()).then(data => {
+            if (data.ok) {
+                var el = document.getElementById('curso-' + cursoId);
+                if (el) el.remove();
+            } else {
+                alert('Error al remover');
+            }
+        }).catch(() => alert('Error de conexión'));
+    }
+
+    function validarDni(input) {
+        if (input.value && !/^\d*$/.test(input.value)) {
+            input.setCustomValidity('El DNI debe contener solo números');
+            input.reportValidity();
+        } else if (input.value && input.value.length > 9) {
+            input.setCustomValidity('El DNI debe tener máximo 9 caracteres');
+            input.reportValidity();
+        } else {
+            input.setCustomValidity('');
+        }
+    }
+
+    function validarNombre(input) {
+        if (input.value && !/^[A-Za-zÁÉÍÓÚáéíóúÑñ\s\-\']*$/.test(input.value)) {
+            input.setCustomValidity('Este campo debe contener solo letras y espacios');
+            input.reportValidity();
+        } else {
+            input.setCustomValidity('');
+        }
+    }
+
+    function validarCorreo(input) {
+        if (input.value && input.value.length > 100) {
+            input.setCustomValidity('El correo debe tener máximo 100 caracteres');
+            input.reportValidity();
+        } else if (input.value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input.value)) {
+            input.setCustomValidity('Ingrese un correo electrónico válido');
+            input.reportValidity();
+        } else {
+            input.setCustomValidity('');
+        }
+    }
+
+    function validarClaveInput(input) {
+        if (input.value && input.value.length > 50) {
+            input.setCustomValidity('La contraseña debe tener máximo 50 caracteres');
+            input.reportValidity();
+        } else {
+            input.setCustomValidity('');
+        }
+    }
+
+    function validarTelefono(input, campo) {
+        if (input.value && !/^\d*$/.test(input.value)) {
+            input.setCustomValidity(campo + ' debe contener solo números');
+            input.reportValidity();
+        } else if (input.value && input.value.length > 12) {
+            input.setCustomValidity(campo + ' debe tener máximo 12 caracteres');
+            input.reportValidity();
+        } else {
+            input.setCustomValidity('');
+        }
+    }
+ </script>
+
 {% endblock %}

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recuperar Contraseña - David House</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <div class="login-wrapper">
+        <div class="login-left">
+            <div class="login-bg-grid"></div>
+            <div class="login-left-content">
+                <div class="login-logo-circle">DH</div>
+                <p class="login-welcome">David House</p>
+                <h1 class="login-brand">Camino de Vida</h1>
+                <p class="login-tagline">Institución Educativa comprometida con la excelencia</p>
+            </div>
+            <div class="login-copyright">&copy; 2026 David House. Todos los derechos reservados.</div>
+        </div>
+        <div class="login-right">
+            <div class="login-form-container">
+                <div class="login-form-header">
+                    <h2>Recuperar Contraseña</h2>
+                    <p><i class="fas fa-key"></i> Ayuda</p>
+                </div>
+                <p class="login-form-desc"><i class="fas fa-info-circle" style="color:var(--color-accent);margin-right:6px;"></i>Función en desarrollo. Contacta al administrador para restablecer tu contraseña.</p>
+                <div class="login-help" style="border:none;margin-top:10px;">
+                    <p><i class="fas fa-envelope" style="color:var(--color-primary);margin-right:6px;"></i> admin@davidhouse.edu.pe</p>
+                    <p><i class="fas fa-phone" style="color:var(--color-primary);margin-right:6px;"></i> +51 123 456 789</p>
+                </div>
+                <div class="login-forgot" style="margin-top:28px;">
+                    <a href="{{ url_for('login') }}"><i class="fas fa-arrow-left"></i> Volver al inicio de sesión</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

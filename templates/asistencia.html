@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Asistencia - {{ curso.nombre }}{% endblock %}
+{% block content %}
+<div class="module-header">
+    <h2><i class="fas fa-calendar-check"></i> Asistencia: {{ curso.nombre }}</h2>
+    <p>{{ curso.grado_rel.nombre if curso.grado_rel else '-' }} - Sección {{ curso.seccion_rel.nombre if curso.seccion_rel else '-' }}</p>
+</div>
+
+<div class="card">
+    <form class="filter-form" method="GET" action="{{ url_for('docente.asistencia_curso', curso_id=curso.id) }}">
+        <div class="filter-group"><label class="form-label">Bimestre</label>
+            <select name="bimestre_id" onchange="this.form.submit()" class="form-select">
+                {% for b in bimestres %}
+                <option value="{{ b.id }}" {{ 'selected' if b.id == bimestre_id }}>{{ b.nombre }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="filter-group"><label class="form-label">Fecha</label>
+            <input type="date" name="fecha" value="{{ fecha }}" onchange="this.form.submit()" class="form-control">
+        </div>
+    </form>
+</div>
+
+<div class="card mt-1">
+    <form method="POST" action="{{ url_for('docente.asistencia_curso', curso_id=curso.id) }}" id="asistencia-form">
+        <input type="hidden" name="fecha" value="{{ fecha }}">
+        <input type="hidden" name="bimestre_id" value="{{ bimestre_id }}">
+        <div class="flex-between mb-1">
+            <h3>Marcar Asistencia - {{ fecha }}</h3>
+            <button type="button" class="btn btn-sm btn-secondary" onclick="marcarTodosPresente()"><i class="fas fa-check-double"></i> Marcar todos Presente</button>
+        </div>
+        <div class="table-responsive"><table class="table">
+            <tr><th>#</th><th>Estudiante</th><th>Presente</th><th>Tarde</th><th>Falta</th><th>Justificado</th></tr>
+            {% for e in estudiantes %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ e.apellido_paterno }} {{ e.apellido_materno }}, {{ e.nombres }}</td>
+                {% set estado = asistencias.get(e.id, 'presente') %}
+                <td class="text-center"><input type="radio" name="estado_{{ e.id }}" value="presente" {{ 'checked' if estado == 'presente' }} class="asist-radio"></td>
+                <td class="text-center"><input type="radio" name="estado_{{ e.id }}" value="tarde" {{ 'checked' if estado == 'tarde' }} class="asist-radio"></td>
+                <td class="text-center"><input type="radio" name="estado_{{ e.id }}" value="falta" {{ 'checked' if estado == 'falta' }} class="asist-radio"></td>
+                <td class="text-center"><input type="radio" name="estado_{{ e.id }}" value="justificado" {{ 'checked' if estado == 'justificado' }} class="asist-radio"></td>
+            </tr>
+            {% endfor %}
+        </table></div>
+        <button class="btn btn-primary mt-1"><i class="fas fa-save"></i> Guardar Asistencia</button>
+    </form>
+</div>
+
+<script>
+function marcarTodosPresente() {
+    var radios = document.querySelectorAll('.asist-radio[value="presente"]');
+    radios.forEach(function(r) { r.checked = true; });
+}
+</script>
+{% endblock %}

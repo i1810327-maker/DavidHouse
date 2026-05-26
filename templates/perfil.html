@@ -1,45 +1,139 @@
 {% extends "base.html" %}
 {% block title %}Perfil{% endblock %}
-
 {% block content %}
-<div class="card card-highlight">
-    <h2>Mi Perfil</h2>
-    <p>Revisa y actualiza tu información personal desde este panel.</p>
-</div>
-
-<div class="profile-grid">
-    <div class="card profile-card">
-        <h3>Datos personales</h3>
-        <div class="profile-row"><span>DNI:</span> {{ usuario.dni }}</div>
-        <div class="profile-row"><span>Nombre completo:</span> {{ usuario.nombre_completo }}</div>
-        <div class="profile-row"><span>Correo:</span> {{ usuario.correo }}</div>
-        <div class="profile-row"><span>Rol:</span> {{ usuario.rol|title }}</div>
-        <div class="profile-row"><span>Estado:</span> {{ 'Activo' if usuario.activo else 'Inactivo' }}</div>
-        <div class="profile-row"><span>Registrado:</span> {{ usuario.fecha_registro.strftime('%d/%m/%Y') }}</div>
+<div class="profile-wrapper">
+    <div class="profile-header-card">
+        <div class="profile-avatar">
+            <span class="avatar-icon">
+                {% if viewed_rol == 'directora' %}<i class="fas fa-user-tie"></i>
+                {% elif viewed_rol == 'docente' %}<i class="fas fa-chalkboard-teacher"></i>
+                {% elif viewed_rol == 'alumno' %}<i class="fas fa-user-graduate"></i>
+                {% else %}<i class="fas fa-users"></i>{% endif %}
+            </span>
+        </div>
+        <h2>{{ usuario.nombre_completo }}</h2>
+        <span class="profile-role-badge">{{ viewed_rol|title }}</span>
     </div>
-
-    <div class="card profile-card">
-        <h3>Detalles adicionales</h3>
-        {% if usuario.rol == 'alumno' %}
-            <div class="profile-row"><span>Grado:</span> {{ usuario.grado_rel.nombre if usuario.grado_rel else 'No asignado' }}</div>
-            <div class="profile-row"><span>Sección:</span> {{ usuario.seccion_rel.nombre if usuario.seccion_rel else 'No asignada' }}</div>
-        {% elif usuario.rol == 'docente' %}
-            <div class="profile-row"><span>Profesión:</span> {{ usuario.profesion or 'No especificada' }}</div>
-            <div class="profile-row"><span>Especialidad:</span> {{ usuario.descripcion_especialidad if usuario.tiene_especialidad else 'No tiene especialidad' }}</div>
-            <div class="profile-row"><span>Sección asignada:</span> {{ usuario.seccion_rel.nombre if usuario.seccion_rel else 'No asignada' }}</div>
-        {% else %}
-            <div class="profile-row"><span>Tipo de acceso:</span> Administración</div>
-        {% endif %}
-
-        <div class="profile-actions">
-            {% if usuario.rol == 'directora' %}
-                <a href="{{ url_for('directora_cambiar_clave') }}" class="btn btn-primary">Cambiar contraseña</a>
-            {% elif usuario.rol == 'docente' %}
-                <a href="{{ url_for('docente_cambiar_clave') }}" class="btn btn-primary">Cambiar contraseña</a>
-            {% elif usuario.rol == 'alumno' %}
-                <a href="{{ url_for('alumno_cambiar_clave') }}" class="btn btn-primary">Cambiar contraseña</a>
-            {% endif %}
+    <div class="profile-grid">
+        <div class="profile-card">
+            <div class="card-head"><h3><i class="fas fa-clipboard-list"></i> Datos personales</h3></div>
+            <div class="profile-table">
+                <div class="profile-row"><span class="label">DNI</span><span class="value">{{ usuario.dni if usuario.dni else '-' }}</span></div>
+                <div class="profile-row"><span class="label">Nombres</span><span class="value">{{ usuario.nombres }}</span></div>
+                <div class="profile-row"><span class="label">Apellidos</span><span class="value">{{ usuario.apellido_paterno }} {{ usuario.apellido_materno }}</span></div>
+                <div class="profile-row"><span class="label">Correo</span><span class="value">{{ usuario.correo }}</span></div>
+            </div>
+        </div>
+        <div class="profile-card">
+            <div class="card-head"><h3><i class="fas fa-thumbtack"></i> Detalles</h3></div>
+            <div class="profile-table">
+                {% if viewed_rol == 'alumno' %}
+                    <div class="profile-row"><span class="label">Grado</span><span class="value">{{ usuario.grado_rel.nombre if usuario.grado_rel else '-' }}</span></div>
+                    <div class="profile-row"><span class="label">Sección</span><span class="value">{{ usuario.seccion_rel.nombre if usuario.seccion_rel else '-' }}</span></div>
+                {% elif viewed_rol == 'docente' %}
+                    <div class="profile-row"><span class="label">Profesión</span><span class="value">{{ usuario.profesion or '-' }}</span></div>
+                    <div class="profile-row"><span class="label">Especialidad</span><span class="value">{{ usuario.descripcion_especialidad if usuario.tiene_especialidad else '-' }}</span></div>
+                {% endif %}
+                <div class="profile-row"><span class="label">Rol</span><span class="value">{{ viewed_rol|title }}</span></div>
+            </div>
         </div>
     </div>
+    <div class="profile-actions">
+        {% if session.rol == 'directora' %}
+            <a href="{{ url_for('directora.dashboard') }}" class="btn btn-primary"><i class="fas fa-home"></i> Volver al inicio</a>
+        {% elif session.rol == 'docente' %}
+            <a href="{{ url_for('docente.dashboard') }}" class="btn btn-primary"><i class="fas fa-home"></i> Volver al inicio</a>
+        {% elif session.rol == 'alumno' %}
+            <a href="{{ url_for('estudiante.dashboard') }}" class="btn btn-primary"><i class="fas fa-home"></i> Volver al inicio</a>
+        {% endif %}
+        <button class="btn btn-secondary" onclick="document.getElementById('form-cambiar-clave').style.display='block'"><i class="fas fa-key"></i> Cambiar Contraseña</button>
+    </div>
+    <div id="form-cambiar-clave" class="card mt-1" style="display:none">
+        <div class="card-head"><h3>Cambiar Contraseña</h3></div>
+        <form method="POST" action="{{ url_for('cambiar_clave') }}" onsubmit="return validarCambioClave()">
+            <div class="filter-form">
+                <div class="filter-group"><label class="form-label">Contraseña actual</label>
+                    <div style="position:relative;">
+                        <input type="password" id="clave_actual" name="clave_actual" required class="form-input form-control" style="padding-right:40px;">
+                        <button type="button" class="password-toggle" onclick="togglePassword(this)"><i class="fas fa-eye"></i></button>
+                    </div>
+                </div>
+            </div>
+            <div class="filter-form">
+                <div class="filter-group"><label class="form-label">Nueva contraseña</label>
+                    <div style="position:relative;">
+                        <input type="password" id="clave_nueva" name="clave_nueva" required class="form-input form-control" minlength="8" onkeyup="medirSeguridad()" style="padding-right:40px;">
+                        <button type="button" class="password-toggle" onclick="togglePassword(this)"><i class="fas fa-eye"></i></button>
+                    </div>
+                </div>
+                <div class="filter-group"><label class="form-label">Confirmar nueva</label>
+                    <div style="position:relative;">
+                        <input type="password" id="clave_confirmar" name="clave_confirmar" required class="form-input form-control" minlength="8" onkeyup="medirSeguridad()" style="padding-right:40px;">
+                        <button type="button" class="password-toggle" onclick="togglePassword(this)"><i class="fas fa-eye"></i></button>
+                    </div>
+                </div>
+            </div>
+            <div id="password-strength" class="mt-1" style="display:none">
+                <div class="strength-bar" id="strength-bar" style="height:6px;border-radius:4px;transition:all 0.3s"></div>
+                <div id="strength-text" style="font-size:12px;margin-top:4px"></div>
+            </div>
+            <div id="password-reqs" class="mt-1" style="font-size:12px;color:#666">
+                <div id="req-len">✗ Mínimo 8 caracteres</div>
+                <div id="req-may">✗ Al menos 1 mayúscula</div>
+                <div id="req-min">✗ Al menos 1 minúscula</div>
+                <div id="req-num">✗ Al menos 1 número</div>
+                <div id="req-sym">✗ Al menos 1 símbolo (!@#$%^&amp;*(),.?":{}|&lt;&gt;</div>
+                <div id="req-match">✗ Contraseñas coinciden</div>
+            </div>
+            <div id="password-match" class="mt-1" style="font-size:12px;color:#666"></div>
+            <button class="btn btn-primary btn-sm mt-1"><i class="fas fa-save"></i> Guardar</button>
+        </form>
+    </div>
 </div>
+<script>
+function medirSeguridad() {
+    var pwd = document.getElementById('clave_nueva').value;
+    var conf = document.getElementById('clave_confirmar').value;
+    var bar = document.getElementById('strength-bar');
+    var txt = document.getElementById('strength-text');
+    var div = document.getElementById('password-strength');
+    if (!pwd) { div.style.display = 'none'; return; }
+    div.style.display = 'block';
+    var score = 0;
+    if (pwd.length >= 8) score += 20;
+    if (/[A-Z]/.test(pwd)) score += 20;
+    if (/[a-z]/.test(pwd)) score += 20;
+    if (/\d/.test(pwd)) score += 20;
+    if (/[!@#$%^&*(),.?":{}|<>_\-+=]/.test(pwd)) score += 20;
+    var col = score <= 40 ? '#dc3545' : score <= 60 ? '#ff9800' : score <= 80 ? '#28a745' : '#1565c0';
+    var label = score <= 40 ? 'Débil' : score <= 60 ? 'Regular' : score <= 80 ? 'Buena' : 'Muy segura';
+    bar.style.width = score + '%';
+    bar.style.background = col;
+    txt.innerHTML = '<strong style="color:'+col+'">' + label + '</strong> (' + score + '/100)';
+    // Requisitos
+    document.getElementById('req-len').innerHTML = (pwd.length >= 8 ? '✓' : '✗') + ' Mínimo 8 caracteres';
+    document.getElementById('req-may').innerHTML = (/[A-Z]/.test(pwd) ? '✓' : '✗') + ' Al menos 1 mayúscula';
+    document.getElementById('req-min').innerHTML = (/[a-z]/.test(pwd) ? '✓' : '✗') + ' Al menos 1 minúscula';
+    document.getElementById('req-num').innerHTML = (/\d/.test(pwd) ? '✓' : '✗') + ' Al menos 1 número';
+    document.getElementById('req-sym').innerHTML = (/[!@#$%^&*(),.?":{}|<>_\-+=]/.test(pwd) ? '✓' : '✗') + ' Al menos 1 símbolo';
+    document.getElementById('req-match').innerHTML = (pwd && pwd === conf ? '✓' : '✗') + ' Contraseñas coinciden';
+    document.getElementById('req-len').style.color = pwd.length >= 8 ? '#28a745' : '#dc3545';
+    document.getElementById('req-may').style.color = /[A-Z]/.test(pwd) ? '#28a745' : '#dc3545';
+    document.getElementById('req-min').style.color = /[a-z]/.test(pwd) ? '#28a745' : '#dc3545';
+    document.getElementById('req-num').style.color = /\d/.test(pwd) ? '#28a745' : '#dc3545';
+    document.getElementById('req-sym').style.color = /[!@#$%^&*(),.?":{}|<>_\-+=]/.test(pwd) ? '#28a745' : '#dc3545';
+    document.getElementById('req-match').style.color = (pwd && pwd === conf) ? '#28a745' : '#dc3545';
+}
+function validarCambioClave() {
+    var pwd = document.getElementById('clave_nueva').value;
+    var conf = document.getElementById('clave_confirmar').value;
+    if (pwd !== conf) { alert('Las contraseñas nuevas no coinciden'); return false; }
+    if (pwd.length < 8) { alert('La contraseña debe tener al menos 8 caracteres'); return false; }
+    if (!/[A-Z]/.test(pwd)) { alert('Debe incluir al menos una mayúscula'); return false; }
+    if (!/[a-z]/.test(pwd)) { alert('Debe incluir al menos una minúscula'); return false; }
+    if (!/\d/.test(pwd)) { alert('Debe incluir al menos un número'); return false; }
+    if (!/[!@#$%^&*(),.?":{}|<>_\-+=]/.test(pwd)) { alert('Debe incluir al menos un símbolo'); return false; }
+    return true;
+}
+</script>
 {% endblock %}

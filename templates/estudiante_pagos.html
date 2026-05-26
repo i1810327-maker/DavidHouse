@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Mis Pagos{% endblock %}
+{% block content %}
+<div class="module-header"><h2><i class="fas fa-money-bill"></i> Mis Pagos</h2></div>
+<div class="grid-2 mt-1">
+    <div class="card">
+        <div class="card-head"><h3>Pagos Realizados</h3></div>
+        <div class="table-responsive"><table class="table">
+            <tr><th>Plan</th><th>Monto</th><th>Vencimiento</th><th>Fecha Pago</th><th>Estado</th></tr>
+            {% for p in pagos %}
+            <tr>
+                <td>{{ p.plan.nombre if p.plan else '-' }}</td>
+                <td>S/ {{ p.monto_pagado }}</td>
+                <td>{{ p.plan.fecha_vencimiento.strftime('%d/%m/%Y') if p.plan else '-' }}</td>
+                <td>{{ p.fecha_pago.strftime('%d/%m/%Y') if p.fecha_pago else '-' }}</td>
+                <td><span style="background:{{ '#e6fffa' if p.estado == 'pagado' else '#fff5f5' }};color:{{ '#234e52' if p.estado == 'pagado' else '#9b2c2c' }};padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">{{ p.estado|title }}</span></td>
+            </tr>
+            {% else %}
+            <tr><td colspan="5" class="text-center">Sin pagos registrados</td></tr>
+            {% endfor %}
+        </table></div>
+    </div>
+    <div class="card">
+        <div class="card-head"><h3>Planes Activos</h3></div>
+        <div class="table-responsive"><table class="table">
+            <tr><th>Nombre</th><th>Monto</th><th>Vencimiento</th></tr>
+            {% for pl in planes %}
+            <tr>
+                <td>{{ pl.nombre }}</td>
+                <td>S/ {{ pl.monto }}</td>
+                <td>{{ pl.fecha_vencimiento }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="3" class="text-center">Sin planes activos</td></tr>
+            {% endfor %}
+        </table></div>
+        <div class="mt-1 text-center text-muted">
+            <i class="fas fa-qrcode fa-3x"></i>
+            <p>Próximamente: Pago con QR</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

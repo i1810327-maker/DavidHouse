@@ -1,0 +1,48 @@
+{% macro grade_badge(nota) %}
+  {% if nota is not none and nota >= 18 %}
+    <span style="background:#e3f2fd;color:#1565c0;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">{{ nota }}</span>
+  {% elif nota is not none and nota >= 14 %}
+    <span style="background:#e6fffa;color:#234e52;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">{{ nota }}</span>
+  {% elif nota is not none and nota >= 12 %}
+    <span style="background:#fff3cd;color:#856404;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">{{ nota }}</span>
+  {% elif nota is not none %}
+    <span style="background:#fff5f5;color:#9b2c2c;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">{{ nota }}</span>
+  {% else %}
+    <span style="background:#e2e8f0;color:#4a5568;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">-</span>
+  {% endif %}
+{% endmacro %}
+
+{% macro letter_grade(nota) %}
+  {% set letra = nota_a_letra(nota) if nota is not none else '-' %}
+  {% if letra == 'AD' %}
+    <span style="background:#e3f2fd;color:#1565c0;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">{{ letra }}</span>
+  {% elif letra == 'A' %}
+    <span style="background:#e6fffa;color:#234e52;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">{{ letra }}</span>
+  {% elif letra == 'B' %}
+    <span style="background:#fff3cd;color:#856404;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">{{ letra }}</span>
+  {% elif letra == 'C' %}
+    <span style="background:#fff5f5;color:#9b2c2c;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">{{ letra }}</span>
+  {% else %}
+    <span style="background:#e2e8f0;color:#4a5568;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">{{ letra }}</span>
+  {% endif %}
+{% endmacro %}
+
+{% macro status_badge(estado) %}
+  {% set bg = '#e6fffa' if estado in ('pagado','activo','aprobado','presente') else '#fff5f5' if estado in ('inactivo','rechazado','falta','atrasado') else '#fff3cd' if estado in ('pendiente','tarde') else '#e3f2fd' %}
+  {% set fg = '#234e52' if estado in ('pagado','activo','aprobado','presente') else '#9b2c2c' if estado in ('inactivo','rechazado','falta','atrasado') else '#856404' if estado in ('pendiente','tarde') else '#1565c0' %}
+  <span style="background:{{ bg }};color:{{ fg }};padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">{{ estado|title }}</span>
+{% endmacro %}
+
+{% macro evento_card(evento) %}
+  <div class="evento-card">
+    {% if evento.imagen_url %}
+    <div class="evento-img" style="background-image: url('{{ evento.imagen_url }}');"></div>
+    {% endif %}
+    <div class="evento-body">
+      <h4>{{ evento.titulo }}</h4>
+      {% if evento.descripcion %}<p>{{ evento.descripcion[:120] }}{% if evento.descripcion|length > 120 %}...{% endif %}</p>{% endif %}
+    </div>
+  </div>
+{% endmacro %}
+
+

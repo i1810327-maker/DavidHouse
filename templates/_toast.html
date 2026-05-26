@@ -1,0 +1,24 @@
+<div id="toast-container" style="position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px;"></div>
+<script>
+function showToast(message, type) {
+    type = type || 'success';
+    var icons = {success:'fa-check-circle', danger:'fa-exclamation-triangle', warning:'fa-exclamation-circle', info:'fa-info-circle'};
+    var container = document.getElementById('toast-container');
+    var toast = document.createElement('div');
+    toast.style.cssText = 'background:' + (type === 'success' ? '#22c55e' : type === 'danger' ? '#ef4444' : type === 'warning' ? '#f59e0b' : '#3b82f6') + ';color:#fff;padding:14px 20px;border-radius:10px;box-shadow:0 8px 30px rgba(0,0,0,0.12);display:flex;align-items:center;gap:10px;font-size:14px;font-weight:500;animation:toastSlideIn 0.3s ease;font-family:inherit;max-width:400px;';
+    toast.innerHTML = '<i class="fas ' + (icons[type] || 'fa-info-circle') + '"></i> ' + message;
+    container.appendChild(toast);
+    setTimeout(function() {
+        toast.style.transition = 'opacity 0.3s, transform 0.3s';
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(50px)';
+        setTimeout(function() { toast.remove(); }, 300);
+    }, 3000);
+}
+document.querySelectorAll('.alert').forEach(function(a) {
+    var msg = a.textContent.trim();
+    var type = a.classList.contains('alert-success') ? 'success' : a.classList.contains('alert-danger') ? 'danger' : a.classList.contains('alert-warning') ? 'warning' : 'info';
+    showToast(msg, type);
+    a.style.display = 'none';
+});
+</script>
