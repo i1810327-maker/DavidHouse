@@ -6,8 +6,8 @@ db = SQLAlchemy()
 def init_db(app):
     # Configuración para Alwaysdata
     # Reemplaza estos valores con tus credenciales de Alwaysdata
-    db_user = "colegiodh_"  # Tu usuario de BD
-    db_password = "cris123456."       # Tu contraseña de BD
+    db_user = "colegiodh"  # Tu usuario de BD
+    db_password = "Alex123456."       # Tu contraseña de BD
     db_host = "mysql-colegiodh.alwaysdata.net"  # Host de Alwaysdata
     db_name = "colegiodh_colegio_sys"            # Nombre de tu BD
     
