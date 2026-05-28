@@ -1185,3 +1185,14 @@ def api_notas_guardar():
                     db.session.add(ev)
     db.session.commit()
     return jsonify({'success': True})
+
+@directora_bp.route('/api/verificar_email')
+@login_required
+@role_required('directora')
+def api_verificar_email():
+    email = request.args.get('email', '').strip().lower()
+    if not email:
+        return jsonify({'disponible': False})
+    col = Colaborador.query.filter_by(correo=email).first()
+    est = Estudiante.query.filter_by(correo=email).first()
+    return jsonify({'disponible': col is None and est is None})

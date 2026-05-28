@@ -182,21 +182,22 @@
     <div class="ref-modal" style="max-width:560px;max-height:85vh;overflow-y:auto;">
         <span class="close" onclick="document.getElementById('modal-alumno-crear').style.display='none'">&times;</span>
         <h3>Registrar Nuevo Estudiante</h3>
-        <form method="POST" action="{{ url_for('directora.crear_estudiante') }}">
+        <form method="POST" action="{{ url_for('directora.crear_estudiante') }}" novalidate onsubmit="return validarFormulario(this)">
             <div class="row g-3 mb-3">
-                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">DNI</label><input type="text" name="dni" class="ref-filter-select w-100" style="min-height:44px;" required pattern="[0-9]{1,8}" maxlength="8" oninput="this.value=this.value.replace(/[^0-9]/g,'')" title="Solo números (8 dígitos máximo)"></div>
-                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Nombres</label><input type="text" name="nombres" class="ref-filter-select w-100" style="min-height:44px;" required pattern="[A-Za-zÁÉÍÓÚáéíóúñÑüÜ\s]+" oninput="this.value=this.value.replace(/[^A-Za-zÁÉÍÓÚáéíóúñÑüÜ\s]/g,'')" title="Solo letras y espacios"></div>
+                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">DNI</label><div class="dni-wrapper"><input type="text" name="dni" id="alu-dni" class="ref-filter-select w-100" style="min-height:44px;" maxlength="8" oninput="this.value=this.value.replace(/[^0-9]/g,'');onDniInput('alu');validarCampo(this)" title="Solo números (8 dígitos máximo)"><button type="button" class="btn-consultar-dni" id="btn-alu-dni" onclick="consultarDNI('alu')" title="Consultar RENIEC"><i class="fas fa-search"></i></button></div><div class="dni-status" id="status-alu-dni"></div><span class="field-error" id="err-dni"></span></div>
+                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Nombres</label><input type="text" name="nombres" id="alu-nombres" class="ref-filter-select w-100" style="min-height:44px;" oninput="this.value=this.value.replace(/[^A-Za-zÁÉÍÓÚáéíóúñÑüÜ\s]/g,'');validarCampo(this)" title="Solo letras y espacios"><span class="field-error" id="err-nombres"></span></div>
             </div>
             <div class="row g-3 mb-3">
-                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Ap. Paterno</label><input type="text" name="apellido_paterno" class="ref-filter-select w-100" style="min-height:44px;" required pattern="[A-Za-zÁÉÍÓÚáéíóúñÑüÜ\s]+" oninput="this.value=this.value.replace(/[^A-Za-zÁÉÍÓÚáéíóúñÑüÜ\s]/g,'')" title="Solo letras y espacios"></div>
-                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Ap. Materno</label><input type="text" name="apellido_materno" class="ref-filter-select w-100" style="min-height:44px;" required pattern="[A-Za-zÁÉÍÓÚáéíóúñÑüÜ\s]+" oninput="this.value=this.value.replace(/[^A-Za-zÁÉÍÓÚáéíóúñÑüÜ\s]/g,'')" title="Solo letras y espacios"></div>
+                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Ap. Paterno</label><input type="text" name="apellido_paterno" id="alu-apPat" class="ref-filter-select w-100" style="min-height:44px;" oninput="this.value=this.value.replace(/[^A-Za-zÁÉÍÓÚáéíóúñÑüÜ\s]/g,'');validarCampo(this)" title="Solo letras y espacios"><span class="field-error" id="err-apellido_paterno"></span></div>
+                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Ap. Materno</label><input type="text" name="apellido_materno" id="alu-apMat" class="ref-filter-select w-100" style="min-height:44px;" oninput="this.value=this.value.replace(/[^A-Za-zÁÉÍÓÚáéíóúñÑüÜ\s]/g,'');validarCampo(this)" title="Solo letras y espacios"><span class="field-error" id="err-apellido_materno"></span></div>
             </div>
             <div class="row g-3 mb-3">
-                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Correo</label><input type="email" name="correo" class="ref-filter-select w-100" style="min-height:44px;" required></div>
+                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Correo</label><input type="email" name="correo" id="alu-correo" class="ref-filter-select w-100" style="min-height:44px;" autocomplete="off" oninput="validarCampo(this);verificarEmail(this)" onblur="verificarEmail(this)"><span class="field-error" id="err-correo"></span></div>
                 <div class="col-md-6" style="position:relative;">
                     <label style="font-size:12px;font-weight:500;color:#555;">Contraseña</label>
-                    <input type="password" name="clave" class="ref-filter-select w-100" style="min-height:44px;padding-right:40px;" required>
+                    <input type="password" name="clave" id="alu-clave" class="ref-filter-select w-100" style="min-height:44px;padding-right:40px;" oninput="validarCampo(this)">
                     <button type="button" class="password-toggle" onclick="togglePassword(this)"><i class="fas fa-eye"></i></button>
+                    <span class="field-error" id="err-clave"></span>
                 </div>
             </div>
             <div class="row g-3 mb-3">
@@ -278,25 +279,27 @@
     <div class="ref-modal" style="max-width:560px;max-height:85vh;overflow-y:auto;">
         <span class="close" onclick="document.getElementById('modal-colaborador-crear').style.display='none'">&times;</span>
         <h3>Registrar Nuevo Docente</h3>
-        <form method="POST" action="{{ url_for('directora.crear_colaborador') }}">
+        <form method="POST" action="{{ url_for('directora.crear_colaborador') }}" novalidate onsubmit="return validarFormulario(this)">
+            <input type="hidden" name="rol" value="docente">
             <div class="row g-3 mb-3">
-                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">DNI</label><input type="text" name="dni" class="ref-filter-select w-100" style="min-height:44px;" required pattern="[0-9]{1,8}" maxlength="8" oninput="this.value=this.value.replace(/[^0-9]/g,'')" title="Solo números (8 dígitos máximo)"></div>
-                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Nombres</label><input type="text" name="nombres" class="ref-filter-select w-100" style="min-height:44px;" required pattern="[A-Za-zÁÉÍÓÚáéíóúñÑüÜ\s]+" oninput="this.value=this.value.replace(/[^A-Za-zÁÉÍÓÚáéíóúñÑüÜ\s]/g,'')" title="Solo letras y espacios"></div>
+                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">DNI</label><div class="dni-wrapper"><input type="text" name="dni" id="col-dni" class="ref-filter-select w-100" style="min-height:44px;" maxlength="8" oninput="this.value=this.value.replace(/[^0-9]/g,'');onDniInput('col');validarCampo(this)" title="Solo números (8 dígitos máximo)"><button type="button" class="btn-consultar-dni" id="btn-col-dni" onclick="consultarDNI('col')" title="Consultar RENIEC"><i class="fas fa-search"></i></button></div><div class="dni-status" id="status-col-dni"></div><span class="field-error" id="err-dni"></span></div>
+                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Nombres</label><input type="text" name="nombres" id="col-nombres" class="ref-filter-select w-100" style="min-height:44px;" oninput="this.value=this.value.replace(/[^A-Za-zÁÉÍÓÚáéíóúñÑüÜ\s]/g,'');validarCampo(this)" title="Solo letras y espacios"><span class="field-error" id="err-nombres"></span></div>
             </div>
             <div class="row g-3 mb-3">
-                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Ap. Paterno</label><input type="text" name="apellido_paterno" class="ref-filter-select w-100" style="min-height:44px;" required pattern="[A-Za-zÁÉÍÓÚáéíóúñÑüÜ\s]+" oninput="this.value=this.value.replace(/[^A-Za-zÁÉÍÓÚáéíóúñÑüÜ\s]/g,'')" title="Solo letras y espacios"></div>
-                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Ap. Materno</label><input type="text" name="apellido_materno" class="ref-filter-select w-100" style="min-height:44px;" required pattern="[A-Za-zÁÉÍÓÚáéíóúñÑüÜ\s]+" oninput="this.value=this.value.replace(/[^A-Za-zÁÉÍÓÚáéíóúñÑüÜ\s]/g,'')" title="Solo letras y espacios"></div>
+                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Ap. Paterno</label><input type="text" name="apellido_paterno" id="col-apPat" class="ref-filter-select w-100" style="min-height:44px;" oninput="this.value=this.value.replace(/[^A-Za-zÁÉÍÓÚáéíóúñÑüÜ\s]/g,'');validarCampo(this)" title="Solo letras y espacios"><span class="field-error" id="err-apellido_paterno"></span></div>
+                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Ap. Materno</label><input type="text" name="apellido_materno" id="col-apMat" class="ref-filter-select w-100" style="min-height:44px;" oninput="this.value=this.value.replace(/[^A-Za-zÁÉÍÓÚáéíóúñÑüÜ\s]/g,'');validarCampo(this)" title="Solo letras y espacios"><span class="field-error" id="err-apellido_materno"></span></div>
             </div>
             <div class="row g-3 mb-3">
-                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Tel. Principal</label><input type="text" name="telefono_principal" class="ref-filter-select w-100" style="min-height:44px;" maxlength="12" pattern="[0-9]+" oninput="this.value=this.value.replace(/[^0-9]/g,'')" title="Solo números"></div>
-                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Tel. Secundario</label><input type="text" name="telefono_secundario" class="ref-filter-select w-100" style="min-height:44px;" maxlength="12" pattern="[0-9]+" oninput="this.value=this.value.replace(/[^0-9]/g,'')" title="Solo números"></div>
+                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Tel. Principal</label><input type="text" name="telefono_principal" id="col-tel1" class="ref-filter-select w-100" style="min-height:44px;" maxlength="12" oninput="this.value=this.value.replace(/[^0-9]/g,'');validarCampo(this)" title="Solo números"><span class="field-error" id="err-telefono_principal"></span></div>
+                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Tel. Secundario</label><input type="text" name="telefono_secundario" id="col-tel2" class="ref-filter-select w-100" style="min-height:44px;" maxlength="12" oninput="this.value=this.value.replace(/[^0-9]/g,'');validarCampo(this)" title="Solo números"><span class="field-error" id="err-telefono_secundario"></span></div>
             </div>
             <div class="row g-3 mb-3">
-                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Correo</label><input type="email" name="correo" class="ref-filter-select w-100" style="min-height:44px;" required></div>
+                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Correo</label><input type="email" name="correo" id="col-correo" class="ref-filter-select w-100" style="min-height:44px;" autocomplete="off" oninput="validarCampo(this);verificarEmail(this)" onblur="verificarEmail(this)"><span class="field-error" id="err-correo"></span></div>
                 <div class="col-md-6" style="position:relative;">
                     <label style="font-size:12px;font-weight:500;color:#555;">Contraseña</label>
-                    <input type="password" name="clave" class="ref-filter-select w-100" style="min-height:44px;padding-right:40px;" required>
+                    <input type="password" name="clave" id="col-clave" class="ref-filter-select w-100" style="min-height:44px;padding-right:40px;" oninput="validarCampo(this)">
                     <button type="button" class="password-toggle" onclick="togglePassword(this)"><i class="fas fa-eye"></i></button>
+                    <span class="field-error" id="err-clave"></span>
                 </div>
             </div>
             <div class="row g-3 mb-3">
@@ -697,6 +700,7 @@ const API_NOTAS = "{{ url_for('directora.api_notas_por_curso') }}";
 const API_NOTAS_GUARDAR = "{{ url_for('directora.api_notas_guardar') }}";
 const API_ALUMNOS = "{{ url_for('directora.api_alumnos') }}";
 const API_ACTUALIZAR_METODO_PAGO = "{{ url_for('directora.api_actualizar_metodo_pago') }}";
+const API_VERIFICAR_EMAIL = "{{ url_for('directora.api_verificar_email') }}";
 
 function cerrarModalHorario() { document.getElementById('modal-horario').style.display = 'none'; }
 function abrirModalGrado() { document.getElementById('modal-grado').style.display = 'flex'; }
@@ -1042,6 +1046,157 @@ function filtrarDocentes() {
 
 function filtrarReportes() {
     showToast('Filtro de reportes aplicado', 'info');
+}
+
+// ========== Field Validation ==========
+function validarCampo(input) {
+    var container = input.closest('.col-md-6');
+    if (!container) container = input.parentElement;
+    var err = container.querySelector('.field-error');
+    if (!err) return true;
+    var val = input.value.trim();
+    var msg = '';
+    if (input.name === 'dni' && val) {
+        if (!/^\d+$/.test(val)) msg = 'Solo n\u00fameros';
+        else if (val.length !== 8) msg = 'Debe tener 8 d\u00edgitos';
+    } else if ((input.name === 'nombres' || input.name === 'apellido_paterno' || input.name === 'apellido_materno') && val) {
+        if (!/^[A-Za-z\u00c1\u00c9\u00cd\u00d3\u00da\u00e1\u00e9\u00ed\u00f3\u00fa\u00f1\u00d1\u00fc\u00dc\s]+$/.test(val)) msg = 'Solo letras y espacios';
+    } else if (input.name === 'correo' && val) {
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) msg = 'Correo inv\u00e1lido';
+    } else if (input.name === 'clave' && val) {
+        var errs = [];
+        if (val.length < 8) errs.push('M\u00ednimo 8 caracteres');
+        if (val.length > 50) errs.push('M\u00e1ximo 50');
+        if (!/[A-Z]/.test(val)) errs.push('Falta may\u00fascula');
+        if (!/[a-z]/.test(val)) errs.push('Falta min\u00fascula');
+        if (!/\d/.test(val)) errs.push('Falta n\u00famero');
+        if (!/[!@#$%^&*(),.?":{}|<>_\-+=]/.test(val)) errs.push('Falta s\u00edmbolo');
+        msg = errs.join(', ');
+    } else if ((input.name === 'telefono_principal' || input.name === 'telefono_secundario') && val) {
+        if (!/^\d+$/.test(val)) msg = 'Solo n\u00fameros';
+    }
+    if (val === '' && input.name !== 'telefono_principal' && input.name !== 'telefono_secundario' && input.name !== 'profesion') {
+        if (input.name === 'dni' || input.name === 'nombres' || input.name === 'apellido_paterno' || input.name === 'apellido_materno' || input.name === 'correo' || input.name === 'clave') {
+            msg = 'Campo obligatorio';
+        }
+    }
+    err.textContent = msg;
+    if (msg) input.classList.add('is-invalid');
+    else input.classList.remove('is-invalid');
+    return !msg;
+}
+
+function validarFormulario(form) {
+    var inputs = form.querySelectorAll('input[name], select[name]');
+    var valido = true;
+    inputs.forEach(function(input) {
+        if (input.type !== 'hidden' && input.type !== 'submit' && input.type !== 'button') {
+            if (!validarCampo(input)) valido = false;
+        }
+    });
+    if (!valido) {
+        var firstErr = form.querySelector('.is-invalid');
+        if (firstErr) firstErr.focus();
+    }
+    return valido;
+}
+
+var emailTimeout = null;
+function verificarEmail(input) {
+    if (emailTimeout) clearTimeout(emailTimeout);
+    var container = input.closest('.col-md-6');
+    if (!container) container = input.parentElement;
+    var err = container.querySelector('.field-error');
+    if (!err) return;
+    var val = input.value.trim();
+    if (!val || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) return;
+    emailTimeout = setTimeout(function() {
+        fetch(API_VERIFICAR_EMAIL + '?email=' + encodeURIComponent(val))
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (!data.disponible) {
+                    err.textContent = 'Correo no disponible';
+                    input.classList.add('is-invalid');
+                }
+            });
+    }, 500);
+}
+
+// ========== RENIEC DNI Auto-fill ==========
+const API_BASE = 'https://dniruc.apisperu.com/api/v1/dni/';
+const API_TOKEN = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJlbWFpbCI6ImkyNTEzNzAyQGNvbnRpbmVudGFsLmVkdS5wZSJ9.o02LSzKdddnW-h9XO-sf5hFbquw5vroU6ZAoFhbl9mY';
+
+const CAMPOS_DASH = {
+    alu: {
+        dni: 'alu-dni', nombres: 'alu-nombres', apPat: 'alu-apPat', apMat: 'alu-apMat',
+        btn: 'btn-alu-dni', status: 'status-alu-dni',
+    },
+    col: {
+        dni: 'col-dni', nombres: 'col-nombres', apPat: 'col-apPat', apMat: 'col-apMat',
+        btn: 'btn-col-dni', status: 'status-col-dni',
+    }
+};
+
+function capitalizarNombre(str) {
+    return str.toLowerCase().replace(/\b\w/g, function(c) { return c.toUpperCase(); });
+}
+
+function setStatus(el, type, msg) {
+    el.className = 'dni-status ' + type;
+    el.innerHTML = msg;
+}
+
+function autoFill(fieldId, value) {
+    var el = document.getElementById(fieldId);
+    if (!el) return;
+    el.value = value;
+    el.classList.remove('field-autofilled');
+    void el.offsetWidth;
+    el.classList.add('field-autofilled');
+}
+
+async function consultarDNI(seccion) {
+    var c = CAMPOS_DASH[seccion];
+    var dniVal = document.getElementById(c.dni).value.trim();
+    var statusEl = document.getElementById(c.status);
+    var btnEl = document.getElementById(c.btn);
+    if (!/^\d+$/.test(dniVal)) {
+        setStatus(statusEl, 'error', 'El DNI solo debe contener n\u00fameros.');
+        return;
+    }
+    if (dniVal.length !== 8) {
+        setStatus(statusEl, 'error', 'El DNI debe tener exactamente 8 d\u00edgitos.');
+        return;
+    }
+    setStatus(statusEl, 'loading', '<span class="spinner"></span> Consultando RENIEC...');
+    btnEl.disabled = true;
+    try {
+        var response = await fetch(API_BASE + dniVal + '?token=' + API_TOKEN);
+        if (!response.ok) {
+            if (response.status === 401) setStatus(statusEl, 'error', 'Token de API inv\u00e1lido o expirado.');
+            else setStatus(statusEl, 'error', 'Error del servidor (c\u00f3digo ' + response.status + ').');
+            return;
+        }
+        var data = await response.json();
+        if (!data.nombres) {
+            setStatus(statusEl, 'error', 'DNI no encontrado en RENIEC.');
+            return;
+        }
+        autoFill(c.nombres, capitalizarNombre(data.nombres));
+        autoFill(c.apPat,   capitalizarNombre(data.apellidoPaterno));
+        autoFill(c.apMat,   capitalizarNombre(data.apellidoMaterno));
+        setStatus(statusEl, 'success', '\u2714 Datos cargados correctamente desde RENIEC.');
+    } catch (err) {
+        setStatus(statusEl, 'error', 'Error de conexi\u00f3n: ' + err.message);
+    } finally {
+        btnEl.disabled = false;
+    }
+}
+
+function onDniInput(seccion) {
+    var c = CAMPOS_DASH[seccion];
+    var dniVal = document.getElementById(c.dni).value.trim();
+    if (dniVal.length === 8) consultarDNI(seccion);
 }
 </script>
 {% endblock %}
