@@ -3,36 +3,212 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Error - ColegioSys</title>
+    <title>Error - David House</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { height: 100%; }
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: linear-gradient(135deg, #006eff, #ff7919);
+        }
+        .error-page {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            position: relative;
+        }
+        .error-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 80px 24px 60px;
+        }
+        .error-card {
+            background: white;
+            border-radius: 20px;
+            padding: 56px 48px 48px;
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.18);
+            position: relative;
+            overflow: hidden;
+        }
+        .error-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #1565c0, #e65100);
+        }
+        .error-logo {
+            width: 68px;
+            height: 68px;
+            background: linear-gradient(135deg, #e65100, #ff6d00);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 18px;
+            font-size: 24px;
+            font-weight: 800;
+            color: white;
+            box-shadow: 0 8px 24px rgba(230,81,0,0.3);
+        }
+        .error-icon {
+            width: 76px;
+            height: 76px;
+            background: #fff3e0;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 22px;
+            font-size: 34px;
+            color: #e65100;
+        }
+        .error-card h1 {
+            font-family: 'Poppins', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            color: #1565c0;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            margin: 0 0 6px;
+        }
+        .error-card h2 {
+            font-family: 'Poppins', sans-serif;
+            font-size: 24px;
+            font-weight: 700;
+            color: #1a202c;
+            margin: 0 0 10px;
+        }
+        .error-card p {
+            font-size: 15px;
+            color: #5a6a7a;
+            line-height: 1.6;
+            margin: 0;
+            word-break: break-word;
+        }
+        .error-divider {
+            width: 48px;
+            height: 3px;
+            background: linear-gradient(90deg, #1565c0, #e65100);
+            border-radius: 2px;
+            margin: 18px auto;
+        }
+        .error-detail {
+            font-size: 13px !important;
+            color: #9aa8b8 !important;
+            margin-bottom: 26px !important;
+        }
+        .error-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .error-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 13px 28px;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            font-family: 'Nunito', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            border: none;
+            min-width: 170px;
+        }
+        .error-btn-primary {
+            background: #1565c0;
+            color: white;
+            box-shadow: 0 4px 14px rgba(21,101,192,0.3);
+        }
+        .error-btn-primary:hover {
+            background: #0d47a1;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(21,101,192,0.4);
+            color: white;
+            text-decoration: none;
+        }
+        .error-btn-outline {
+            background: transparent;
+            color: #1565c0;
+            border: 2px solid #1565c0;
+        }
+        .error-btn-outline:hover {
+            background: #1565c0;
+            color: white;
+            transform: translateY(-2px);
+            text-decoration: none;
+        }
+        .error-footer {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            text-align: center;
+            padding: 16px 24px;
+            font-size: 12px;
+            color: rgba(255,255,255,0.65);
+        }
+        @media (max-width: 600px) {
+            .error-container { padding: 60px 16px 50px; }
+            .error-card { padding: 40px 20px 36px; border-radius: 16px; }
+            .error-card h2 { font-size: 20px; }
+            .error-card p { font-size: 14px; }
+            .error-btn { min-width: 140px; padding: 11px 20px; font-size: 14px; }
+            .error-btn-outline { border-width: 1.5px; }
+            .error-logo { width: 56px; height: 56px; font-size: 20px; }
+            .error-icon { width: 64px; height: 64px; font-size: 28px; }
+        }
+        @media (max-width: 400px) {
+            .error-actions { flex-direction: column; align-items: center; }
+            .error-btn { width: 100%; max-width: 240px; }
+        }
+    </style>
 </head>
 <body>
-    <header>
-        <h1><i class="fas fa-graduation-cap"></i> ColegioSys</h1>
-    </header>
-
-    <div class="container">
-        <div class="card text-center error-card">
-            <div class="error-icon">
-                <i class="fas fa-triangle-exclamation"></i>
-            </div>
-            <h2 class="error-title">Algo salió mal</h2>
-            <p class="error-text">
-                {{ error }}
-            </p>
-            <div class="divider"></div>
-            <p class="error-detail">
-                Si el problema persiste, contacta al administrador del sistema.
-            </p>
-            <div class="btn-group flex-center">
-                <a href="{{ url_for('index') }}" class="btn"> Ir al Inicio</a>
-                <a href="{{ url_for('login') }}" class="btn btn-secondary"> Iniciar Sesión</a>
+    <div class="error-page">
+        <div class="error-container">
+            <div class="error-card">
+                <div class="error-logo">DH</div>
+                <div class="error-icon">
+                    <i class="fas fa-triangle-exclamation"></i>
+                </div>
+                <h1>David House</h1>
+                <h2>Algo sali&oacute; mal</h2>
+                <p>{{ error }}</p>
+                <div class="error-divider"></div>
+                <p class="error-detail">
+                    <i class="fas fa-info-circle"></i> Si el problema persiste, contacta al administrador del sistema.
+                </p>
+                <div class="error-actions">
+                    <a href="{{ url_for('index') }}" class="error-btn error-btn-primary">
+                        <i class="fas fa-home"></i> Ir al Inicio
+                    </a>
+                    <a href="{{ url_for('login') }}" class="error-btn error-btn-outline">
+                        <i class="fas fa-sign-in-alt"></i> Iniciar Sesi&oacute;n
+                    </a>
+                </div>
             </div>
         </div>
+        <div class="error-footer">
+            &copy; 2026 Colegio David House Camino de Vida. Todos los derechos reservados.
+        </div>
     </div>
-
-    <footer>
-    </footer>
 </body>
 </html>

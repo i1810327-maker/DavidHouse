@@ -853,6 +853,18 @@ def crear_estudiante():
         seccion_id=int(request.form.get('seccion_id')) if request.form.get('seccion_id') else None
     )
     db.session.add(e); db.session.commit()
+    apoNom = request.form.get('apo_nombres', '').strip()
+    if apoNom:
+        ap = Apoderado(
+            alumno_id=e.id,
+            dni=request.form.get('apo_dni'),
+            nombres=apoNom,
+            apellido_paterno=request.form.get('apo_apellido_paterno', '').strip(),
+            apellido_materno=request.form.get('apo_apellido_materno', '').strip(),
+            telefono_principal=request.form.get('apo_telefono_principal'),
+            telefono_secundario=request.form.get('apo_telefono_secundario')
+        )
+        db.session.add(ap); db.session.commit()
     flash(f'Estudiante {e.nombre_completo} creado', 'success')
     return redirect(url_for('directora.dashboard'))
 
@@ -881,6 +893,22 @@ def editar_estudiante(id):
             return redirect(url_for('directora.dashboard'))
         e.clave = bcrypt.generate_password_hash(clave).decode('utf-8')
     db.session.commit()
+    apoNom = request.form.get('apo_nombres', '').strip()
+    ap = Apoderado.query.filter_by(alumno_id=e.id).first()
+    if apoNom:
+        if not ap:
+            ap = Apoderado(alumno_id=e.id)
+            db.session.add(ap)
+        ap.dni = request.form.get('apo_dni')
+        ap.nombres = apoNom
+        ap.apellido_paterno = request.form.get('apo_apellido_paterno', '').strip()
+        ap.apellido_materno = request.form.get('apo_apellido_materno', '').strip()
+        ap.telefono_principal = request.form.get('apo_telefono_principal')
+        ap.telefono_secundario = request.form.get('apo_telefono_secundario')
+        db.session.commit()
+    elif ap:
+        db.session.delete(ap)
+        db.session.commit()
     flash('Estudiante actualizado', 'success')
     return redirect(url_for('directora.dashboard'))
 
