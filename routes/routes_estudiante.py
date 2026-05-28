@@ -185,6 +185,11 @@ def asistencia():
         if not titulo:
             flash('El título es obligatorio', 'danger')
             return redirect(url_for('estudiante.asistencia', bimestre_id=bimestre_id))
+        ALLOWED_EXT = {'pdf', 'doc', 'docx', 'xls', 'xlsx', 'jpg', 'jpeg', 'png', 'gif', 'txt'}
+        ext = archivo.filename.rsplit('.', 1)[1].lower() if '.' in archivo.filename else ''
+        if ext not in ALLOWED_EXT:
+            flash('Tipo de archivo no permitido. Extensiones: pdf, doc, docx, xls, xlsx, jpg, png, gif, txt', 'danger')
+            return redirect(url_for('estudiante.asistencia', bimestre_id=bimestre_id))
         filename = secure_filename(archivo.filename)
         filepath = os.path.join(UPLOAD_FOLDER, filename)
         archivo.save(filepath)

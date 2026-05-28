@@ -5,7 +5,7 @@ from db import db
 from models import (
     Colaborador, Estudiante, Curso, Evaluacion, Asistencia,
     Comentario, Bimestre, CarpetaDocente, DocumentoDocente,
-    SolicitudReporte, Horario, Nivel, Grado, Seccion
+    SolicitudReporte, Horario, Nivel, Grado, Seccion, Inscripcion
 )
 from functools import wraps
 import os
@@ -49,11 +49,14 @@ def dashboard():
     cursos = Curso.query.options(
         joinedload(Curso.grado_rel), joinedload(Curso.seccion_rel), joinedload(Curso.periodo)
     ).filter_by(docente_id=docente.id, activo=True).all()
-    seccion_ids = {c.seccion_id for c in cursos if c.seccion_id}
-    total_estudiantes = Estudiante.query.filter(Estudiante.seccion_id.in_(seccion_ids)).count() if seccion_ids else 0
-    niveles = Nivel.query.filter_by(activo=True).all()
-    grados = Grado.query.filter_by(activo=True).all()
-    secciones = Seccion.query.filter_by(activo=True).all()
+    curso_ids = [c.id for c in cursos]
+    curso_grado_ids = {c.grado_id for c in cursos if c.grado_id}
+    curso_seccion_ids = {c.seccion_id for c in cursos if c.seccion_id}
+    total_estudiantes = db.session.query(Inscripcion.alumno_id).filter(Inscripcion.curso_id.in_(curso_ids)).distinct().count() if curso_ids else 0
+    grados = Grado.query.filter(Grado.id.in_(curso_grado_ids)).all() if curso_grado_ids else []
+    nivel_ids = {g.nivel_id for g in grados}
+    niveles = Nivel.query.filter(Nivel.id.in_(nivel_ids)).all() if nivel_ids else []
+    secciones = Seccion.query.filter(Seccion.id.in_(curso_seccion_ids)).all() if curso_seccion_ids else []
     bimestres = Bimestre.query.all()
     horarios = Horario.query.options(
         joinedload(Horario.curso), joinedload(Horario.seccion), joinedload(Horario.docente)
@@ -61,7 +64,8 @@ def dashboard():
     solicitudes = SolicitudReporte.query.filter_by(activa=True).order_by(SolicitudReporte.fecha_maxima).all()
     estudiantes_por_curso = {}
     for c in cursos:
-        estudiantes_por_curso[c.id] = Estudiante.query.filter_by(seccion_id=c.seccion_id, activo=True).order_by(Estudiante.apellido_paterno).all()
+        alumno_ids = db.session.query(Inscripcion.alumno_id).filter(Inscripcion.curso_id == c.id).subquery()
+        estudiantes_por_curso[c.id] = Estudiante.query.filter(Estudiante.id.in_(alumno_ids), Estudiante.activo == True).order_by(Estudiante.apellido_paterno).all()
     return render_template('dashboard_docente.html', docente=docente, cursos=cursos,
         total_estudiantes=total_estudiantes, niveles=niveles, grados=grados,
         secciones=secciones, bimestres=bimestres, horarios=horarios,
@@ -256,6 +260,11 @@ def documentos():
         if not archivo or not archivo.filename:
             flash('No se seleccionó ningún archivo', 'danger')
             return redirect(url_for('docente.documentos'))
+        ALLOWED_EXT = {'pdf', 'doc', 'docx', 'xls', 'xlsx', 'jpg', 'jpeg', 'png', 'gif', 'txt'}
+        ext = archivo.filename.rsplit('.', 1)[1].lower() if '.' in archivo.filename else ''
+        if ext not in ALLOWED_EXT:
+            flash('Tipo de archivo no permitido. Extensiones: pdf, doc, docx, xls, xlsx, jpg, png, gif, txt', 'danger')
+            return redirect(url_for('docente.documentos'))
         filename = secure_filename(archivo.filename)
         filepath = os.path.join(UPLOAD_FOLDER, filename)
         archivo.save(filepath)
@@ -341,11 +350,9 @@ def api_asistencia_estudiantes():
 @role_required('docente')
 def horario():
     docente = Colaborador.query.get(session['usuario_id'])
-    cursos = Curso.query.filter_by(docente_id=docente.id, activo=True).all()
-    seccion_ids = {c.seccion_id for c in cursos if c.seccion_id}
     horarios = Horario.query.options(
         joinedload(Horario.curso), joinedload(Horario.seccion)
-    ).filter(Horario.seccion_id.in_(seccion_ids)).all() if seccion_ids else []
+    ).filter_by(docente_id=docente.id).all()
     return render_template('docente_horario.html', horarios=horarios, docente=docente,
         dias=['Lunes','Martes','Miércoles','Jueves','Viernes'])
 
