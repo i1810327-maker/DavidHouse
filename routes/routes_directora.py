@@ -109,61 +109,140 @@ def dashboard():
 @role_required('directora')
 def niveles_crud():
     if request.method == 'POST':
-        accion = request.form.get('accion')
-        if accion == 'crear':
-            n = Nivel(nombre=request.form.get('nombre'))
-            db.session.add(n); db.session.commit()
-            flash('Nivel creado', 'success')
-        elif accion == 'editar':
-            n = Nivel.query.get(int(request.form.get('id')))
-            if n: n.nombre = request.form.get('nombre'); db.session.commit()
-            flash('Nivel actualizado', 'success')
-        elif accion == 'toggle':
-            n = Nivel.query.get(int(request.form.get('id')))
-            if n: n.activo = not n.activo; db.session.commit()
-    return redirect(url_for('directora.dashboard'))
+        try:
+            accion = request.form.get('accion')
+            ajax = request.form.get('ajax') == '1'
+            logger.warning('niveles_crud POST: ajax=%s, accion=%s, form_keys=%s, accion_raw=%r, nombre=%r',
+                           ajax, accion, list(request.form.keys()), request.form.get('accion'), request.form.get('nombre'))
+            if accion == 'crear':
+                nombre = request.form.get('nombre', '').strip()
+                if not nombre:
+                    if ajax: return jsonify({'success': False, 'error': 'El nombre es obligatorio'})
+                    flash('El nombre es obligatorio', 'danger')
+                    return redirect(url_for('directora.dashboard') + '#academico')
+                if Nivel.query.filter_by(nombre=nombre).first():
+                    if ajax: return jsonify({'success': False, 'error': 'Ya existe un nivel con ese nombre'})
+                    flash('Ya existe un nivel con ese nombre', 'danger')
+                    return redirect(url_for('directora.dashboard') + '#academico')
+                n = Nivel(nombre=nombre)
+                db.session.add(n); db.session.commit()
+                if ajax:
+                    return jsonify({'success': True, 'item': {'id': n.id, 'nombre': n.nombre, 'activo': n.activo}})
+                flash('Nivel creado', 'success')
+            elif accion == 'editar':
+                n = Nivel.query.get(int(request.form.get('id')))
+                if n: n.nombre = request.form.get('nombre'); db.session.commit()
+                flash('Nivel actualizado', 'success')
+            elif accion == 'toggle':
+                n = Nivel.query.get(int(request.form.get('id')))
+                if n: n.activo = not n.activo; db.session.commit()
+                if ajax:
+                    return jsonify({'success': True, 'item': {'id': n.id, 'activo': n.activo}})
+                flash('Nivel actualizado', 'success')
+        except Exception as e:
+            db.session.rollback()
+            logger.exception('Error en niveles_crud: %s', e)
+            if request.form.get('ajax') == '1':
+                return jsonify({'success': False, 'error': str(e)})
+            flash('Error: ' + str(e), 'danger')
+    return redirect(url_for('directora.dashboard') + '#academico')
 
 @directora_bp.route('/grados', methods=['POST'])
 @login_required
 @role_required('directora')
 def grados_crud():
-    accion = request.form.get('accion')
-    if accion == 'crear':
-        g = Grado(nombre=request.form.get('nombre'), nivel_id=int(request.form.get('nivel_id')), activo=True)
-        db.session.add(g); db.session.commit()
-        flash('Grado creado', 'success')
-    elif accion == 'editar':
-        g = Grado.query.get(int(request.form.get('id')))
-        if g:
-            g.nombre = request.form.get('nombre')
-            g.nivel_id = int(request.form.get('nivel_id'))
-            db.session.commit()
+    try:
+        accion = request.form.get('accion')
+        ajax = request.form.get('ajax') == '1'
+        logger.warning('grados_crud POST: ajax=%s, accion=%s, form_keys=%s, nombre=%r, nivel_id=%r',
+                       ajax, accion, list(request.form.keys()), request.form.get('nombre'), request.form.get('nivel_id'))
+        if accion == 'crear':
+            nombre = request.form.get('nombre', '').strip()
+            nivel_id = request.form.get('nivel_id')
+            if not nombre or not nivel_id:
+                if ajax: return jsonify({'success': False, 'error': 'Nombre y nivel son obligatorios'})
+                flash('Nombre y nivel son obligatorios', 'danger')
+                return redirect(url_for('directora.dashboard') + '#academico')
+            if Grado.query.filter_by(nombre=nombre, nivel_id=int(nivel_id)).first():
+                if ajax: return jsonify({'success': False, 'error': 'Ya existe un grado con ese nombre en este nivel'})
+                flash('Ya existe un grado con ese nombre en este nivel', 'danger')
+                return redirect(url_for('directora.dashboard') + '#academico')
+            nivel_obj = Nivel.query.get(int(nivel_id))
+            if not nivel_obj:
+                if ajax: return jsonify({'success': False, 'error': 'Nivel no encontrado'})
+                flash('Nivel no encontrado', 'danger')
+                return redirect(url_for('directora.dashboard') + '#academico')
+            g = Grado(nombre=nombre, nivel_id=nivel_obj.id, nivel=nivel_obj.nombre, activo=True)
+            db.session.add(g); db.session.commit()
+            if ajax:
+                return jsonify({'success': True, 'item': {'id': g.id, 'nombre': g.nombre, 'nivel_id': g.nivel_id, 'nivel_nombre': g.nivel_rel.nombre if g.nivel_rel else '', 'activo': g.activo}})
+            flash('Grado creado', 'success')
+        elif accion == 'editar':
+            g = Grado.query.get(int(request.form.get('id')))
+            if g:
+                g.nombre = request.form.get('nombre')
+                g.nivel_id = int(request.form.get('nivel_id'))
+                db.session.commit()
+                flash('Grado actualizado', 'success')
+        elif accion == 'toggle':
+            g = Grado.query.get(int(request.form.get('id')))
+            if g: g.activo = not g.activo; db.session.commit()
+            if ajax:
+                return jsonify({'success': True, 'item': {'id': g.id, 'activo': g.activo}})
             flash('Grado actualizado', 'success')
-    elif accion == 'toggle':
-        g = Grado.query.get(int(request.form.get('id')))
-        if g: g.activo = not g.activo; db.session.commit()
-    return redirect(url_for('directora.dashboard'))
+    except Exception as e:
+        db.session.rollback()
+        logger.exception('Error en grados_crud: %s', e)
+        if request.form.get('ajax') == '1':
+            return jsonify({'success': False, 'error': str(e)})
+        flash('Error: ' + str(e), 'danger')
+    return redirect(url_for('directora.dashboard') + '#academico')
 
 @directora_bp.route('/secciones', methods=['POST'])
 @login_required
 @role_required('directora')
 def secciones_crud():
-    accion = request.form.get('accion')
-    if accion == 'crear':
-        s = Seccion(nombre=request.form.get('nombre'), grado_id=int(request.form.get('grado_id')), activo=True)
-        db.session.add(s); db.session.commit()
-        flash('Sección creada', 'success')
-    elif accion == 'editar':
-        s = Seccion.query.get(int(request.form.get('id')))
-        if s:
-            s.nombre = request.form.get('nombre')
-            s.grado_id = int(request.form.get('grado_id'))
-            db.session.commit()
+    try:
+        accion = request.form.get('accion')
+        ajax = request.form.get('ajax') == '1'
+        logger.warning('secciones_crud POST: ajax=%s, accion=%s, form_keys=%s, nombre=%r, grado_id=%r',
+                       ajax, accion, list(request.form.keys()), request.form.get('nombre'), request.form.get('grado_id'))
+        if accion == 'crear':
+            nombre = request.form.get('nombre', '').strip()
+            grado_id = request.form.get('grado_id')
+            if not nombre or not grado_id:
+                if ajax: return jsonify({'success': False, 'error': 'Nombre y grado son obligatorios'})
+                flash('Nombre y grado son obligatorios', 'danger')
+                return redirect(url_for('directora.dashboard') + '#academico')
+            if Seccion.query.filter_by(nombre=nombre, grado_id=int(grado_id)).first():
+                if ajax: return jsonify({'success': False, 'error': 'Ya existe una sección con ese nombre en este grado'})
+                flash('Ya existe una sección con ese nombre en este grado', 'danger')
+                return redirect(url_for('directora.dashboard') + '#academico')
+            s = Seccion(nombre=nombre, grado_id=int(grado_id), activo=True)
+            db.session.add(s); db.session.commit()
+            if ajax:
+                return jsonify({'success': True, 'item': {'id': s.id, 'nombre': s.nombre, 'grado_id': s.grado_id, 'grado_nombre': s.grado.nombre if s.grado else '', 'activo': s.activo}})
+            flash('Sección creada', 'success')
+        elif accion == 'editar':
+            s = Seccion.query.get(int(request.form.get('id')))
+            if s:
+                s.nombre = request.form.get('nombre')
+                s.grado_id = int(request.form.get('grado_id'))
+                db.session.commit()
+                flash('Sección actualizada', 'success')
+        elif accion == 'toggle':
+            s = Seccion.query.get(int(request.form.get('id')))
+            if s: s.activo = not s.activo; db.session.commit()
+            if ajax:
+                return jsonify({'success': True, 'item': {'id': s.id, 'activo': s.activo}})
             flash('Sección actualizada', 'success')
-    elif accion == 'toggle':
-        s = Seccion.query.get(int(request.form.get('id')))
-        if s: s.activo = not s.activo; db.session.commit()
-    return redirect(url_for('directora.dashboard'))
+    except Exception as e:
+        db.session.rollback()
+        logger.exception('Error en secciones_crud: %s', e)
+        if request.form.get('ajax') == '1':
+            return jsonify({'success': False, 'error': str(e)})
+        flash('Error: ' + str(e), 'danger')
+    return redirect(url_for('directora.dashboard') + '#academico')
 
 @directora_bp.route('/periodos', methods=['POST'])
 @login_required
@@ -229,14 +308,35 @@ def cursos_crud():
     if request.method == 'POST':
         accion = request.form.get('accion', 'crear')
         if accion == 'crear':
+            nombre = request.form.get('nombre', '').strip()
+            codigo = request.form.get('codigo', '').strip()
+            if not nombre or not codigo:
+                flash('Nombre y c\u00f3digo son obligatorios', 'danger')
+                return redirect(url_for('directora.dashboard') + '#academico')
+            if Curso.query.filter_by(codigo=codigo).first():
+                flash('El c\u00f3digo ya existe', 'danger')
+                return redirect(url_for('directora.dashboard') + '#academico')
+            grado_id = request.form.get('grado_id')
+            seccion_id = request.form.get('seccion_id')
+            docente_id = request.form.get('docente_id')
+            if not grado_id or not seccion_id or not docente_id:
+                flash('Debes seleccionar grado, secci\u00f3n y docente', 'danger')
+                return redirect(url_for('directora.dashboard') + '#academico')
+            periodo_id = request.form.get('periodo_academico_id')
+            if not periodo_id:
+                periodo_activo = PeriodoAcademico.query.filter_by(activo=True).first()
+                periodo_id = periodo_activo.id if periodo_activo else None
+                if not periodo_id:
+                    flash('No hay periodo acad\u00e9mico activo', 'danger')
+                    return redirect(url_for('directora.dashboard') + '#academico')
             c = Curso(
-                nombre=request.form.get('nombre'),
-                codigo=request.form.get('codigo'),
+                nombre=nombre,
+                codigo=codigo,
                 descripcion=request.form.get('descripcion', ''),
-                docente_id=int(request.form.get('docente_id')),
-                grado_id=int(request.form.get('grado_id')),
-                seccion_id=int(request.form.get('seccion_id')),
-                periodo_academico_id=int(request.form.get('periodo_academico_id'))
+                docente_id=int(docente_id),
+                grado_id=int(grado_id),
+                seccion_id=int(seccion_id),
+                periodo_academico_id=int(periodo_id)
             )
             db.session.add(c); db.session.commit()
             flash('Curso creado', 'success')
@@ -255,7 +355,7 @@ def cursos_crud():
         elif accion == 'toggle':
             c = Curso.query.get(int(request.form.get('id')))
             if c: c.activo = not c.activo; db.session.commit()
-    return redirect(url_for('directora.dashboard'))
+    return redirect(url_for('directora.dashboard') + '#academico')
 
 @directora_bp.route('/api/grados/<int:nivel_id>')
 @login_required
@@ -346,6 +446,12 @@ def crear_colaborador():
     dni = request.form.get('dni')
     if Colaborador.query.filter_by(dni=dni).first():
         flash('El DNI ya existe', 'danger')
+        return redirect(url_for('directora.dashboard'))
+    nom = request.form.get('nombres', '').strip()
+    apPat = request.form.get('apellido_paterno', '').strip()
+    apMat = request.form.get('apellido_materno', '').strip()
+    if Colaborador.query.filter_by(nombres=nom, apellido_paterno=apPat, apellido_materno=apMat).first():
+        flash('Ya existe un colaborador con ese nombre y apellidos', 'danger')
         return redirect(url_for('directora.dashboard'))
     correo = request.form.get('correo')
     if Colaborador.query.filter_by(correo=correo).first():
@@ -720,6 +826,12 @@ def crear_estudiante():
     dni = request.form.get('dni')
     if Estudiante.query.filter_by(dni=dni).first():
         flash('El DNI ya existe', 'danger')
+        return redirect(url_for('directora.dashboard'))
+    nom = request.form.get('nombres', '').strip()
+    apPat = request.form.get('apellido_paterno', '').strip()
+    apMat = request.form.get('apellido_materno', '').strip()
+    if Estudiante.query.filter_by(nombres=nom, apellido_paterno=apPat, apellido_materno=apMat).first():
+        flash('Ya existe un alumno con ese nombre y apellidos', 'danger')
         return redirect(url_for('directora.dashboard'))
     correo = request.form.get('correo')
     if Estudiante.query.filter_by(correo=correo).first():
@@ -1185,3 +1297,14 @@ def api_notas_guardar():
                     db.session.add(ev)
     db.session.commit()
     return jsonify({'success': True})
+
+@directora_bp.route('/api/verificar_email')
+@login_required
+@role_required('directora')
+def api_verificar_email():
+    email = request.args.get('email', '').strip().lower()
+    if not email:
+        return jsonify({'disponible': False})
+    col = Colaborador.query.filter_by(correo=email).first()
+    est = Estudiante.query.filter_by(correo=email).first()
+    return jsonify({'disponible': col is None and est is None})

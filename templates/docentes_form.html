@@ -17,7 +17,11 @@
             <div class="form-grid">
                 <div class="form-group">
                     <label for="dni" class="form-label">DNI *</label>
-                    <input type="text" id="dni" name="dni" placeholder="12345678" required maxlength="8" pattern="[0-9]{1,8}" oninput="this.value=this.value.replace(/[^0-9]/g,'')" class="form-control" title="Solo números (8 dígitos máximo)">
+                    <div class="dni-wrapper">
+                        <input type="text" id="dni" name="dni" placeholder="12345678" required maxlength="8" pattern="[0-9]{1,8}" oninput="this.value=this.value.replace(/[^0-9]/g,''); onDniInput('docente')" class="form-control" title="Solo números (8 dígitos máximo)" autocomplete="off">
+                        <button type="button" class="btn-consultar-dni" onclick="consultarDNI('docente')" id="btn-docente" title="Buscar en RENIEC"><i class="fas fa-search"></i></button>
+                    </div>
+                    <div class="dni-status" id="status-docente"></div>
                 </div>
                 <div class="form-group">
                     <label for="nombres" class="form-label">Nombres *</label>
@@ -114,6 +118,93 @@
 
 <script>
     const gradosData = JSON.parse('{{ grados_data | default([]) | tojson | safe }}');
+
+    // ── CONFIG API RENIEC ──────────────────────────────────────────────
+    const API_TOKEN = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJlbWFpbCI6ImkyNTEzNzAyQGNvbnRpbmVudGFsLmVkdS5wZSJ9.o02LSzKdddnW-h9XO-sf5hFbquw5vroU6ZAoFhbl9mY';
+    const API_BASE  = 'https://dniruc.apisperu.com/api/v1/dni/';
+
+    const CAMPOS = {
+        docente: {
+            dni:     'dni',
+            nombres: 'nombres',
+            apPat:   'apellido_paterno',
+            apMat:   'apellido_materno',
+            btn:     'btn-docente',
+            status:  'status-docente',
+        }
+    };
+
+    async function consultarDNI(seccion) {
+        const c = CAMPOS[seccion];
+        const dniVal = document.getElementById(c.dni).value.trim();
+        const statusEl = document.getElementById(c.status);
+        const btnEl = document.getElementById(c.btn);
+
+        if (!/^\d+$/.test(dniVal)) {
+            setStatus(statusEl, 'error', 'El DNI solo debe contener n\u00fameros.');
+            return;
+        }
+        if (dniVal.length !== 8) {
+            setStatus(statusEl, 'error', 'El DNI debe tener exactamente 8 d\u00edgitos.');
+            return;
+        }
+
+        setStatus(statusEl, 'loading', '<span class="spinner"></span> Consultando RENIEC...');
+        btnEl.disabled = true;
+
+        try {
+            const response = await fetch(API_BASE + dniVal + '?token=' + API_TOKEN);
+            if (!response.ok) {
+                if (response.status === 401) setStatus(statusEl, 'error', 'Token de API inv\u00e1lido o expirado.');
+                else setStatus(statusEl, 'error', 'Error del servidor (c\u00f3digo ' + response.status + ').');
+                return;
+            }
+            const data = await response.json();
+            if (!data.nombres) {
+                setStatus(statusEl, 'error', 'DNI no encontrado en RENIEC.');
+                return;
+            }
+            autoFill(c.nombres, capitalizarNombre(data.nombres));
+            autoFill(c.apPat,   capitalizarNombre(data.apellidoPaterno));
+            autoFill(c.apMat,   capitalizarNombre(data.apellidoMaterno));
+            setStatus(statusEl, 'success', '\u2714 Datos cargados correctamente desde RENIEC.');
+        } catch (err) {
+            console.error('Error consultando DNI:', err);
+            setStatus(statusEl, 'error', '\u2716 No se pudo conectar con la API.');
+        } finally {
+            btnEl.disabled = false;
+        }
+    }
+
+    function autoFill(fieldId, valor) {
+        var el = document.getElementById(fieldId);
+        if (!el) return;
+        el.value = valor;
+        el.classList.add('field-autofilled');
+        setTimeout(function() { el.classList.remove('field-autofilled'); }, 2500);
+    }
+
+    function setStatus(el, tipo, html) {
+        el.className = 'dni-status ' + tipo;
+        el.innerHTML = html;
+    }
+
+    function capitalizarNombre(str) {
+        if (!str) return '';
+        return str.toLowerCase().replace(/\b\w/g, function(c) { return c.toUpperCase(); });
+    }
+
+    function onDniInput(seccion) {
+        var input = document.getElementById(CAMPOS[seccion].dni);
+        var statusEl = document.getElementById(CAMPOS[seccion].status);
+        if (input.value.length === 8) {
+            consultarDNI(seccion);
+        }
+        if (input.value.length < 8 && statusEl) {
+            statusEl.className = 'dni-status';
+            statusEl.innerHTML = '';
+        }
+    }
 
     function mostrarEspecialidad(mostrar) {
         const campo = document.getElementById('campo_especialidad');

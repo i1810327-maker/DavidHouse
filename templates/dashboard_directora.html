@@ -182,21 +182,22 @@
     <div class="ref-modal" style="max-width:560px;max-height:85vh;overflow-y:auto;">
         <span class="close" onclick="document.getElementById('modal-alumno-crear').style.display='none'">&times;</span>
         <h3>Registrar Nuevo Estudiante</h3>
-        <form method="POST" action="{{ url_for('directora.crear_estudiante') }}">
+        <form method="POST" action="{{ url_for('directora.crear_estudiante') }}" novalidate onsubmit="return validarFormulario(this)">
             <div class="row g-3 mb-3">
-                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">DNI</label><input type="text" name="dni" class="ref-filter-select w-100" style="min-height:44px;" required pattern="[0-9]{1,8}" maxlength="8" oninput="this.value=this.value.replace(/[^0-9]/g,'')" title="Solo números (8 dígitos máximo)"></div>
-                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Nombres</label><input type="text" name="nombres" class="ref-filter-select w-100" style="min-height:44px;" required pattern="[A-Za-zÁÉÍÓÚáéíóúñÑüÜ\s]+" oninput="this.value=this.value.replace(/[^A-Za-zÁÉÍÓÚáéíóúñÑüÜ\s]/g,'')" title="Solo letras y espacios"></div>
+                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">DNI</label><div class="dni-wrapper"><input type="text" name="dni" id="alu-dni" class="ref-filter-select w-100" style="min-height:44px;" maxlength="8" oninput="this.value=this.value.replace(/[^0-9]/g,'');onDniInput('alu');validarCampo(this)" title="Solo números (8 dígitos máximo)"><button type="button" class="btn-consultar-dni" id="btn-alu-dni" onclick="consultarDNI('alu')" title="Consultar RENIEC"><i class="fas fa-search"></i></button></div><div class="dni-status" id="status-alu-dni"></div><span class="field-error" id="err-dni"></span></div>
+                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Nombres</label><input type="text" name="nombres" id="alu-nombres" class="ref-filter-select w-100" style="min-height:44px;" oninput="this.value=this.value.replace(/[^A-Za-zÁÉÍÓÚáéíóúñÑüÜ\s]/g,'');validarCampo(this)" title="Solo letras y espacios"><span class="field-error" id="err-nombres"></span></div>
             </div>
             <div class="row g-3 mb-3">
-                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Ap. Paterno</label><input type="text" name="apellido_paterno" class="ref-filter-select w-100" style="min-height:44px;" required pattern="[A-Za-zÁÉÍÓÚáéíóúñÑüÜ\s]+" oninput="this.value=this.value.replace(/[^A-Za-zÁÉÍÓÚáéíóúñÑüÜ\s]/g,'')" title="Solo letras y espacios"></div>
-                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Ap. Materno</label><input type="text" name="apellido_materno" class="ref-filter-select w-100" style="min-height:44px;" required pattern="[A-Za-zÁÉÍÓÚáéíóúñÑüÜ\s]+" oninput="this.value=this.value.replace(/[^A-Za-zÁÉÍÓÚáéíóúñÑüÜ\s]/g,'')" title="Solo letras y espacios"></div>
+                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Ap. Paterno</label><input type="text" name="apellido_paterno" id="alu-apPat" class="ref-filter-select w-100" style="min-height:44px;" oninput="this.value=this.value.replace(/[^A-Za-zÁÉÍÓÚáéíóúñÑüÜ\s]/g,'');validarCampo(this)" title="Solo letras y espacios"><span class="field-error" id="err-apellido_paterno"></span></div>
+                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Ap. Materno</label><input type="text" name="apellido_materno" id="alu-apMat" class="ref-filter-select w-100" style="min-height:44px;" oninput="this.value=this.value.replace(/[^A-Za-zÁÉÍÓÚáéíóúñÑüÜ\s]/g,'');validarCampo(this)" title="Solo letras y espacios"><span class="field-error" id="err-apellido_materno"></span></div>
             </div>
             <div class="row g-3 mb-3">
-                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Correo</label><input type="email" name="correo" class="ref-filter-select w-100" style="min-height:44px;" required></div>
+                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Correo</label><input type="email" name="correo" id="alu-correo" class="ref-filter-select w-100" style="min-height:44px;" autocomplete="off" oninput="validarCampo(this);verificarEmail(this)" onblur="verificarEmail(this)"><span class="field-error" id="err-correo"></span></div>
                 <div class="col-md-6" style="position:relative;">
                     <label style="font-size:12px;font-weight:500;color:#555;">Contraseña</label>
-                    <input type="password" name="clave" class="ref-filter-select w-100" style="min-height:44px;padding-right:40px;" required>
+                    <input type="password" name="clave" id="alu-clave" class="ref-filter-select w-100" style="min-height:44px;padding-right:40px;" oninput="validarCampo(this)">
                     <button type="button" class="password-toggle" onclick="togglePassword(this)"><i class="fas fa-eye"></i></button>
+                    <span class="field-error" id="err-clave"></span>
                 </div>
             </div>
             <div class="row g-3 mb-3">
@@ -278,25 +279,27 @@
     <div class="ref-modal" style="max-width:560px;max-height:85vh;overflow-y:auto;">
         <span class="close" onclick="document.getElementById('modal-colaborador-crear').style.display='none'">&times;</span>
         <h3>Registrar Nuevo Docente</h3>
-        <form method="POST" action="{{ url_for('directora.crear_colaborador') }}">
+        <form method="POST" action="{{ url_for('directora.crear_colaborador') }}" novalidate onsubmit="return validarFormulario(this)">
+            <input type="hidden" name="rol" value="docente">
             <div class="row g-3 mb-3">
-                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">DNI</label><input type="text" name="dni" class="ref-filter-select w-100" style="min-height:44px;" required pattern="[0-9]{1,8}" maxlength="8" oninput="this.value=this.value.replace(/[^0-9]/g,'')" title="Solo números (8 dígitos máximo)"></div>
-                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Nombres</label><input type="text" name="nombres" class="ref-filter-select w-100" style="min-height:44px;" required pattern="[A-Za-zÁÉÍÓÚáéíóúñÑüÜ\s]+" oninput="this.value=this.value.replace(/[^A-Za-zÁÉÍÓÚáéíóúñÑüÜ\s]/g,'')" title="Solo letras y espacios"></div>
+                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">DNI</label><div class="dni-wrapper"><input type="text" name="dni" id="col-dni" class="ref-filter-select w-100" style="min-height:44px;" maxlength="8" oninput="this.value=this.value.replace(/[^0-9]/g,'');onDniInput('col');validarCampo(this)" title="Solo números (8 dígitos máximo)"><button type="button" class="btn-consultar-dni" id="btn-col-dni" onclick="consultarDNI('col')" title="Consultar RENIEC"><i class="fas fa-search"></i></button></div><div class="dni-status" id="status-col-dni"></div><span class="field-error" id="err-dni"></span></div>
+                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Nombres</label><input type="text" name="nombres" id="col-nombres" class="ref-filter-select w-100" style="min-height:44px;" oninput="this.value=this.value.replace(/[^A-Za-zÁÉÍÓÚáéíóúñÑüÜ\s]/g,'');validarCampo(this)" title="Solo letras y espacios"><span class="field-error" id="err-nombres"></span></div>
             </div>
             <div class="row g-3 mb-3">
-                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Ap. Paterno</label><input type="text" name="apellido_paterno" class="ref-filter-select w-100" style="min-height:44px;" required pattern="[A-Za-zÁÉÍÓÚáéíóúñÑüÜ\s]+" oninput="this.value=this.value.replace(/[^A-Za-zÁÉÍÓÚáéíóúñÑüÜ\s]/g,'')" title="Solo letras y espacios"></div>
-                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Ap. Materno</label><input type="text" name="apellido_materno" class="ref-filter-select w-100" style="min-height:44px;" required pattern="[A-Za-zÁÉÍÓÚáéíóúñÑüÜ\s]+" oninput="this.value=this.value.replace(/[^A-Za-zÁÉÍÓÚáéíóúñÑüÜ\s]/g,'')" title="Solo letras y espacios"></div>
+                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Ap. Paterno</label><input type="text" name="apellido_paterno" id="col-apPat" class="ref-filter-select w-100" style="min-height:44px;" oninput="this.value=this.value.replace(/[^A-Za-zÁÉÍÓÚáéíóúñÑüÜ\s]/g,'');validarCampo(this)" title="Solo letras y espacios"><span class="field-error" id="err-apellido_paterno"></span></div>
+                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Ap. Materno</label><input type="text" name="apellido_materno" id="col-apMat" class="ref-filter-select w-100" style="min-height:44px;" oninput="this.value=this.value.replace(/[^A-Za-zÁÉÍÓÚáéíóúñÑüÜ\s]/g,'');validarCampo(this)" title="Solo letras y espacios"><span class="field-error" id="err-apellido_materno"></span></div>
             </div>
             <div class="row g-3 mb-3">
-                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Tel. Principal</label><input type="text" name="telefono_principal" class="ref-filter-select w-100" style="min-height:44px;" maxlength="12" pattern="[0-9]+" oninput="this.value=this.value.replace(/[^0-9]/g,'')" title="Solo números"></div>
-                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Tel. Secundario</label><input type="text" name="telefono_secundario" class="ref-filter-select w-100" style="min-height:44px;" maxlength="12" pattern="[0-9]+" oninput="this.value=this.value.replace(/[^0-9]/g,'')" title="Solo números"></div>
+                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Tel. Principal</label><input type="text" name="telefono_principal" id="col-tel1" class="ref-filter-select w-100" style="min-height:44px;" maxlength="12" oninput="this.value=this.value.replace(/[^0-9]/g,'');validarCampo(this)" title="Solo números"><span class="field-error" id="err-telefono_principal"></span></div>
+                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Tel. Secundario</label><input type="text" name="telefono_secundario" id="col-tel2" class="ref-filter-select w-100" style="min-height:44px;" maxlength="12" oninput="this.value=this.value.replace(/[^0-9]/g,'');validarCampo(this)" title="Solo números"><span class="field-error" id="err-telefono_secundario"></span></div>
             </div>
             <div class="row g-3 mb-3">
-                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Correo</label><input type="email" name="correo" class="ref-filter-select w-100" style="min-height:44px;" required></div>
+                <div class="col-md-6"><label style="font-size:12px;font-weight:500;color:#555;">Correo</label><input type="email" name="correo" id="col-correo" class="ref-filter-select w-100" style="min-height:44px;" autocomplete="off" oninput="validarCampo(this);verificarEmail(this)" onblur="verificarEmail(this)"><span class="field-error" id="err-correo"></span></div>
                 <div class="col-md-6" style="position:relative;">
                     <label style="font-size:12px;font-weight:500;color:#555;">Contraseña</label>
-                    <input type="password" name="clave" class="ref-filter-select w-100" style="min-height:44px;padding-right:40px;" required>
+                    <input type="password" name="clave" id="col-clave" class="ref-filter-select w-100" style="min-height:44px;padding-right:40px;" oninput="validarCampo(this)">
                     <button type="button" class="password-toggle" onclick="togglePassword(this)"><i class="fas fa-eye"></i></button>
+                    <span class="field-error" id="err-clave"></span>
                 </div>
             </div>
             <div class="row g-3 mb-3">
@@ -458,25 +461,33 @@
                 <div class="table-responsive"><table class="ref-table">
                     {% for n in niveles %}
                     <tr><td>{{ n.nombre }}</td><td><span style="background:{{ '#e6fffa' if n.activo else '#fff5f5' }};color:{{ '#234e52' if n.activo else '#9b2c2c' }};padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">{{ 'Activo' if n.activo else 'Inactivo' }}</span></td>
-                        <td><form method="POST" action="{{ url_for('directora.niveles_crud') }}" style="display:inline"><input type="hidden" name="accion" value="toggle"><input type="hidden" name="id" value="{{ n.id }}"><button class="ref-header-btn"><i class="fas fa-{{ 'pause' if n.activo else 'play' }}"></i></button></form></td></tr>
+                        <td><form method="POST" action="{{ url_for('directora.niveles_crud') }}" style="display:inline" data-ajax="1" data-entity="nivel" onsubmit="return ajaxEnviarForm(this)"><input type="hidden" name="accion" value="toggle"><input type="hidden" name="id" value="{{ n.id }}"><button class="ref-header-btn"><i class="fas fa-{{ 'pause' if n.activo else 'play' }}"></i></button></form></td></tr>
                     {% endfor %}
                 </table></div>
             </div></div>
             <div class="col-md-4"><div class="card h-100">
                 <div class="ref-section-header" style="margin-bottom:12px;"><h3 style="font-size:16px;margin:0;">Grados</h3><button class="ref-btn-outline ref-btn-sm" onclick="abrirModalGrado()"><i class="fas fa-plus"></i></button></div>
+                <select class="ref-filter-select" style="min-height:32px;font-size:12px;margin:0 12px 8px;width:calc(100% - 24px);" onchange="filtrarGrados(this)">
+                    <option value="">Todos los niveles</option>
+                    {% for n in niveles %}<option value="{{ n.id }}">{{ n.nombre }}</option>{% endfor %}
+                </select>
                 <div class="table-responsive"><table class="ref-table">
                     {% for g in grados %}
-                    <tr><td>{{ g.nombre }}</td><td>{{ g.nivel_rel.nombre if g.nivel_rel else '-' }}</td><td><span style="background:{{ '#e6fffa' if g.activo else '#fff5f5' }};color:{{ '#234e52' if g.activo else '#9b2c2c' }};padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">{{ 'Activo' if g.activo else 'Inactivo' }}</span></td>
-                        <td><form method="POST" action="{{ url_for('directora.grados_crud') }}" style="display:inline"><input type="hidden" name="accion" value="toggle"><input type="hidden" name="id" value="{{ g.id }}"><button class="ref-header-btn"><i class="fas fa-{{ 'pause' if g.activo else 'play' }}"></i></button></form></td></tr>
+                    <tr data-nivel-id="{{ g.nivel_id }}"><td>{{ g.nombre }}</td><td>{{ g.nivel_rel.nombre if g.nivel_rel else '-' }}</td><td><span style="background:{{ '#e6fffa' if g.activo else '#fff5f5' }};color:{{ '#234e52' if g.activo else '#9b2c2c' }};padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">{{ 'Activo' if g.activo else 'Inactivo' }}</span></td>
+                        <td><form method="POST" action="{{ url_for('directora.grados_crud') }}" style="display:inline" data-ajax="1" data-entity="grado" onsubmit="return ajaxEnviarForm(this)"><input type="hidden" name="accion" value="toggle"><input type="hidden" name="id" value="{{ g.id }}"><button class="ref-header-btn"><i class="fas fa-{{ 'pause' if g.activo else 'play' }}"></i></button></form></td></tr>
                     {% endfor %}
                 </table></div>
             </div></div>
             <div class="col-md-4"><div class="card h-100">
                 <div class="ref-section-header" style="margin-bottom:12px;"><h3 style="font-size:16px;margin:0;">Secciones</h3><button class="ref-btn-outline ref-btn-sm" onclick="abrirModalSeccion()"><i class="fas fa-plus"></i></button></div>
+                <select class="ref-filter-select" id="filtro-sec-grado" style="min-height:32px;font-size:12px;margin:0 12px 8px;width:calc(100% - 24px);" onchange="filtrarSecciones(this)">
+                    <option value="">Todos los grados</option>
+                    {% for g in grados %}<option value="{{ g.id }}" data-nivel-id="{{ g.nivel_id }}">{{ g.nombre }}</option>{% endfor %}
+                </select>
                 <div class="table-responsive"><table class="ref-table">
                     {% for s in secciones %}
-                    <tr><td>{{ s.grado.nombre }} - {{ s.nombre }}</td><td><span style="background:{{ '#e6fffa' if s.activo else '#fff5f5' }};color:{{ '#234e52' if s.activo else '#9b2c2c' }};padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">{{ 'Activo' if s.activo else 'Inactivo' }}</span></td>
-                        <td><form method="POST" action="{{ url_for('directora.secciones_crud') }}" style="display:inline"><input type="hidden" name="accion" value="toggle"><input type="hidden" name="id" value="{{ s.id }}"><button class="ref-header-btn"><i class="fas fa-{{ 'pause' if s.activo else 'play' }}"></i></button></form></td></tr>
+                    <tr data-grado-id="{{ s.grado_id }}"><td>{{ s.grado.nombre }} - {{ s.nombre }}</td><td><span style="background:{{ '#e6fffa' if s.activo else '#fff5f5' }};color:{{ '#234e52' if s.activo else '#9b2c2c' }};padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">{{ 'Activo' if s.activo else 'Inactivo' }}</span></td>
+                        <td><form method="POST" action="{{ url_for('directora.secciones_crud') }}" style="display:inline" data-ajax="1" data-entity="seccion" onsubmit="return ajaxEnviarForm(this)"><input type="hidden" name="accion" value="toggle"><input type="hidden" name="id" value="{{ s.id }}"><button class="ref-header-btn"><i class="fas fa-{{ 'pause' if s.activo else 'play' }}"></i></button></form></td></tr>
                     {% endfor %}
                 </table></div>
             </div></div>
@@ -574,27 +585,29 @@
 </div>
 
 <!-- ===== MODALES CRUD ===== -->
-<div class="ref-modal-overlay" id="modal-nivel"><div class="ref-modal" style="max-height:85vh;overflow-y:auto;"><span class="close" onclick="document.getElementById('modal-nivel').style.display='none'">&times;</span><h3>Nuevo Nivel</h3><form method="POST" action="{{ url_for('directora.niveles_crud') }}"><input type="hidden" name="accion" value="crear"><div class="mb-3"><label class="form-label">Nombre</label><input type="text" name="nombre" placeholder="Ej: Inicial, Primaria" class="form-control" required></div><div class="ref-modal-actions"><button type="button" class="ref-btn-outline" onclick="document.getElementById('modal-nivel').style.display='none'">Cancelar</button><button class="ref-btn-primary">Guardar</button></div></form></div></div>
-<div class="ref-modal-overlay" id="modal-grado"><div class="ref-modal" style="max-height:85vh;overflow-y:auto;"><span class="close" onclick="document.getElementById('modal-grado').style.display='none'">&times;</span><h3>Nuevo Grado</h3><form method="POST" action="{{ url_for('directora.grados_crud') }}"><input type="hidden" name="accion" value="crear"><div class="mb-3"><label class="form-label">Nombre</label><input type="text" name="nombre" placeholder="Ej: 1º Primaria" class="form-control" required></div><div class="mb-3"><label class="form-label">Nivel</label><select name="nivel_id" class="form-select">{% for n in niveles %}<option value="{{ n.id }}">{{ n.nombre }}</option>{% endfor %}</select></div><div class="ref-modal-actions"><button type="button" class="ref-btn-outline" onclick="document.getElementById('modal-grado').style.display='none'">Cancelar</button><button class="ref-btn-primary">Guardar</button></div></form></div></div>
-<div class="ref-modal-overlay" id="modal-seccion"><div class="ref-modal" style="max-height:85vh;overflow-y:auto;"><span class="close" onclick="document.getElementById('modal-seccion').style.display='none'">&times;</span><h3>Nueva Sección</h3><form method="POST" action="{{ url_for('directora.secciones_crud') }}"><input type="hidden" name="accion" value="crear"><div class="mb-3"><label class="form-label">Nombre</label><input type="text" name="nombre" placeholder="Ej: A, B, C" class="form-control" required></div><div class="mb-3"><label class="form-label">Grado</label><select name="grado_id" class="form-select">{% for g in grados %}<option value="{{ g.id }}">{{ g.nombre }}</option>{% endfor %}</select></div><div class="ref-modal-actions"><button type="button" class="ref-btn-outline" onclick="document.getElementById('modal-seccion').style.display='none'">Cancelar</button><button class="ref-btn-primary">Guardar</button></div></form></div></div>
+<div class="ref-modal-overlay" id="modal-nivel"><div class="ref-modal" style="max-height:85vh;overflow-y:auto;"><span class="close" onclick="cerrarModalNivel()">&times;</span><h3>Nuevo Nivel</h3><form method="POST" action="{{ url_for('directora.niveles_crud') }}" data-ajax="1" data-entity="nivel" onsubmit="return ajaxEnviarForm(this)"><input type="hidden" name="accion" value="crear"><div class="mb-3"><label class="form-label">Nombre</label><input type="text" name="nombre" placeholder="Ej: Inicial, Primaria" class="form-control" required></div><div class="ref-modal-actions"><button type="button" class="ref-btn-outline" onclick="cerrarModalNivel()">Cancelar</button><button class="ref-btn-primary">Guardar</button></div></form></div></div>
+<div class="ref-modal-overlay" id="modal-grado"><div class="ref-modal" style="max-height:85vh;overflow-y:auto;"><span class="close" onclick="cerrarModalGrado()">&times;</span><h3>Nuevo Grado</h3><form method="POST" action="{{ url_for('directora.grados_crud') }}" data-ajax="1" data-entity="grado" onsubmit="return ajaxEnviarForm(this)"><input type="hidden" name="accion" value="crear"><div class="mb-3"><label class="form-label">Nombre</label><input type="text" name="nombre" placeholder="Ej: 1º Primaria" class="form-control" required></div><div class="mb-3"><label class="form-label">Nivel</label><select name="nivel_id" class="form-select">{% for n in niveles %}<option value="{{ n.id }}">{{ n.nombre }}</option>{% endfor %}</select></div><div class="ref-modal-actions"><button type="button" class="ref-btn-outline" onclick="cerrarModalGrado()">Cancelar</button><button class="ref-btn-primary">Guardar</button></div></form></div></div>
+<div class="ref-modal-overlay" id="modal-seccion"><div class="ref-modal" style="max-height:85vh;overflow-y:auto;"><span class="close" onclick="cerrarModalSeccion()">&times;</span><h3>Nueva Sección</h3><form method="POST" action="{{ url_for('directora.secciones_crud') }}" data-ajax="1" data-entity="seccion" onsubmit="return ajaxEnviarForm(this)"><input type="hidden" name="accion" value="crear"><div class="mb-3"><label class="form-label">Nombre</label><input type="text" name="nombre" placeholder="Ej: A, B, C" class="form-control" required></div><div class="mb-3"><label class="form-label">Nivel</label><select class="form-select" id="sec-nivel" onchange="filtrarGradosSec(this)"><option value="">Seleccionar Nivel</option>{% for n in niveles %}<option value="{{ n.id }}">{{ n.nombre }}</option>{% endfor %}</select></div><div class="mb-3"><label class="form-label">Grado</label><select name="grado_id" class="form-select" id="sec-grado">{% for g in grados %}<option value="{{ g.id }}" data-nivel-id="{{ g.nivel_id }}">{{ g.nombre }}</option>{% endfor %}</select></div><div class="ref-modal-actions"><button type="button" class="ref-btn-outline" onclick="cerrarModalSeccion()">Cancelar</button><button class="ref-btn-primary">Guardar</button></div></form></div></div>
 
 <div class="ref-modal-overlay" id="modal-curso">
     <div class="ref-modal" style="max-height:85vh;overflow-y:auto;">
         <span class="close" onclick="document.getElementById('modal-curso').style.display='none'">&times;</span>
         <h3>Nuevo Curso</h3>
-        <form method="POST" action="{{ url_for('directora.cursos_crud') }}">
+        <form method="POST" action="{{ url_for('directora.cursos_crud') }}" novalidate onsubmit="return validarFormulario(this)">
             <input type="hidden" name="accion" value="crear">
+            {% set periodo_default = periodos|selectattr('activo')|first %}
+            <input type="hidden" name="periodo_academico_id" value="{{ periodo_default.id if periodo_default else '' }}">
             <div class="row g-3 mb-3">
-                <div class="col-md-6"><label class="form-label">Nombre</label><input type="text" name="nombre" placeholder="Nombre del curso" class="form-control" required></div>
-                <div class="col-md-6"><label class="form-label">Código</label><input type="text" name="codigo" placeholder="Código único" class="form-control" required></div>
+                <div class="col-md-6"><label class="form-label">Nombre</label><input type="text" name="nombre" placeholder="Nombre del curso" class="form-control" oninput="validarCampo(this)"><span class="field-error"></span></div>
+                <div class="col-md-6"><label class="form-label">Código</label><input type="text" name="codigo" placeholder="Código único" class="form-control" oninput="validarCampo(this)"><span class="field-error"></span></div>
             </div>
             <div class="mb-3"><label class="form-label">Descripción</label><textarea name="descripcion" rows="2" class="form-control"></textarea></div>
             <div class="row g-3 mb-3">
                 <div class="col-md-4"><select name="nivel_id" class="form-select" onchange="cargarGradosRef(this.value,'cur-grado')"><option value="">Nivel</option>{% for n in niveles %}<option value="{{ n.id }}">{{ n.nombre }}</option>{% endfor %}</select></div>
-                <div class="col-md-4"><select id="cur-grado" name="grado_id" class="form-select" onchange="cargarSeccionesRef(this.value,'cur-seccion')"><option value="">Grado</option></select></div>
-                <div class="col-md-4"><select id="cur-seccion" name="seccion_id" class="form-select"><option value="">Sección</option></select></div>
+                <div class="col-md-4"><select id="cur-grado" name="grado_id" class="form-select" onchange="cargarSeccionesRef(this.value,'cur-seccion');validarCampo(this)"><option value="">Grado</option></select><span class="field-error"></span></div>
+                <div class="col-md-4"><select id="cur-seccion" name="seccion_id" class="form-select" onchange="validarCampo(this)"><option value="">Sección</option></select><span class="field-error"></span></div>
             </div>
-            <div class="mb-3"><select name="docente_id" class="form-select" required><option value="">Docente</option>{% for d in docentes %}<option value="{{ d.id }}">{{ d.nombre_completo }}</option>{% endfor %}</select></div>
+            <div class="mb-3"><select name="docente_id" class="form-select" onchange="validarCampo(this)"><option value="">Docente</option>{% for d in docentes %}<option value="{{ d.id }}">{{ d.nombre_completo }}</option>{% endfor %}</select><span class="field-error"></span></div>
             <div class="ref-modal-actions">
                 <button type="button" class="ref-btn-outline" onclick="document.getElementById('modal-curso').style.display='none'">Cancelar</button>
                 <button class="ref-btn-primary">Guardar</button>
@@ -697,10 +710,134 @@ const API_NOTAS = "{{ url_for('directora.api_notas_por_curso') }}";
 const API_NOTAS_GUARDAR = "{{ url_for('directora.api_notas_guardar') }}";
 const API_ALUMNOS = "{{ url_for('directora.api_alumnos') }}";
 const API_ACTUALIZAR_METODO_PAGO = "{{ url_for('directora.api_actualizar_metodo_pago') }}";
+const API_VERIFICAR_EMAIL = "{{ url_for('directora.api_verificar_email') }}";
+const URL_NIVELES_CRUD = "{{ url_for('directora.niveles_crud') }}";
+const URL_GRADOS_CRUD = "{{ url_for('directora.grados_crud') }}";
+const URL_SECCIONES_CRUD = "{{ url_for('directora.secciones_crud') }}";
 
 function cerrarModalHorario() { document.getElementById('modal-horario').style.display = 'none'; }
 function abrirModalGrado() { document.getElementById('modal-grado').style.display = 'flex'; }
 function abrirModalSeccion() { document.getElementById('modal-seccion').style.display = 'flex'; }
+function cerrarModalNivel() { var m = document.getElementById('modal-nivel'); m.style.display = 'none'; m.querySelector('form').reset(); }
+function cerrarModalGrado() { var m = document.getElementById('modal-grado'); m.style.display = 'none'; m.querySelector('form').reset(); var s = document.getElementById('sec-nivel'); if (s) s.value = ''; }
+function cerrarModalSeccion() { var m = document.getElementById('modal-seccion'); m.style.display = 'none'; m.querySelector('form').reset(); var s = document.getElementById('sec-nivel'); if (s) s.value = ''; filtrarGradosSec(s); }
+
+function ajaxEnviarForm(form) {
+    var entity = form.getAttribute('data-entity');
+    var urlMap = {'nivel': URL_NIVELES_CRUD, 'grado': URL_GRADOS_CRUD, 'seccion': URL_SECCIONES_CRUD};
+    var url = urlMap[entity] || form.getAttribute('action');
+    var fd = new FormData(form);
+    fd.append('ajax', '1');
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', url, true);
+    xhr.onerror = function() {
+        showToast('Error de red - no se pudo conectar al servidor', 'danger');
+    };
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState !== 4) return;
+        if (xhr.status !== 200) {
+            showToast('HTTP ' + xhr.status + ': ' + (xhr.statusText || 'error'), 'danger');
+            return;
+        }
+        var txt = xhr.responseText || '';
+        if (!txt || txt.length === 0) {
+            showToast('Respuesta vacia del servidor (status 200)', 'danger');
+            return;
+        }
+        var data;
+        try { data = JSON.parse(txt); } catch (ex) {
+            showToast('Error: respuesta no es JSON. Status ' + xhr.status + ', Length ' + txt.length + ', Preview: ' + txt.substring(0, 120), 'danger');
+            return;
+        }
+        if (!data.success) { showToast(data.error || 'Error', 'danger'); return; }
+        var accion = form.querySelector('[name=accion]').value;
+        if (accion === 'crear') {
+            if (entity === 'nivel') addNivelRow(data.item);
+            else if (entity === 'grado') addGradoRow(data.item);
+            else if (entity === 'seccion') addSeccionRow(data.item);
+            var modal = form.closest('.ref-modal-overlay');
+            if (modal) {
+                modal.style.display = 'none';
+                form.reset();
+                var niv = document.getElementById('sec-nivel');
+                if (niv) { niv.value = ''; filtrarGradosSec(niv); }
+            }
+            showToast('Creado correctamente', 'success');
+        } else if (accion === 'toggle') {
+            actualizarToggle(form, data.item);
+        }
+    };
+    xhr.send(fd);
+    return false;
+}
+
+function addNivelRow(d) {
+    var t = document.querySelector('#acad-estructura .col-md-4:first-child .ref-table');
+    if (!t) return;
+    var icon = d.activo ? 'pause' : 'play';
+    var badge = d.activo
+        ? '<span style="background:#e6fffa;color:#234e52;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">Activo</span>'
+        : '<span style="background:#fff5f5;color:#9b2c2c;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">Inactivo</span>';
+    var tr = document.createElement('tr');
+    tr.innerHTML = '<td>' + d.nombre + '</td><td>' + badge + '</td>'
+        + '<td><form style="display:inline" data-ajax="1" data-entity="nivel" method="POST" action="' + URL_NIVELES_CRUD + '" onsubmit="return ajaxEnviarForm(this)">'
+        + '<input type="hidden" name="accion" value="toggle"><input type="hidden" name="id" value="' + d.id + '">'
+        + '<button class="ref-header-btn"><i class="fas fa-' + icon + '"></i></button></form></td>';
+    t.appendChild(tr);
+    // Add option to grados filter
+    var gf = document.querySelector('#acad-estructura .col-md-4:nth-child(2) .ref-filter-select');
+    if (gf) { var o = document.createElement('option'); o.value = d.id; o.textContent = d.nombre; gf.appendChild(o); }
+}
+
+function addGradoRow(d) {
+    var t = document.querySelector('#acad-estructura .col-md-4:nth-child(2) .ref-table');
+    if (!t) return;
+    var icon = d.activo ? 'pause' : 'play';
+    var badge = d.activo
+        ? '<span style="background:#e6fffa;color:#234e52;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">Activo</span>'
+        : '<span style="background:#fff5f5;color:#9b2c2c;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">Inactivo</span>';
+    var tr = document.createElement('tr');
+    tr.setAttribute('data-nivel-id', d.nivel_id);
+    tr.innerHTML = '<td>' + d.nombre + '</td><td>' + (d.nivel_nombre || '-') + '</td><td>' + badge + '</td>'
+        + '<td><form style="display:inline" data-ajax="1" data-entity="grado" method="POST" action="' + URL_GRADOS_CRUD + '" onsubmit="return ajaxEnviarForm(this)">'
+        + '<input type="hidden" name="accion" value="toggle"><input type="hidden" name="id" value="' + d.id + '">'
+        + '<button class="ref-header-btn"><i class="fas fa-' + icon + '"></i></button></form></td>';
+    t.appendChild(tr);
+    // Add option to secciones filter
+    var sf = document.getElementById('filtro-sec-grado');
+    if (sf) { var o = document.createElement('option'); o.value = d.id; o.textContent = d.nombre; o.setAttribute('data-nivel-id', d.nivel_id); sf.appendChild(o); }
+    // Add option to seccion modal grado select
+    var sg = document.getElementById('sec-grado');
+    if (sg) { var o = document.createElement('option'); o.value = d.id; o.textContent = d.nombre; o.setAttribute('data-nivel-id', d.nivel_id); sg.appendChild(o); }
+}
+
+function addSeccionRow(d) {
+    var t = document.querySelector('#acad-estructura .col-md-4:last-child .ref-table');
+    if (!t) return;
+    var icon = d.activo ? 'pause' : 'play';
+    var badge = d.activo
+        ? '<span style="background:#e6fffa;color:#234e52;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">Activo</span>'
+        : '<span style="background:#fff5f5;color:#9b2c2c;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">Inactivo</span>';
+    var tr = document.createElement('tr');
+    tr.setAttribute('data-grado-id', d.grado_id);
+    tr.innerHTML = '<td>' + (d.grado_nombre || '') + ' - ' + d.nombre + '</td><td>' + badge + '</td>'
+        + '<td><form style="display:inline" data-ajax="1" data-entity="seccion" method="POST" action="' + URL_SECCIONES_CRUD + '" onsubmit="return ajaxEnviarForm(this)">'
+        + '<input type="hidden" name="accion" value="toggle"><input type="hidden" name="id" value="' + d.id + '">'
+        + '<button class="ref-header-btn"><i class="fas fa-' + icon + '"></i></button></form></td>';
+    t.appendChild(tr);
+}
+
+function actualizarToggle(form, d) {
+    var row = form.closest('tr');
+    if (!row) return;
+    var badge = row.querySelector('span[style*="border-radius:20px"]');
+    if (badge) {
+        if (d.activo) { badge.style.background = '#e6fffa'; badge.style.color = '#234e52'; badge.textContent = 'Activo'; }
+        else { badge.style.background = '#fff5f5'; badge.style.color = '#9b2c2c'; badge.textContent = 'Inactivo'; }
+    }
+    var icon = row.querySelector('.ref-header-btn i');
+    if (icon) icon.className = 'fas fa-' + (d.activo ? 'pause' : 'play');
+}
 
 function cargarHorariosBuilder() {
     var secId = document.getElementById('hor-seccion').value;
@@ -1043,5 +1180,213 @@ function filtrarDocentes() {
 function filtrarReportes() {
     showToast('Filtro de reportes aplicado', 'info');
 }
+
+function filtrarGrados(sel) {
+    var nivelId = sel.value;
+    var card = sel.closest('.card');
+    if (!card) return;
+    Array.from(card.querySelectorAll('.ref-table tr[data-nivel-id]')).forEach(function(row) {
+        row.style.display = (!nivelId || row.getAttribute('data-nivel-id') === nivelId) ? '' : 'none';
+    });
+    var secFilter = document.getElementById('filtro-sec-grado');
+    Array.from(secFilter.querySelectorAll('option[data-nivel-id]')).forEach(function(opt) {
+        opt.style.display = (!nivelId || opt.getAttribute('data-nivel-id') === nivelId) ? '' : 'none';
+    });
+    if (secFilter.value) {
+        var selected = secFilter.querySelector('option[value="' + secFilter.value + '"]');
+        if (selected && selected.style.display === 'none') {
+            secFilter.value = '';
+            filtrarSecciones(secFilter);
+        }
+    }
+}
+
+function filtrarSecciones(sel) {
+    var gradoId = sel.value;
+    var card = sel.closest('.card');
+    if (!card) return;
+    Array.from(card.querySelectorAll('.ref-table tr[data-grado-id]')).forEach(function(row) {
+        row.style.display = (!gradoId || row.getAttribute('data-grado-id') === gradoId) ? '' : 'none';
+    });
+}
+
+function filtrarGradosSec(nivelSel) {
+    var nivelId = nivelSel.value;
+    var gradoSel = document.getElementById('sec-grado');
+    Array.from(gradoSel.options).forEach(function(opt) {
+        if (!opt.value) return;
+        opt.style.display = (!nivelId || opt.getAttribute('data-nivel-id') === nivelId) ? '' : 'none';
+    });
+    if (gradoSel.value) {
+        var selOpt = gradoSel.querySelector('option[value="' + gradoSel.value + '"]');
+        if (selOpt && selOpt.style.display === 'none') gradoSel.value = '';
+    }
+}
+
+// ========== Field Validation ==========
+var REQUIRED_FIELDS = ['nombres','apellido_paterno','apellido_materno','correo','clave','nombre','codigo','grado_id','seccion_id','docente_id'];
+var OPTIONAL_FIELDS = ['telefono_principal','telefono_secundario','profesion','descripcion'];
+
+function validarCampo(input) {
+    var container = input.closest('.col-md-6');
+    if (!container) container = input.parentElement;
+    var err = container.querySelector('.field-error');
+    if (!err) return true;
+    var val = input.value.trim();
+    var msg = '';
+    if (input.name === 'dni' && val) {
+        if (!/^\d+$/.test(val)) msg = 'Solo n\u00fameros';
+        else if (val.length !== 8) msg = 'Debe tener 8 d\u00edgitos';
+    } else if ((input.name === 'nombres' || input.name === 'apellido_paterno' || input.name === 'apellido_materno') && val) {
+        if (!/^[A-Za-z\u00c1\u00c9\u00cd\u00d3\u00da\u00e1\u00e9\u00ed\u00f3\u00fa\u00f1\u00d1\u00fc\u00dc\s]+$/.test(val)) msg = 'Solo letras y espacios';
+    } else if (input.name === 'correo' && val) {
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) msg = 'Correo inv\u00e1lido';
+    } else if (input.name === 'clave' && val) {
+        var errs = [];
+        if (val.length < 8) errs.push('M\u00ednimo 8 caracteres');
+        if (val.length > 50) errs.push('M\u00e1ximo 50');
+        if (!/[A-Z]/.test(val)) errs.push('Falta may\u00fascula');
+        if (!/[a-z]/.test(val)) errs.push('Falta min\u00fascula');
+        if (!/\d/.test(val)) errs.push('Falta n\u00famero');
+        if (!/[!@#$%^&*(),.?":{}|<>_\-+=]/.test(val)) errs.push('Falta s\u00edmbolo');
+        msg = errs.join(', ');
+    } else if ((input.name === 'telefono_principal' || input.name === 'telefono_secundario') && val) {
+        if (!/^\d+$/.test(val)) msg = 'Solo n\u00fameros';
+    }
+    if (val === '' && OPTIONAL_FIELDS.indexOf(input.name) === -1 && REQUIRED_FIELDS.indexOf(input.name) !== -1) {
+        if (input.tagName === 'SELECT') msg = 'Selecciona una opci\u00f3n';
+        else msg = 'Campo obligatorio';
+    }
+    err.textContent = msg;
+    if (msg) input.classList.add('is-invalid');
+    else input.classList.remove('is-invalid');
+    return !msg;
+}
+
+function validarFormulario(form) {
+    var inputs = form.querySelectorAll('input[name], select[name]');
+    var valido = true;
+    inputs.forEach(function(input) {
+        if (input.type !== 'hidden' && input.type !== 'submit' && input.type !== 'button') {
+            if (!validarCampo(input)) valido = false;
+        }
+    });
+    if (!valido) {
+        var firstErr = form.querySelector('.is-invalid');
+        if (firstErr) firstErr.focus();
+    }
+    return valido;
+}
+
+var emailTimeout = null;
+function verificarEmail(input) {
+    if (emailTimeout) clearTimeout(emailTimeout);
+    var container = input.closest('.col-md-6');
+    if (!container) container = input.parentElement;
+    var err = container.querySelector('.field-error');
+    if (!err) return;
+    var val = input.value.trim();
+    if (!val || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) return;
+    emailTimeout = setTimeout(function() {
+        fetch(API_VERIFICAR_EMAIL + '?email=' + encodeURIComponent(val))
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (!data.disponible) {
+                    err.textContent = 'Correo no disponible';
+                    input.classList.add('is-invalid');
+                }
+            });
+    }, 500);
+}
+
+// ========== RENIEC DNI Auto-fill ==========
+const API_BASE = 'https://dniruc.apisperu.com/api/v1/dni/';
+const API_TOKEN = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJlbWFpbCI6ImkyNTEzNzAyQGNvbnRpbmVudGFsLmVkdS5wZSJ9.o02LSzKdddnW-h9XO-sf5hFbquw5vroU6ZAoFhbl9mY';
+
+const CAMPOS_DASH = {
+    alu: {
+        dni: 'alu-dni', nombres: 'alu-nombres', apPat: 'alu-apPat', apMat: 'alu-apMat',
+        btn: 'btn-alu-dni', status: 'status-alu-dni',
+    },
+    col: {
+        dni: 'col-dni', nombres: 'col-nombres', apPat: 'col-apPat', apMat: 'col-apMat',
+        btn: 'btn-col-dni', status: 'status-col-dni',
+    }
+};
+
+function capitalizarNombre(str) {
+    return str.toLowerCase().replace(/\b\w/g, function(c) { return c.toUpperCase(); });
+}
+
+function setStatus(el, type, msg) {
+    el.className = 'dni-status ' + type;
+    el.innerHTML = msg;
+}
+
+function autoFill(fieldId, value) {
+    var el = document.getElementById(fieldId);
+    if (!el) return;
+    el.value = value;
+    el.classList.remove('field-autofilled');
+    void el.offsetWidth;
+    el.classList.add('field-autofilled');
+}
+
+async function consultarDNI(seccion) {
+    var c = CAMPOS_DASH[seccion];
+    var dniVal = document.getElementById(c.dni).value.trim();
+    var statusEl = document.getElementById(c.status);
+    var btnEl = document.getElementById(c.btn);
+    if (!/^\d+$/.test(dniVal)) {
+        setStatus(statusEl, 'error', 'El DNI solo debe contener n\u00fameros.');
+        return;
+    }
+    if (dniVal.length !== 8) {
+        setStatus(statusEl, 'error', 'El DNI debe tener exactamente 8 d\u00edgitos.');
+        return;
+    }
+    setStatus(statusEl, 'loading', '<span class="spinner"></span> Consultando RENIEC...');
+    btnEl.disabled = true;
+    try {
+        var response = await fetch(API_BASE + dniVal + '?token=' + API_TOKEN);
+        if (!response.ok) {
+            if (response.status === 401) setStatus(statusEl, 'error', 'Token de API inv\u00e1lido o expirado.');
+            else setStatus(statusEl, 'error', 'Error del servidor (c\u00f3digo ' + response.status + ').');
+            return;
+        }
+        var data = await response.json();
+        if (!data.nombres) {
+            setStatus(statusEl, 'error', 'DNI no encontrado en RENIEC.');
+            return;
+        }
+        autoFill(c.nombres, capitalizarNombre(data.nombres));
+        autoFill(c.apPat,   capitalizarNombre(data.apellidoPaterno));
+        autoFill(c.apMat,   capitalizarNombre(data.apellidoMaterno));
+        setStatus(statusEl, 'success', '\u2714 Datos cargados correctamente desde RENIEC.');
+    } catch (err) {
+        setStatus(statusEl, 'error', 'Error de conexi\u00f3n: ' + err.message);
+    } finally {
+        btnEl.disabled = false;
+    }
+}
+
+function onDniInput(seccion) {
+    var c = CAMPOS_DASH[seccion];
+    var dniVal = document.getElementById(c.dni).value.trim();
+    if (dniVal.length === 8) consultarDNI(seccion);
+}
+
+(function() {
+    var hash = window.location.hash.replace('#', '');
+    if (hash) {
+        var btns = document.querySelectorAll('.dash-tab');
+        for (var i = 0; i < btns.length; i++) {
+            var b = btns[i];
+            if ((b.getAttribute('onclick') || '').indexOf(hash) > -1) {
+                b.click(); break;
+            }
+        }
+    }
+})();
 </script>
 {% endblock %}
