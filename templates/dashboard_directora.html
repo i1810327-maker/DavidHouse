@@ -461,25 +461,33 @@
                 <div class="table-responsive"><table class="ref-table">
                     {% for n in niveles %}
                     <tr><td>{{ n.nombre }}</td><td><span style="background:{{ '#e6fffa' if n.activo else '#fff5f5' }};color:{{ '#234e52' if n.activo else '#9b2c2c' }};padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">{{ 'Activo' if n.activo else 'Inactivo' }}</span></td>
-                        <td><form method="POST" action="{{ url_for('directora.niveles_crud') }}" style="display:inline"><input type="hidden" name="accion" value="toggle"><input type="hidden" name="id" value="{{ n.id }}"><button class="ref-header-btn"><i class="fas fa-{{ 'pause' if n.activo else 'play' }}"></i></button></form></td></tr>
+                        <td><form method="POST" action="{{ url_for('directora.niveles_crud') }}" style="display:inline" data-ajax="1" data-entity="nivel" onsubmit="return ajaxEnviarForm(this)"><input type="hidden" name="accion" value="toggle"><input type="hidden" name="id" value="{{ n.id }}"><button class="ref-header-btn"><i class="fas fa-{{ 'pause' if n.activo else 'play' }}"></i></button></form></td></tr>
                     {% endfor %}
                 </table></div>
             </div></div>
             <div class="col-md-4"><div class="card h-100">
                 <div class="ref-section-header" style="margin-bottom:12px;"><h3 style="font-size:16px;margin:0;">Grados</h3><button class="ref-btn-outline ref-btn-sm" onclick="abrirModalGrado()"><i class="fas fa-plus"></i></button></div>
+                <select class="ref-filter-select" style="min-height:32px;font-size:12px;margin:0 12px 8px;width:calc(100% - 24px);" onchange="filtrarGrados(this)">
+                    <option value="">Todos los niveles</option>
+                    {% for n in niveles %}<option value="{{ n.id }}">{{ n.nombre }}</option>{% endfor %}
+                </select>
                 <div class="table-responsive"><table class="ref-table">
                     {% for g in grados %}
-                    <tr><td>{{ g.nombre }}</td><td>{{ g.nivel_rel.nombre if g.nivel_rel else '-' }}</td><td><span style="background:{{ '#e6fffa' if g.activo else '#fff5f5' }};color:{{ '#234e52' if g.activo else '#9b2c2c' }};padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">{{ 'Activo' if g.activo else 'Inactivo' }}</span></td>
-                        <td><form method="POST" action="{{ url_for('directora.grados_crud') }}" style="display:inline"><input type="hidden" name="accion" value="toggle"><input type="hidden" name="id" value="{{ g.id }}"><button class="ref-header-btn"><i class="fas fa-{{ 'pause' if g.activo else 'play' }}"></i></button></form></td></tr>
+                    <tr data-nivel-id="{{ g.nivel_id }}"><td>{{ g.nombre }}</td><td>{{ g.nivel_rel.nombre if g.nivel_rel else '-' }}</td><td><span style="background:{{ '#e6fffa' if g.activo else '#fff5f5' }};color:{{ '#234e52' if g.activo else '#9b2c2c' }};padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">{{ 'Activo' if g.activo else 'Inactivo' }}</span></td>
+                        <td><form method="POST" action="{{ url_for('directora.grados_crud') }}" style="display:inline" data-ajax="1" data-entity="grado" onsubmit="return ajaxEnviarForm(this)"><input type="hidden" name="accion" value="toggle"><input type="hidden" name="id" value="{{ g.id }}"><button class="ref-header-btn"><i class="fas fa-{{ 'pause' if g.activo else 'play' }}"></i></button></form></td></tr>
                     {% endfor %}
                 </table></div>
             </div></div>
             <div class="col-md-4"><div class="card h-100">
                 <div class="ref-section-header" style="margin-bottom:12px;"><h3 style="font-size:16px;margin:0;">Secciones</h3><button class="ref-btn-outline ref-btn-sm" onclick="abrirModalSeccion()"><i class="fas fa-plus"></i></button></div>
+                <select class="ref-filter-select" id="filtro-sec-grado" style="min-height:32px;font-size:12px;margin:0 12px 8px;width:calc(100% - 24px);" onchange="filtrarSecciones(this)">
+                    <option value="">Todos los grados</option>
+                    {% for g in grados %}<option value="{{ g.id }}" data-nivel-id="{{ g.nivel_id }}">{{ g.nombre }}</option>{% endfor %}
+                </select>
                 <div class="table-responsive"><table class="ref-table">
                     {% for s in secciones %}
-                    <tr><td>{{ s.grado.nombre }} - {{ s.nombre }}</td><td><span style="background:{{ '#e6fffa' if s.activo else '#fff5f5' }};color:{{ '#234e52' if s.activo else '#9b2c2c' }};padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">{{ 'Activo' if s.activo else 'Inactivo' }}</span></td>
-                        <td><form method="POST" action="{{ url_for('directora.secciones_crud') }}" style="display:inline"><input type="hidden" name="accion" value="toggle"><input type="hidden" name="id" value="{{ s.id }}"><button class="ref-header-btn"><i class="fas fa-{{ 'pause' if s.activo else 'play' }}"></i></button></form></td></tr>
+                    <tr data-grado-id="{{ s.grado_id }}"><td>{{ s.grado.nombre }} - {{ s.nombre }}</td><td><span style="background:{{ '#e6fffa' if s.activo else '#fff5f5' }};color:{{ '#234e52' if s.activo else '#9b2c2c' }};padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">{{ 'Activo' if s.activo else 'Inactivo' }}</span></td>
+                        <td><form method="POST" action="{{ url_for('directora.secciones_crud') }}" style="display:inline" data-ajax="1" data-entity="seccion" onsubmit="return ajaxEnviarForm(this)"><input type="hidden" name="accion" value="toggle"><input type="hidden" name="id" value="{{ s.id }}"><button class="ref-header-btn"><i class="fas fa-{{ 'pause' if s.activo else 'play' }}"></i></button></form></td></tr>
                     {% endfor %}
                 </table></div>
             </div></div>
@@ -577,27 +585,29 @@
 </div>
 
 <!-- ===== MODALES CRUD ===== -->
-<div class="ref-modal-overlay" id="modal-nivel"><div class="ref-modal" style="max-height:85vh;overflow-y:auto;"><span class="close" onclick="document.getElementById('modal-nivel').style.display='none'">&times;</span><h3>Nuevo Nivel</h3><form method="POST" action="{{ url_for('directora.niveles_crud') }}"><input type="hidden" name="accion" value="crear"><div class="mb-3"><label class="form-label">Nombre</label><input type="text" name="nombre" placeholder="Ej: Inicial, Primaria" class="form-control" required></div><div class="ref-modal-actions"><button type="button" class="ref-btn-outline" onclick="document.getElementById('modal-nivel').style.display='none'">Cancelar</button><button class="ref-btn-primary">Guardar</button></div></form></div></div>
-<div class="ref-modal-overlay" id="modal-grado"><div class="ref-modal" style="max-height:85vh;overflow-y:auto;"><span class="close" onclick="document.getElementById('modal-grado').style.display='none'">&times;</span><h3>Nuevo Grado</h3><form method="POST" action="{{ url_for('directora.grados_crud') }}"><input type="hidden" name="accion" value="crear"><div class="mb-3"><label class="form-label">Nombre</label><input type="text" name="nombre" placeholder="Ej: 1º Primaria" class="form-control" required></div><div class="mb-3"><label class="form-label">Nivel</label><select name="nivel_id" class="form-select">{% for n in niveles %}<option value="{{ n.id }}">{{ n.nombre }}</option>{% endfor %}</select></div><div class="ref-modal-actions"><button type="button" class="ref-btn-outline" onclick="document.getElementById('modal-grado').style.display='none'">Cancelar</button><button class="ref-btn-primary">Guardar</button></div></form></div></div>
-<div class="ref-modal-overlay" id="modal-seccion"><div class="ref-modal" style="max-height:85vh;overflow-y:auto;"><span class="close" onclick="document.getElementById('modal-seccion').style.display='none'">&times;</span><h3>Nueva Sección</h3><form method="POST" action="{{ url_for('directora.secciones_crud') }}"><input type="hidden" name="accion" value="crear"><div class="mb-3"><label class="form-label">Nombre</label><input type="text" name="nombre" placeholder="Ej: A, B, C" class="form-control" required></div><div class="mb-3"><label class="form-label">Grado</label><select name="grado_id" class="form-select">{% for g in grados %}<option value="{{ g.id }}">{{ g.nombre }}</option>{% endfor %}</select></div><div class="ref-modal-actions"><button type="button" class="ref-btn-outline" onclick="document.getElementById('modal-seccion').style.display='none'">Cancelar</button><button class="ref-btn-primary">Guardar</button></div></form></div></div>
+<div class="ref-modal-overlay" id="modal-nivel"><div class="ref-modal" style="max-height:85vh;overflow-y:auto;"><span class="close" onclick="cerrarModalNivel()">&times;</span><h3>Nuevo Nivel</h3><form method="POST" action="{{ url_for('directora.niveles_crud') }}" data-ajax="1" data-entity="nivel" onsubmit="return ajaxEnviarForm(this)"><input type="hidden" name="accion" value="crear"><div class="mb-3"><label class="form-label">Nombre</label><input type="text" name="nombre" placeholder="Ej: Inicial, Primaria" class="form-control" required></div><div class="ref-modal-actions"><button type="button" class="ref-btn-outline" onclick="cerrarModalNivel()">Cancelar</button><button class="ref-btn-primary">Guardar</button></div></form></div></div>
+<div class="ref-modal-overlay" id="modal-grado"><div class="ref-modal" style="max-height:85vh;overflow-y:auto;"><span class="close" onclick="cerrarModalGrado()">&times;</span><h3>Nuevo Grado</h3><form method="POST" action="{{ url_for('directora.grados_crud') }}" data-ajax="1" data-entity="grado" onsubmit="return ajaxEnviarForm(this)"><input type="hidden" name="accion" value="crear"><div class="mb-3"><label class="form-label">Nombre</label><input type="text" name="nombre" placeholder="Ej: 1º Primaria" class="form-control" required></div><div class="mb-3"><label class="form-label">Nivel</label><select name="nivel_id" class="form-select">{% for n in niveles %}<option value="{{ n.id }}">{{ n.nombre }}</option>{% endfor %}</select></div><div class="ref-modal-actions"><button type="button" class="ref-btn-outline" onclick="cerrarModalGrado()">Cancelar</button><button class="ref-btn-primary">Guardar</button></div></form></div></div>
+<div class="ref-modal-overlay" id="modal-seccion"><div class="ref-modal" style="max-height:85vh;overflow-y:auto;"><span class="close" onclick="cerrarModalSeccion()">&times;</span><h3>Nueva Sección</h3><form method="POST" action="{{ url_for('directora.secciones_crud') }}" data-ajax="1" data-entity="seccion" onsubmit="return ajaxEnviarForm(this)"><input type="hidden" name="accion" value="crear"><div class="mb-3"><label class="form-label">Nombre</label><input type="text" name="nombre" placeholder="Ej: A, B, C" class="form-control" required></div><div class="mb-3"><label class="form-label">Nivel</label><select class="form-select" id="sec-nivel" onchange="filtrarGradosSec(this)"><option value="">Seleccionar Nivel</option>{% for n in niveles %}<option value="{{ n.id }}">{{ n.nombre }}</option>{% endfor %}</select></div><div class="mb-3"><label class="form-label">Grado</label><select name="grado_id" class="form-select" id="sec-grado">{% for g in grados %}<option value="{{ g.id }}" data-nivel-id="{{ g.nivel_id }}">{{ g.nombre }}</option>{% endfor %}</select></div><div class="ref-modal-actions"><button type="button" class="ref-btn-outline" onclick="cerrarModalSeccion()">Cancelar</button><button class="ref-btn-primary">Guardar</button></div></form></div></div>
 
 <div class="ref-modal-overlay" id="modal-curso">
     <div class="ref-modal" style="max-height:85vh;overflow-y:auto;">
         <span class="close" onclick="document.getElementById('modal-curso').style.display='none'">&times;</span>
         <h3>Nuevo Curso</h3>
-        <form method="POST" action="{{ url_for('directora.cursos_crud') }}">
+        <form method="POST" action="{{ url_for('directora.cursos_crud') }}" novalidate onsubmit="return validarFormulario(this)">
             <input type="hidden" name="accion" value="crear">
+            {% set periodo_default = periodos|selectattr('activo')|first %}
+            <input type="hidden" name="periodo_academico_id" value="{{ periodo_default.id if periodo_default else '' }}">
             <div class="row g-3 mb-3">
-                <div class="col-md-6"><label class="form-label">Nombre</label><input type="text" name="nombre" placeholder="Nombre del curso" class="form-control" required></div>
-                <div class="col-md-6"><label class="form-label">Código</label><input type="text" name="codigo" placeholder="Código único" class="form-control" required></div>
+                <div class="col-md-6"><label class="form-label">Nombre</label><input type="text" name="nombre" placeholder="Nombre del curso" class="form-control" oninput="validarCampo(this)"><span class="field-error"></span></div>
+                <div class="col-md-6"><label class="form-label">Código</label><input type="text" name="codigo" placeholder="Código único" class="form-control" oninput="validarCampo(this)"><span class="field-error"></span></div>
             </div>
             <div class="mb-3"><label class="form-label">Descripción</label><textarea name="descripcion" rows="2" class="form-control"></textarea></div>
             <div class="row g-3 mb-3">
                 <div class="col-md-4"><select name="nivel_id" class="form-select" onchange="cargarGradosRef(this.value,'cur-grado')"><option value="">Nivel</option>{% for n in niveles %}<option value="{{ n.id }}">{{ n.nombre }}</option>{% endfor %}</select></div>
-                <div class="col-md-4"><select id="cur-grado" name="grado_id" class="form-select" onchange="cargarSeccionesRef(this.value,'cur-seccion')"><option value="">Grado</option></select></div>
-                <div class="col-md-4"><select id="cur-seccion" name="seccion_id" class="form-select"><option value="">Sección</option></select></div>
+                <div class="col-md-4"><select id="cur-grado" name="grado_id" class="form-select" onchange="cargarSeccionesRef(this.value,'cur-seccion');validarCampo(this)"><option value="">Grado</option></select><span class="field-error"></span></div>
+                <div class="col-md-4"><select id="cur-seccion" name="seccion_id" class="form-select" onchange="validarCampo(this)"><option value="">Sección</option></select><span class="field-error"></span></div>
             </div>
-            <div class="mb-3"><select name="docente_id" class="form-select" required><option value="">Docente</option>{% for d in docentes %}<option value="{{ d.id }}">{{ d.nombre_completo }}</option>{% endfor %}</select></div>
+            <div class="mb-3"><select name="docente_id" class="form-select" onchange="validarCampo(this)"><option value="">Docente</option>{% for d in docentes %}<option value="{{ d.id }}">{{ d.nombre_completo }}</option>{% endfor %}</select><span class="field-error"></span></div>
             <div class="ref-modal-actions">
                 <button type="button" class="ref-btn-outline" onclick="document.getElementById('modal-curso').style.display='none'">Cancelar</button>
                 <button class="ref-btn-primary">Guardar</button>
@@ -701,10 +711,133 @@ const API_NOTAS_GUARDAR = "{{ url_for('directora.api_notas_guardar') }}";
 const API_ALUMNOS = "{{ url_for('directora.api_alumnos') }}";
 const API_ACTUALIZAR_METODO_PAGO = "{{ url_for('directora.api_actualizar_metodo_pago') }}";
 const API_VERIFICAR_EMAIL = "{{ url_for('directora.api_verificar_email') }}";
+const URL_NIVELES_CRUD = "{{ url_for('directora.niveles_crud') }}";
+const URL_GRADOS_CRUD = "{{ url_for('directora.grados_crud') }}";
+const URL_SECCIONES_CRUD = "{{ url_for('directora.secciones_crud') }}";
 
 function cerrarModalHorario() { document.getElementById('modal-horario').style.display = 'none'; }
 function abrirModalGrado() { document.getElementById('modal-grado').style.display = 'flex'; }
 function abrirModalSeccion() { document.getElementById('modal-seccion').style.display = 'flex'; }
+function cerrarModalNivel() { var m = document.getElementById('modal-nivel'); m.style.display = 'none'; m.querySelector('form').reset(); }
+function cerrarModalGrado() { var m = document.getElementById('modal-grado'); m.style.display = 'none'; m.querySelector('form').reset(); var s = document.getElementById('sec-nivel'); if (s) s.value = ''; }
+function cerrarModalSeccion() { var m = document.getElementById('modal-seccion'); m.style.display = 'none'; m.querySelector('form').reset(); var s = document.getElementById('sec-nivel'); if (s) s.value = ''; filtrarGradosSec(s); }
+
+function ajaxEnviarForm(form) {
+    var entity = form.getAttribute('data-entity');
+    var urlMap = {'nivel': URL_NIVELES_CRUD, 'grado': URL_GRADOS_CRUD, 'seccion': URL_SECCIONES_CRUD};
+    var url = urlMap[entity] || form.getAttribute('action');
+    var fd = new FormData(form);
+    fd.append('ajax', '1');
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', url, true);
+    xhr.onerror = function() {
+        showToast('Error de red - no se pudo conectar al servidor', 'danger');
+    };
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState !== 4) return;
+        if (xhr.status !== 200) {
+            showToast('HTTP ' + xhr.status + ': ' + (xhr.statusText || 'error'), 'danger');
+            return;
+        }
+        var txt = xhr.responseText || '';
+        if (!txt || txt.length === 0) {
+            showToast('Respuesta vacia del servidor (status 200)', 'danger');
+            return;
+        }
+        var data;
+        try { data = JSON.parse(txt); } catch (ex) {
+            showToast('Error: respuesta no es JSON. Status ' + xhr.status + ', Length ' + txt.length + ', Preview: ' + txt.substring(0, 120), 'danger');
+            return;
+        }
+        if (!data.success) { showToast(data.error || 'Error', 'danger'); return; }
+        var accion = form.querySelector('[name=accion]').value;
+        if (accion === 'crear') {
+            if (entity === 'nivel') addNivelRow(data.item);
+            else if (entity === 'grado') addGradoRow(data.item);
+            else if (entity === 'seccion') addSeccionRow(data.item);
+            var modal = form.closest('.ref-modal-overlay');
+            if (modal) {
+                modal.style.display = 'none';
+                form.reset();
+                var niv = document.getElementById('sec-nivel');
+                if (niv) { niv.value = ''; filtrarGradosSec(niv); }
+            }
+            showToast('Creado correctamente', 'success');
+        } else if (accion === 'toggle') {
+            actualizarToggle(form, data.item);
+        }
+    };
+    xhr.send(fd);
+    return false;
+}
+
+function addNivelRow(d) {
+    var t = document.querySelector('#acad-estructura .col-md-4:first-child .ref-table');
+    if (!t) return;
+    var icon = d.activo ? 'pause' : 'play';
+    var badge = d.activo
+        ? '<span style="background:#e6fffa;color:#234e52;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">Activo</span>'
+        : '<span style="background:#fff5f5;color:#9b2c2c;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">Inactivo</span>';
+    var tr = document.createElement('tr');
+    tr.innerHTML = '<td>' + d.nombre + '</td><td>' + badge + '</td>'
+        + '<td><form style="display:inline" data-ajax="1" data-entity="nivel" method="POST" action="' + URL_NIVELES_CRUD + '" onsubmit="return ajaxEnviarForm(this)">'
+        + '<input type="hidden" name="accion" value="toggle"><input type="hidden" name="id" value="' + d.id + '">'
+        + '<button class="ref-header-btn"><i class="fas fa-' + icon + '"></i></button></form></td>';
+    t.appendChild(tr);
+    // Add option to grados filter
+    var gf = document.querySelector('#acad-estructura .col-md-4:nth-child(2) .ref-filter-select');
+    if (gf) { var o = document.createElement('option'); o.value = d.id; o.textContent = d.nombre; gf.appendChild(o); }
+}
+
+function addGradoRow(d) {
+    var t = document.querySelector('#acad-estructura .col-md-4:nth-child(2) .ref-table');
+    if (!t) return;
+    var icon = d.activo ? 'pause' : 'play';
+    var badge = d.activo
+        ? '<span style="background:#e6fffa;color:#234e52;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">Activo</span>'
+        : '<span style="background:#fff5f5;color:#9b2c2c;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">Inactivo</span>';
+    var tr = document.createElement('tr');
+    tr.setAttribute('data-nivel-id', d.nivel_id);
+    tr.innerHTML = '<td>' + d.nombre + '</td><td>' + (d.nivel_nombre || '-') + '</td><td>' + badge + '</td>'
+        + '<td><form style="display:inline" data-ajax="1" data-entity="grado" method="POST" action="' + URL_GRADOS_CRUD + '" onsubmit="return ajaxEnviarForm(this)">'
+        + '<input type="hidden" name="accion" value="toggle"><input type="hidden" name="id" value="' + d.id + '">'
+        + '<button class="ref-header-btn"><i class="fas fa-' + icon + '"></i></button></form></td>';
+    t.appendChild(tr);
+    // Add option to secciones filter
+    var sf = document.getElementById('filtro-sec-grado');
+    if (sf) { var o = document.createElement('option'); o.value = d.id; o.textContent = d.nombre; o.setAttribute('data-nivel-id', d.nivel_id); sf.appendChild(o); }
+    // Add option to seccion modal grado select
+    var sg = document.getElementById('sec-grado');
+    if (sg) { var o = document.createElement('option'); o.value = d.id; o.textContent = d.nombre; o.setAttribute('data-nivel-id', d.nivel_id); sg.appendChild(o); }
+}
+
+function addSeccionRow(d) {
+    var t = document.querySelector('#acad-estructura .col-md-4:last-child .ref-table');
+    if (!t) return;
+    var icon = d.activo ? 'pause' : 'play';
+    var badge = d.activo
+        ? '<span style="background:#e6fffa;color:#234e52;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">Activo</span>'
+        : '<span style="background:#fff5f5;color:#9b2c2c;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">Inactivo</span>';
+    var tr = document.createElement('tr');
+    tr.setAttribute('data-grado-id', d.grado_id);
+    tr.innerHTML = '<td>' + (d.grado_nombre || '') + ' - ' + d.nombre + '</td><td>' + badge + '</td>'
+        + '<td><form style="display:inline" data-ajax="1" data-entity="seccion" method="POST" action="' + URL_SECCIONES_CRUD + '" onsubmit="return ajaxEnviarForm(this)">'
+        + '<input type="hidden" name="accion" value="toggle"><input type="hidden" name="id" value="' + d.id + '">'
+        + '<button class="ref-header-btn"><i class="fas fa-' + icon + '"></i></button></form></td>';
+    t.appendChild(tr);
+}
+
+function actualizarToggle(form, d) {
+    var row = form.closest('tr');
+    if (!row) return;
+    var badge = row.querySelector('span[style*="border-radius:20px"]');
+    if (badge) {
+        if (d.activo) { badge.style.background = '#e6fffa'; badge.style.color = '#234e52'; badge.textContent = 'Activo'; }
+        else { badge.style.background = '#fff5f5'; badge.style.color = '#9b2c2c'; badge.textContent = 'Inactivo'; }
+    }
+    var icon = row.querySelector('.ref-header-btn i');
+    if (icon) icon.className = 'fas fa-' + (d.activo ? 'pause' : 'play');
+}
 
 function cargarHorariosBuilder() {
     var secId = document.getElementById('hor-seccion').value;
@@ -1048,7 +1181,52 @@ function filtrarReportes() {
     showToast('Filtro de reportes aplicado', 'info');
 }
 
+function filtrarGrados(sel) {
+    var nivelId = sel.value;
+    var card = sel.closest('.card');
+    if (!card) return;
+    Array.from(card.querySelectorAll('.ref-table tr[data-nivel-id]')).forEach(function(row) {
+        row.style.display = (!nivelId || row.getAttribute('data-nivel-id') === nivelId) ? '' : 'none';
+    });
+    var secFilter = document.getElementById('filtro-sec-grado');
+    Array.from(secFilter.querySelectorAll('option[data-nivel-id]')).forEach(function(opt) {
+        opt.style.display = (!nivelId || opt.getAttribute('data-nivel-id') === nivelId) ? '' : 'none';
+    });
+    if (secFilter.value) {
+        var selected = secFilter.querySelector('option[value="' + secFilter.value + '"]');
+        if (selected && selected.style.display === 'none') {
+            secFilter.value = '';
+            filtrarSecciones(secFilter);
+        }
+    }
+}
+
+function filtrarSecciones(sel) {
+    var gradoId = sel.value;
+    var card = sel.closest('.card');
+    if (!card) return;
+    Array.from(card.querySelectorAll('.ref-table tr[data-grado-id]')).forEach(function(row) {
+        row.style.display = (!gradoId || row.getAttribute('data-grado-id') === gradoId) ? '' : 'none';
+    });
+}
+
+function filtrarGradosSec(nivelSel) {
+    var nivelId = nivelSel.value;
+    var gradoSel = document.getElementById('sec-grado');
+    Array.from(gradoSel.options).forEach(function(opt) {
+        if (!opt.value) return;
+        opt.style.display = (!nivelId || opt.getAttribute('data-nivel-id') === nivelId) ? '' : 'none';
+    });
+    if (gradoSel.value) {
+        var selOpt = gradoSel.querySelector('option[value="' + gradoSel.value + '"]');
+        if (selOpt && selOpt.style.display === 'none') gradoSel.value = '';
+    }
+}
+
 // ========== Field Validation ==========
+var REQUIRED_FIELDS = ['dni','nombres','apellido_paterno','apellido_materno','correo','clave','nombre','codigo','grado_id','seccion_id','docente_id'];
+var OPTIONAL_FIELDS = ['telefono_principal','telefono_secundario','profesion','descripcion'];
+
 function validarCampo(input) {
     var container = input.closest('.col-md-6');
     if (!container) container = input.parentElement;
@@ -1075,10 +1253,9 @@ function validarCampo(input) {
     } else if ((input.name === 'telefono_principal' || input.name === 'telefono_secundario') && val) {
         if (!/^\d+$/.test(val)) msg = 'Solo n\u00fameros';
     }
-    if (val === '' && input.name !== 'telefono_principal' && input.name !== 'telefono_secundario' && input.name !== 'profesion') {
-        if (input.name === 'dni' || input.name === 'nombres' || input.name === 'apellido_paterno' || input.name === 'apellido_materno' || input.name === 'correo' || input.name === 'clave') {
-            msg = 'Campo obligatorio';
-        }
+    if (val === '' && OPTIONAL_FIELDS.indexOf(input.name) === -1 && REQUIRED_FIELDS.indexOf(input.name) !== -1) {
+        if (input.tagName === 'SELECT') msg = 'Selecciona una opci\u00f3n';
+        else msg = 'Campo obligatorio';
     }
     err.textContent = msg;
     if (msg) input.classList.add('is-invalid');
@@ -1198,5 +1375,18 @@ function onDniInput(seccion) {
     var dniVal = document.getElementById(c.dni).value.trim();
     if (dniVal.length === 8) consultarDNI(seccion);
 }
+
+(function() {
+    var hash = window.location.hash.replace('#', '');
+    if (hash) {
+        var btns = document.querySelectorAll('.dash-tab');
+        for (var i = 0; i < btns.length; i++) {
+            var b = btns[i];
+            if ((b.getAttribute('onclick') || '').indexOf(hash) > -1) {
+                b.click(); break;
+            }
+        }
+    }
+})();
 </script>
 {% endblock %}
