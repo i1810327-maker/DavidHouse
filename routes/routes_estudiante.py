@@ -45,8 +45,9 @@ def obtener_bimestre_actual():
 def dashboard():
     estudiante = Estudiante.query.get(session['usuario_id'])
     bimestre = obtener_bimestre_actual()
-    inscripciones = Inscripcion.query.filter_by(alumno_id=estudiante.id).all()
-    cursos = [i.curso for i in inscripciones]
+    cursos = Curso.query.options(
+        joinedload(Curso.docente), joinedload(Curso.grado_rel), joinedload(Curso.seccion_rel), joinedload(Curso.periodo)
+    ).filter_by(grado_id=estudiante.grado_id, seccion_id=estudiante.seccion_id).all() if estudiante.grado_id and estudiante.seccion_id else []
     bimestre_id = request.args.get('bimestre_id', type=int) or (bimestre.id if bimestre else None)
     selected_bimestre = Bimestre.query.get(bimestre_id) if bimestre_id else bimestre
 
@@ -101,6 +102,10 @@ def dashboard():
     justificadas = {j.asistencia_id for j in Justificacion.query.filter_by(estudiante_id=estudiante.id).all()}
     bimestres = Bimestre.query.all()
 
+    horarios_est = Horario.query.options(
+        joinedload(Horario.curso), joinedload(Horario.docente)
+    ).filter_by(seccion_id=estudiante.seccion_id).all() if estudiante.seccion_id else []
+
     return render_template('dashboard_estudiante.html',
         estudiante=estudiante, cursos=cursos,
         promedios=promedios, evaluaciones_por_curso=evaluaciones_por_curso,
@@ -108,7 +113,7 @@ def dashboard():
         pagos_pendientes=pagos_pendientes, pagos_atrasados=pagos_atrasados,
         pagos=pagos, comentarios=comentarios,
         asistencias=asistencias, justificadas=justificadas,
-        bimestres=bimestres)
+        bimestres=bimestres, horarios_est=horarios_est)
 
 @estudiante_bp.route('/horario')
 @login_required
