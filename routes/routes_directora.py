@@ -115,7 +115,16 @@ def niveles_crud():
             logger.warning('niveles_crud POST: ajax=%s, accion=%s, form_keys=%s, accion_raw=%r, nombre=%r',
                            ajax, accion, list(request.form.keys()), request.form.get('accion'), request.form.get('nombre'))
             if accion == 'crear':
-                n = Nivel(nombre=request.form.get('nombre'))
+                nombre = request.form.get('nombre', '').strip()
+                if not nombre:
+                    if ajax: return jsonify({'success': False, 'error': 'El nombre es obligatorio'})
+                    flash('El nombre es obligatorio', 'danger')
+                    return redirect(url_for('directora.dashboard') + '#academico')
+                if Nivel.query.filter_by(nombre=nombre).first():
+                    if ajax: return jsonify({'success': False, 'error': 'Ya existe un nivel con ese nombre'})
+                    flash('Ya existe un nivel con ese nombre', 'danger')
+                    return redirect(url_for('directora.dashboard') + '#academico')
+                n = Nivel(nombre=nombre)
                 db.session.add(n); db.session.commit()
                 if ajax:
                     return jsonify({'success': True, 'item': {'id': n.id, 'nombre': n.nombre, 'activo': n.activo}})
@@ -148,8 +157,22 @@ def grados_crud():
         logger.warning('grados_crud POST: ajax=%s, accion=%s, form_keys=%s, nombre=%r, nivel_id=%r',
                        ajax, accion, list(request.form.keys()), request.form.get('nombre'), request.form.get('nivel_id'))
         if accion == 'crear':
-            nivel_obj = Nivel.query.get(int(request.form.get('nivel_id')))
-            g = Grado(nombre=request.form.get('nombre'), nivel_id=nivel_obj.id, nivel=nivel_obj.nombre, activo=True)
+            nombre = request.form.get('nombre', '').strip()
+            nivel_id = request.form.get('nivel_id')
+            if not nombre or not nivel_id:
+                if ajax: return jsonify({'success': False, 'error': 'Nombre y nivel son obligatorios'})
+                flash('Nombre y nivel son obligatorios', 'danger')
+                return redirect(url_for('directora.dashboard') + '#academico')
+            if Grado.query.filter_by(nombre=nombre, nivel_id=int(nivel_id)).first():
+                if ajax: return jsonify({'success': False, 'error': 'Ya existe un grado con ese nombre en este nivel'})
+                flash('Ya existe un grado con ese nombre en este nivel', 'danger')
+                return redirect(url_for('directora.dashboard') + '#academico')
+            nivel_obj = Nivel.query.get(int(nivel_id))
+            if not nivel_obj:
+                if ajax: return jsonify({'success': False, 'error': 'Nivel no encontrado'})
+                flash('Nivel no encontrado', 'danger')
+                return redirect(url_for('directora.dashboard') + '#academico')
+            g = Grado(nombre=nombre, nivel_id=nivel_obj.id, nivel=nivel_obj.nombre, activo=True)
             db.session.add(g); db.session.commit()
             if ajax:
                 return jsonify({'success': True, 'item': {'id': g.id, 'nombre': g.nombre, 'nivel_id': g.nivel_id, 'nivel_nombre': g.nivel_rel.nombre if g.nivel_rel else '', 'activo': g.activo}})
@@ -185,7 +208,17 @@ def secciones_crud():
         logger.warning('secciones_crud POST: ajax=%s, accion=%s, form_keys=%s, nombre=%r, grado_id=%r',
                        ajax, accion, list(request.form.keys()), request.form.get('nombre'), request.form.get('grado_id'))
         if accion == 'crear':
-            s = Seccion(nombre=request.form.get('nombre'), grado_id=int(request.form.get('grado_id')), activo=True)
+            nombre = request.form.get('nombre', '').strip()
+            grado_id = request.form.get('grado_id')
+            if not nombre or not grado_id:
+                if ajax: return jsonify({'success': False, 'error': 'Nombre y grado son obligatorios'})
+                flash('Nombre y grado son obligatorios', 'danger')
+                return redirect(url_for('directora.dashboard') + '#academico')
+            if Seccion.query.filter_by(nombre=nombre, grado_id=int(grado_id)).first():
+                if ajax: return jsonify({'success': False, 'error': 'Ya existe una sección con ese nombre en este grado'})
+                flash('Ya existe una sección con ese nombre en este grado', 'danger')
+                return redirect(url_for('directora.dashboard') + '#academico')
+            s = Seccion(nombre=nombre, grado_id=int(grado_id), activo=True)
             db.session.add(s); db.session.commit()
             if ajax:
                 return jsonify({'success': True, 'item': {'id': s.id, 'nombre': s.nombre, 'grado_id': s.grado_id, 'grado_nombre': s.grado.nombre if s.grado else '', 'activo': s.activo}})
@@ -413,6 +446,12 @@ def crear_colaborador():
     dni = request.form.get('dni')
     if Colaborador.query.filter_by(dni=dni).first():
         flash('El DNI ya existe', 'danger')
+        return redirect(url_for('directora.dashboard'))
+    nom = request.form.get('nombres', '').strip()
+    apPat = request.form.get('apellido_paterno', '').strip()
+    apMat = request.form.get('apellido_materno', '').strip()
+    if Colaborador.query.filter_by(nombres=nom, apellido_paterno=apPat, apellido_materno=apMat).first():
+        flash('Ya existe un colaborador con ese nombre y apellidos', 'danger')
         return redirect(url_for('directora.dashboard'))
     correo = request.form.get('correo')
     if Colaborador.query.filter_by(correo=correo).first():
@@ -787,6 +826,12 @@ def crear_estudiante():
     dni = request.form.get('dni')
     if Estudiante.query.filter_by(dni=dni).first():
         flash('El DNI ya existe', 'danger')
+        return redirect(url_for('directora.dashboard'))
+    nom = request.form.get('nombres', '').strip()
+    apPat = request.form.get('apellido_paterno', '').strip()
+    apMat = request.form.get('apellido_materno', '').strip()
+    if Estudiante.query.filter_by(nombres=nom, apellido_paterno=apPat, apellido_materno=apMat).first():
+        flash('Ya existe un alumno con ese nombre y apellidos', 'danger')
         return redirect(url_for('directora.dashboard'))
     correo = request.form.get('correo')
     if Estudiante.query.filter_by(correo=correo).first():
