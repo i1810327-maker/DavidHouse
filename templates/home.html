@@ -6,11 +6,25 @@
     <title>David House - Camino de Vida | Educación de Excelencia</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
 </head>
 <body>
+
+<div class="home-loading" aria-hidden="true">
+    <div class="home-loading-logo">DH</div>
+    <div class="home-loading-bar"><div class="home-loading-bar-fill"></div></div>
+</div>
+
+<div class="scroll-progress" aria-hidden="true"></div>
+
+<div class="home-cursor" aria-hidden="true"></div>
+<div class="home-cursor-dot" aria-hidden="true"></div>
+
+<button class="back-to-top" aria-label="Volver arriba"><i class="fas fa-arrow-up"></i></button>
+
     <header class="home-header">
         <div class="header-container">
-            <a href="{{ url_for('index') }}" class="brand-logo">
+            <a href="{{ url_for('index') }}" class="brand-logo magnetic-btn">
                 <span class="brand-icon">DH</span>
                 <span class="brand-text">
                     <strong>David House</strong>
@@ -18,7 +32,7 @@
                 </span>
             </a>
 
-            <button class="hamburger" onclick="toggleMenu()" aria-label="Menú">
+            <button class="hamburger" aria-label="Menú">
                 <span></span>
                 <span></span>
                 <span></span>
@@ -35,31 +49,44 @@
                 </ul>
             </nav>
 
-            <a href="{{ url_for('login') }}" class="btn-aula">Aula Virtual</a>
+            <a href="{{ url_for('login') }}" class="btn-aula magnetic-btn"><span class="btn-shine"></span>Aula Virtual</a>
         </div>
     </header>
 
     <!-- HERO -->
     <section id="inicio" class="home-hero">
+        <div class="hero-gradient-morph"></div>
+        <div class="hero-noise"></div>
+        <div class="hero-particles"></div>
         <div class="hero-bg">
             <div class="hero-shape hero-shape-1"></div>
             <div class="hero-shape hero-shape-2"></div>
             <div class="hero-shape hero-shape-3"></div>
         </div>
-        <div class="hero-content reveal">
+        <div class="hero-content hero-3d-tilt">
             <span class="hero-badge">Educación de Excelencia</span>
-            <h1 class="hero-title"><span class="highlight">David House</span><br>Camino de Vida</h1>
-            <p class="hero-desc">Formamos líderes del mañana con valores sólidos, excelencia académica y un enfoque integral que potencia el talento de cada estudiante.</p>
+            <h1 class="hero-title"><span class="gradient-text">David House</span><br>Camino de Vida</h1>
+            <p class="hero-desc"><span class="hero-typewriter"></span></p>
             <div class="hero-btns">
-                <a href="#nosotros" class="btn-primary">Conócenos</a>
-                <a href="{{ url_for('login') }}" class="btn-outline">Aula Virtual</a>
+                <a href="#nosotros" class="btn-primary"><span class="btn-shine"></span> Conócenos</a>
+                <a href="{{ url_for('login') }}" class="btn-outline"><span class="btn-shine"></span> Aula Virtual</a>
             </div>
+        </div>
+        <div class="hero-scroll-indicator">
+            <span>Scroll</span>
+            <div class="hero-scroll-mouse"></div>
         </div>
     </section>
 
+    <div class="section-divider" aria-hidden="true">
+        <svg viewBox="0 0 1440 80" preserveAspectRatio="none">
+            <path fill="#0d47a1" d="M0,40 C360,80 1080,0 1440,40 L1440,80 L0,80 Z"/>
+        </svg>
+    </div>
+
     <!-- STATS -->
     <section class="home-stats">
-        <div class="stats-grid reveal">
+        <div class="stats-grid">
             <div class="stat-item">
                 <span class="stat-icon"><i class="fas fa-calendar-alt"></i></span>
                 <span class="stat-number">15+</span>
@@ -84,14 +111,14 @@
     </section>
 
     <!-- NOSOTROS -->
-    <section id="nosotros" class="home-section home-nosotros reveal">
+    <section id="nosotros" class="home-section home-nosotros">
         <div class="home-container">
             <div class="nosotros-grid">
-                <div class="placeholder-img">
+                <div class="placeholder-img reveal-left">
                     <span class="placeholder-icon"><i class="fas fa-school"></i></span>
                     <span class="placeholder-text">Tu imagen aquí</span>
                 </div>
-                <div class="nosotros-text">
+                <div class="nosotros-text reveal-right">
                     <span class="section-badge">Sobre Nosotros</span>
                     <h2>Una Institución con Historia</h2>
                     <p>David House Camino de Vida nació con la visión de ofrecer una educación integral que combine la excelencia académica con la formación en valores. Desde nuestros inicios, nos hemos dedicado a crear un ambiente donde cada estudiante pueda desarrollar su máximo potencial.</p>
@@ -102,33 +129,41 @@
     </section>
 
     <!-- VALORES -->
-    <section class="home-section home-valores reveal">
+    <section class="home-section home-valores">
         <div class="home-container">
-            <div class="text-center mb-5">
+            <div class="text-center mb-5 reveal-fade">
                 <span class="section-badge">Nuestros Valores</span>
                 <h2 class="section-title">Principios que nos <span>definen</span></h2>
                 <p class="section-desc">Valores fundamentales que guían nuestra labor educativa diaria.</p>
             </div>
-            <div class="valores-grid">
-                <div class="valor-card">
-                    <div class="valor-icon"><i class="fas fa-heart"></i></div>
-                    <h4>Amor y Respeto</h4>
-                    <p>Fomentamos un ambiente de cariño y respeto mutuo entre todos los miembros de la comunidad educativa.</p>
+            <div class="valores-grid reveal-stagger">
+                <div class="valor-card tilt-card">
+                    <div class="tilt-card-inner">
+                        <div class="valor-icon tilt-icon"><i class="fas fa-heart"></i></div>
+                        <h4 class="tilt-text">Amor y Respeto</h4>
+                        <p class="tilt-text">Fomentamos un ambiente de cariño y respeto mutuo entre todos los miembros de la comunidad educativa.</p>
+                    </div>
                 </div>
-                <div class="valor-card">
-                    <div class="valor-icon"><i class="fas fa-handshake"></i></div>
-                    <h4>Trabajo en Equipo</h4>
-                    <p>Promovemos la colaboración y el trabajo en conjunto como base para el aprendizaje significativo.</p>
+                <div class="valor-card tilt-card">
+                    <div class="tilt-card-inner">
+                        <div class="valor-icon tilt-icon"><i class="fas fa-handshake"></i></div>
+                        <h4 class="tilt-text">Trabajo en Equipo</h4>
+                        <p class="tilt-text">Promovemos la colaboración y el trabajo en conjunto como base para el aprendizaje significativo.</p>
+                    </div>
                 </div>
-                <div class="valor-card">
-                    <div class="valor-icon"><i class="fas fa-trophy"></i></div>
-                    <h4>Excelencia Académica</h4>
-                    <p>Buscamos la más alta calidad educativa, actualizando constantemente nuestros métodos pedagógicos.</p>
+                <div class="valor-card tilt-card">
+                    <div class="tilt-card-inner">
+                        <div class="valor-icon tilt-icon"><i class="fas fa-trophy"></i></div>
+                        <h4 class="tilt-text">Excelencia Académica</h4>
+                        <p class="tilt-text">Buscamos la más alta calidad educativa, actualizando constantemente nuestros métodos pedagógicos.</p>
+                    </div>
                 </div>
-                <div class="valor-card">
-                    <div class="valor-icon"><i class="fas fa-lightbulb"></i></div>
-                    <h4>Innovación Educativa</h4>
-                    <p>Integramos tecnología y metodologías innovadoras para potenciar el aprendizaje de nuestros estudiantes.</p>
+                <div class="valor-card tilt-card">
+                    <div class="tilt-card-inner">
+                        <div class="valor-icon tilt-icon"><i class="fas fa-lightbulb"></i></div>
+                        <h4 class="tilt-text">Innovación Educativa</h4>
+                        <p class="tilt-text">Integramos tecnología y metodologías innovadoras para potenciar el aprendizaje de nuestros estudiantes.</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -136,9 +171,9 @@
 
     <!-- EVENTOS -->
     {% if eventos %}
-    <section id="eventos" class="home-section home-eventos reveal">
+    <section id="eventos" class="home-section home-eventos">
         <div class="home-container">
-            <div class="text-center mb-5">
+            <div class="text-center mb-5 reveal-fade">
                 <span class="section-badge">Próximos Eventos</span>
                 <h2 class="section-title">Nuestros <span>eventos</span></h2>
                 <p class="section-desc">Actividades y fechas importantes de nuestra institución.</p>
@@ -156,7 +191,6 @@
                         </div>
                     </div>
                     {% endfor %}
-                    <!-- Duplicate for seamless loop -->
                     {% for e in eventos %}
                     <div class="evento-card">
                         {% if e.imagen_url %}
@@ -175,123 +209,137 @@
     {% endif %}
 
     <!-- MISIÓN Y VISIÓN -->
-    <section id="mision-vision" class="home-section reveal">
+    <section id="mision-vision" class="home-section">
         <div class="home-container">
-            <div class="text-center mb-5">
+            <div class="text-center mb-5 reveal-fade">
                 <span class="section-badge">Misión & Visión</span>
                 <h2 class="section-title">Nuestra <span>razón de ser</span></h2>
             </div>
-            <div class="mv-grid">
-                <div class="mv-card">
-                    <span class="mv-icon"><i class="fas fa-bullseye"></i></span>
-                    <h3>Misión</h3>
-                    <p>Proporcionar una educación integral de excelencia que forme personas íntegras, con sólidos valores éticos y morales, capaces de enfrentar los desafíos del mundo actual y contribuir positivamente a la sociedad.</p>
+            <div class="mv-grid reveal-stagger">
+                <div class="mv-card tilt-card">
+                    <div class="tilt-card-inner">
+                        <span class="mv-icon tilt-icon"><i class="fas fa-bullseye"></i></span>
+                        <h3 class="tilt-text">Misión</h3>
+                        <p class="tilt-text">Proporcionar una educación integral de excelencia que forme personas íntegras, con sólidos valores éticos y morales, capaces de enfrentar los desafíos del mundo actual y contribuir positivamente a la sociedad.</p>
+                    </div>
                 </div>
-                <div class="mv-card">
-                    <span class="mv-icon"><i class="fas fa-eye"></i></span>
-                    <h3>Visión</h3>
-                    <p>Ser una institución educativa líder reconocida por su calidad académica, innovación pedagógica y formación en valores, formando ciudadanos comprometidos con el desarrollo sostenible de su comunidad y del país.</p>
+                <div class="mv-card tilt-card">
+                    <div class="tilt-card-inner">
+                        <span class="mv-icon tilt-icon"><i class="fas fa-eye"></i></span>
+                        <h3 class="tilt-text">Visión</h3>
+                        <p class="tilt-text">Ser una institución educativa líder reconocida por su calidad académica, innovación pedagógica y formación en valores, formando ciudadanos comprometidos con el desarrollo sostenible de su comunidad y del país.</p>
+                    </div>
                 </div>
             </div>
         </div>
     </section>
 
     <!-- NIVELES -->
-    <section id="niveles" class="home-section home-niveles reveal">
+    <section id="niveles" class="home-section home-niveles">
         <div class="home-container">
-            <div class="text-center mb-5">
+            <div class="text-center mb-5 reveal-fade">
                 <span class="section-badge section-badge-light">Niveles Educativos</span>
                 <h2 class="section-title">Educación para <span>cada etapa</span></h2>
                 <p class="section-desc section-desc-light">Programas diseñados para el desarrollo integral en cada fase de crecimiento.</p>
             </div>
-            <div class="niveles-grid">
-                <div class="nivel-card inicial">
-                    <span class="nivel-icon"><i class="fas fa-seedling"></i></span>
-                    <span class="nivel-age">3-5 años</span>
-                    <h3>Inicial</h3>
-                    <p>Aprendizaje a través del juego en ambientes seguros y estimulantes.</p>
-                    <ul>
-                        <li><i class="fas fa-check"></i> Desarrollo socioemocional</li>
-                        <li><i class="fas fa-check"></i> Estimulación temprana</li>
-                        <li><i class="fas fa-check"></i> Pre-escritura y pre-lectura</li>
-                        <li><i class="fas fa-check"></i> Psicomotricidad</li>
-                    </ul>
+            <div class="niveles-grid reveal-stagger">
+                <div class="nivel-card inicial tilt-card">
+                    <div class="tilt-card-inner">
+                        <span class="nivel-icon tilt-icon"><i class="fas fa-seedling"></i></span>
+                        <span class="nivel-age">3-5 años</span>
+                        <h3 class="tilt-text">Inicial</h3>
+                        <p class="tilt-text">Aprendizaje a través del juego en ambientes seguros y estimulantes.</p>
+                        <ul>
+                            <li><i class="fas fa-check-circle"></i> Desarrollo socioemocional</li>
+                            <li><i class="fas fa-check-circle"></i> Estimulación temprana</li>
+                            <li><i class="fas fa-check-circle"></i> Pre-escritura y pre-lectura</li>
+                            <li><i class="fas fa-check-circle"></i> Psicomotricidad</li>
+                        </ul>
+                    </div>
                 </div>
-                <div class="nivel-card primaria">
-                    <span class="nivel-icon"><i class="fas fa-book-open"></i></span>
-                    <span class="nivel-age">6-11 años</span>
-                    <h3>Primaria</h3>
-                    <p>Bases sólidas de conocimiento con énfasis en valores y pensamiento crítico.</p>
-                    <ul>
-                        <li><i class="fas fa-check"></i> Curriculum integral</li>
-                        <li><i class="fas fa-check"></i> Tutoría personalizada</li>
-                        <li><i class="fas fa-check"></i> Tecnología educativa</li>
-                        <li><i class="fas fa-check"></i> Talleres extracurriculares</li>
-                    </ul>
+                <div class="nivel-card primaria tilt-card">
+                    <div class="tilt-card-inner">
+                        <span class="nivel-icon tilt-icon"><i class="fas fa-book-open"></i></span>
+                        <span class="nivel-age">6-11 años</span>
+                        <h3 class="tilt-text">Primaria</h3>
+                        <p class="tilt-text">Bases sólidas de conocimiento con énfasis en valores y pensamiento crítico.</p>
+                        <ul>
+                            <li><i class="fas fa-check-circle"></i> Curriculum integral</li>
+                            <li><i class="fas fa-check-circle"></i> Tutoría personalizada</li>
+                            <li><i class="fas fa-check-circle"></i> Tecnología educativa</li>
+                            <li><i class="fas fa-check-circle"></i> Talleres extracurriculares</li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </div>
     </section>
 
     <!-- GALERÍA -->
-    <section id="galeria" class="home-section reveal">
+    <section id="galeria" class="home-section">
         <div class="home-container">
-            <div class="text-center mb-5">
+            <div class="text-center mb-5 reveal-fade">
                 <span class="section-badge">Instalaciones</span>
                 <h2 class="section-title">Nuestros <span>espacios</span></h2>
                 <p class="section-desc">Ambientes diseñados para el aprendizaje y desarrollo integral.</p>
             </div>
-            <div class="galeria-grid">
+            <div class="galeria-grid reveal-stagger">
                 <div class="galeria-item">
                     <div class="placeholder-img">
                         <span class="placeholder-icon"><i class="fas fa-landmark"></i></span>
                         <span class="placeholder-text">Tu imagen aquí</span>
                     </div>
+                    <div class="galeria-overlay"><i class="fas fa-search-plus"></i></div>
                 </div>
                 <div class="galeria-item">
                     <div class="placeholder-img">
                         <span class="placeholder-icon"><i class="fas fa-book-open"></i></span>
                         <span class="placeholder-text">Tu imagen aquí</span>
                     </div>
+                    <div class="galeria-overlay"><i class="fas fa-search-plus"></i></div>
                 </div>
                 <div class="galeria-item">
                     <div class="placeholder-img">
                         <span class="placeholder-icon"><i class="fas fa-futbol"></i></span>
                         <span class="placeholder-text">Tu imagen aquí</span>
                     </div>
+                    <div class="galeria-overlay"><i class="fas fa-search-plus"></i></div>
                 </div>
                 <div class="galeria-item">
                     <div class="placeholder-img">
                         <span class="placeholder-icon"><i class="fas fa-laptop-code"></i></span>
                         <span class="placeholder-text">Tu imagen aquí</span>
                     </div>
+                    <div class="galeria-overlay"><i class="fas fa-search-plus"></i></div>
                 </div>
                 <div class="galeria-item">
                     <div class="placeholder-img">
                         <span class="placeholder-icon"><i class="fas fa-palette"></i></span>
                         <span class="placeholder-text">Tu imagen aquí</span>
                     </div>
+                    <div class="galeria-overlay"><i class="fas fa-search-plus"></i></div>
                 </div>
                 <div class="galeria-item">
                     <div class="placeholder-img">
                         <span class="placeholder-icon"><i class="fas fa-mask"></i></span>
                         <span class="placeholder-text">Tu imagen aquí</span>
                     </div>
+                    <div class="galeria-overlay"><i class="fas fa-search-plus"></i></div>
                 </div>
             </div>
         </div>
     </section>
 
     <!-- CONTACTO -->
-    <section id="contacto" class="home-section home-contacto reveal">
+    <section id="contacto" class="home-section home-contacto">
         <div class="home-container">
-            <div class="text-center mb-5">
+            <div class="text-center mb-5 reveal-fade">
                 <span class="section-badge">Contáctanos</span>
                 <h2 class="section-title">Solicita <span>información</span></h2>
                 <p class="section-desc">Déjanos tus datos y nos pondremos en contacto contigo a la brevedad.</p>
             </div>
             <div class="contacto-grid">
-                <div class="contacto-info">
+                <div class="contacto-info reveal-left">
                     <div class="contacto-info-item">
                         <span class="contacto-info-icon"><i class="fas fa-map-marker-alt"></i></span>
                         <div><h4>Dirección</h4><p>Av. Educación 123, Lima</p></div>
@@ -309,7 +357,7 @@
                         <div><h4>Horario</h4><p>Lun - Vie: 8:00 AM - 2:00 PM</p></div>
                     </div>
                 </div>
-                <form class="contacto-form" method="POST" action="{{ url_for('contacto') }}">
+                <form class="contacto-form reveal-right" method="POST" action="{{ url_for('contacto') }}">
                     <div class="contacto-form-row">
                         <div class="contacto-field">
                             <label for="cf_nombre">Nombre completo <span class="req">*</span></label>
@@ -338,7 +386,7 @@
                         <label for="cf_mensaje">Mensaje</label>
                         <textarea id="cf_mensaje" name="mensaje" rows="4" placeholder="Escribe tu mensaje aquí (opcional)"></textarea>
                     </div>
-                    <button type="submit" class="btn-primary" style="width:100%;justify-content:center;"><i class="fas fa-paper-plane"></i> Enviar Solicitud</button>
+                    <button type="submit" class="btn-primary magnetic-btn" style="width:100%;justify-content:center;"><span class="btn-shine"></span><i class="fas fa-paper-plane"></i> Enviar Solicitud</button>
                 </form>
             </div>
         </div>
@@ -381,13 +429,13 @@
             <div class="footer-col">
                 <h4>Síguenos</h4>
                 <div class="social">
-                    <a href="#" aria-label="Facebook"><i class="fab fa-facebook"></i></a>
+                    <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
                     <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
                     <a href="#" aria-label="WhatsApp"><i class="fab fa-whatsapp"></i></a>
                     <a href="#" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
                 </div>
                 <div class="mt-2">
-                    <a href="{{ url_for('login') }}" class="btn-aula">Acceso Aula Virtual</a>
+                    <a href="{{ url_for('login') }}" class="btn-aula"><span class="btn-shine"></span>Acceso Aula Virtual</a>
                 </div>
             </div>
         </div>
@@ -397,32 +445,6 @@
         </div>
     </footer>
 
-<script>
-function toggleMenu() {
-    var nav = document.querySelector('.home-header .main-nav');
-    if (nav) nav.classList.toggle('show');
-}
-
-document.querySelectorAll('.nav-link').forEach(function(link) {
-    link.addEventListener('click', function() {
-        var nav = document.querySelector('.home-header .main-nav');
-        if (nav) nav.classList.remove('show');
-    });
-});
-
-function handleReveal() {
-    var elements = document.querySelectorAll('.reveal');
-    for (var i = 0; i < elements.length; i++) {
-        var el = elements[i];
-        var rect = el.getBoundingClientRect();
-        if (rect.top < window.innerHeight - 80) {
-            el.classList.add('visible');
-        }
-    }
-}
-
-window.addEventListener('scroll', handleReveal);
-window.addEventListener('load', handleReveal);
-</script>
+<script src="{{ url_for('static', filename='js/home.js') }}"></script>
 </body>
 </html>
