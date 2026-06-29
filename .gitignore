@@ -25,6 +25,13 @@ env/
 .DS_Store
 Thumbs.db
 
+# --- OpenCode ---
+.opencode/
+openspec/
+
+# --- Python version ---
+.python-version
+
 # --- Flask / Database ---
 instance/
 *.db
