@@ -801,6 +801,9 @@ img { max-width: 100%; height: auto; }
 .login-forgot a:hover { color: var(--accent); background: #fff0e6; text-decoration: none; }
 .login-help { text-align: center; margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border); }
 .login-help p { color: var(--text-muted); font-size: 13px; }
+.login-back-home { text-align: center; margin-top: 12px; }
+.btn-back-home { display: inline-flex; align-items: center; gap: 6px; color: var(--accent); font-size: 14px; font-weight: 600; padding: 8px 20px; border-radius: var(--radius-md); border: 2px solid var(--accent); transition: all .3s ease; }
+.btn-back-home:hover { background: var(--accent); color: #fff; text-decoration: none; }
 
 /* ===== HOME PAGE ===== */
 .home-header {
