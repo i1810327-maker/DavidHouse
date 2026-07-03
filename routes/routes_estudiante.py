@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for, session, flash
+from flask import Blueprint, render_template, request, redirect, url_for, session, flash, jsonify
 from datetime import datetime
 from sqlalchemy.orm import joinedload
 from db import db
@@ -236,16 +236,16 @@ def api_detalle_notas(curso_id):
         for ev in evals:
             notas[ev.tipo] = float(ev.calificacion)
         c = notas.get('cuaderno')
-        l = notas.get('libro')
+        lb = notas.get('libro')
         p = notas.get('practicas')
         ex = notas.get('exposiciones')
         em = notas.get('examen')
         prom = None
-        if c is not None and l is not None and p is not None and ex is not None and em is not None:
-            prom = round(c*0.10 + l*0.10 + p*0.20 + ex*0.10 + em*0.50, 2)
+        if c is not None and lb is not None and p is not None and ex is not None and em is not None:
+            prom = round(c*0.10 + lb*0.10 + p*0.20 + ex*0.10 + em*0.50, 2)
         resultado.append({
             'nombre': b.nombre,
-            'notas': {'cuaderno': c, 'libro': l, 'practicas': p, 'exposiciones': ex, 'examen': em},
+            'notas': {'cuaderno': c, 'libro': lb, 'practicas': p, 'exposiciones': ex, 'examen': em},
             'promedio': prom,
             'letra': nota_a_letra(prom) if prom is not None else '-'
         })

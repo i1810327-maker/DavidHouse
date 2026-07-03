@@ -230,8 +230,7 @@
                     <td class="time-slot">{{ h }} - {{ '%02d:00'|format(h.split(':')[0]|int + 1) }}</td>
                     {% for dia in range(1,6) %}
                     <td>
-                        {% set clases = horarios | selectattr('dia_semana', 'equalto', dia) | selectattr('hora_inicio.strftime', 'equalto', h + ':00') | list %}
-                        {% for c in clases %}
+                        {% for c in horarios if c.dia_semana == dia and c.hora_inicio.strftime('%H:%M') == h %}
                         <div class="class-cell"><strong>{{ c.curso.nombre }}</strong><small>{{ c.seccion.grado.nombre }} {{ c.seccion.nombre }}</small></div>
                         {% endfor %}
                     </td>

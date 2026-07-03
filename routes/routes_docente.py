@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for, session, flash, jsonify
+from flask import Blueprint, render_template, request, redirect, url_for, session, flash, jsonify, Response
 from datetime import datetime
 from sqlalchemy.orm import joinedload
 from db import db
@@ -9,6 +9,7 @@ from models import (
 )
 from functools import wraps
 import os
+import io
 
 docente_bp = Blueprint('docente', __name__, url_prefix='/docente')
 
@@ -65,7 +66,7 @@ def dashboard():
     estudiantes_por_curso = {}
     for c in cursos:
         alumno_ids = db.session.query(Inscripcion.alumno_id).filter(Inscripcion.curso_id == c.id).subquery()
-        estudiantes_por_curso[c.id] = Estudiante.query.filter(Estudiante.id.in_(alumno_ids), Estudiante.activo == True).order_by(Estudiante.apellido_paterno).all()
+        estudiantes_por_curso[c.id] = Estudiante.query.filter(Estudiante.id.in_(alumno_ids), Estudiante.activo.is_(True)).order_by(Estudiante.apellido_paterno).all()
     return render_template('dashboard_docente.html', docente=docente, cursos=cursos,
         total_estudiantes=total_estudiantes, niveles=niveles, grados=grados,
         secciones=secciones, bimestres=bimestres, horarios=horarios,
@@ -75,7 +76,7 @@ def dashboard():
 @login_required
 @role_required('docente')
 def evaluaciones_curso(curso_id):
-    from app import obtener_bimestre_actual as get_bim, _calcular_promedio_desde_datos
+    from app import obtener_bimestre_actual as get_bim
     curso = Curso.query.get_or_404(curso_id)
     if curso.docente_id != session['usuario_id']:
         flash('No tienes permiso para este curso', 'danger')
@@ -232,7 +233,6 @@ def asistencia_curso(curso_id):
 @login_required
 @role_required('docente')
 def comentarios():
-    from app import obtener_bimestre_actual as get_bim
     docente = Colaborador.query.get(session['usuario_id'])
     cursos = Curso.query.options(joinedload(Curso.grado_rel), joinedload(Curso.seccion_rel)).filter_by(docente_id=docente.id).all()
     if request.method == 'POST':
@@ -338,7 +338,6 @@ def api_asistencia_estudiantes():
     if not seccion_id:
         return jsonify([])
     estudiantes = Estudiante.query.filter_by(seccion_id=seccion_id, activo=True).order_by(Estudiante.apellido_paterno).all()
-    colores = ['#1565c0','#2e7d32','#e65100','#6a1b9a','#c62828','#00838f']
     return jsonify([{
         'id': e.id,
         'nombre': e.nombre_completo,
@@ -406,16 +405,16 @@ def api_evaluaciones():
     for e in estudiantes:
         notas = evals_idx.get(e.id, {})
         c = notas.get('cuaderno')
-        l = notas.get('libro')
+        lb = notas.get('libro')
         p = notas.get('practicas')
         ex = notas.get('exposiciones')
         em = notas.get('examen')
         prom = None
-        if c is not None and l is not None and p is not None and ex is not None and em is not None:
-            prom = c*0.10 + l*0.10 + p*0.20 + ex*0.10 + em*0.50
+        if c is not None and lb is not None and p is not None and ex is not None and em is not None:
+            prom = c*0.10 + lb*0.10 + p*0.20 + ex*0.10 + em*0.50
         result.append({
             'id': e.id, 'nombre': e.nombre_completo,
-            'notas': {'cuaderno': c, 'libro': l, 'practicas': p, 'exposiciones': ex, 'examen': em},
+            'notas': {'cuaderno': c, 'libro': lb, 'practicas': p, 'exposiciones': ex, 'examen': em},
             'promedio': round(prom, 2) if prom is not None else None,
             'letra': nota_a_letra(prom) if prom is not None else '-'
         })

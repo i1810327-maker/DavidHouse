@@ -1,8 +1,8 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
+from flask import Flask, render_template, request, redirect, url_for, session, flash
 from flask_bcrypt import Bcrypt
 from functools import wraps
 from datetime import datetime, timedelta
-from sqlalchemy import or_
+
 from sqlalchemy.orm import joinedload
 import os
 import re
@@ -118,7 +118,7 @@ def log_accion(accion):
                 )
                 db.session.add(log)
                 db.session.commit()
-            except:
+            except Exception:
                 db.session.rollback()
             return resultado
         return decorated
@@ -215,10 +215,6 @@ def index():
 @app.route('/contacto', methods=['POST'])
 def contacto():
     nombre = request.form.get('nombre', '')
-    correo = request.form.get('correo', '')
-    telefono = request.form.get('telefono', '')
-    interes = request.form.get('interes', '')
-    mensaje = request.form.get('mensaje', '')
     flash(f'Gracias {nombre}, hemos recibido tu solicitud. Te contactaremos pronto.', 'success')
     return redirect(url_for('index') + '#contacto')
 
@@ -235,7 +231,7 @@ def login():
                 db.and_(Baneo.tipo_baneo == 'usuario', Baneo.identificador == correo),
                 db.and_(Baneo.tipo_baneo == 'ip', Baneo.ip_address == ip)
             ),
-            Baneo.activo == True, Baneo.fecha_fin > ahora
+            Baneo.activo.is_(True), Baneo.fecha_fin > ahora
         ).first()
         if baneo:
             flash('Cuenta temporalmente bloqueada. Intente más tarde.', 'danger')
