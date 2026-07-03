@@ -60,9 +60,18 @@
     var navMenu = document.getElementById('navMenu');
     if (!hamburger || !navMenu) return;
 
-    hamburger.addEventListener('click', function () {
+    function toggleMenu() {
       navMenu.classList.toggle('active');
       hamburger.classList.toggle('active');
+      hamburger.setAttribute('aria-expanded', navMenu.classList.contains('active'));
+    }
+
+    hamburger.addEventListener('click', toggleMenu);
+    hamburger.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        toggleMenu();
+      }
     });
 
     document.querySelectorAll('.nav-link').forEach(function (link) {

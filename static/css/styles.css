@@ -825,6 +825,9 @@ img { max-width: 100%; height: auto; }
 .home-header .btn-aula:hover { background: var(--primary); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(43,108,176,0.35); text-decoration: none; color: white; }
 .hamburger { display: none; flex-direction: column; gap: 5px; background: none; border: none; cursor: pointer; padding: 4px; }
 .hamburger span { width: 22px; height: 2px; background: var(--primary); border-radius: 2px; transition: all var(--transition); }
+.hamburger.active span:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
+.hamburger.active span:nth-child(2) { opacity: 0; }
+.hamburger.active span:nth-child(3) { transform: rotate(-45deg) translate(5px, -5px); }
 
 .home-hero {
     min-height: 100vh;
@@ -1337,3 +1340,32 @@ input.is-invalid {
 * { -webkit-tap-highlight-color: transparent; }
 input, button, select, textarea { font-family: var(--font); }
 ::placeholder { color: var(--text-muted); opacity: 1; }
+
+/* ===== ACCESSIBILITY / REDUCED MOTION ===== */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .home-loading { display: none; }
+  .scroll-progress { display: none; }
+  .hero-particles { display: none; }
+  .hero-gradient-morph { animation: none; }
+}
+
+/* ===== FOCUS-VISIBLE KEYBOARD RINGS ===== */
+:focus-visible {
+  outline: 2px solid var(--primary-light);
+  outline-offset: 2px;
+}
+.home-header .nav-link:focus-visible,
+.btn-aula:focus-visible,
+.btn-login:focus-visible,
+.btn-back-home:focus-visible,
+.hamburger:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: var(--radius-sm);
+}

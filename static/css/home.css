@@ -312,7 +312,7 @@
 .tilt-card .tilt-text {
   transition: transform 0.3s ease;
 }
-.tilt-card:hover .tilt-icon { transform: translateZ(30px) scale(1.1); }
+.tilt-card:hover .tilt-icon { transform: translateZ(30px); }
 .tilt-card:hover .tilt-text { transform: translateZ(15px); }
 
 /* ===== GLOW BORDER CARDS ===== */
@@ -515,4 +515,15 @@
   .section-divider { height: 40px; margin-top: -40px; }
   .section-divider svg { height: 40px; }
   .back-to-top { right: 16px; bottom: 16px; width: 42px; height: 42px; font-size: 16px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-gradient-morph, .hero-noise { display: none; }
+  .home-cursor, .home-cursor-dot { display: none !important; }
+  .hero-typewriter { animation: none; border-right: none; }
+  .home-hero .hero-title .gradient-text { animation: none; }
+  .hero-badge { animation: none; }
+  .eventos-track { animation: none; }
+  .tilt-card, .tilt-card-inner, .tilt-icon, .tilt-text { transform: none !important; }
+  .home-loading { display: none; }
 }
