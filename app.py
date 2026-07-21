@@ -2,89 +2,38 @@ from flask import Flask, render_template, request, redirect, url_for, session, f
 from flask_bcrypt import Bcrypt
 from functools import wraps
 from datetime import datetime, timedelta
-
 from sqlalchemy.orm import joinedload
-import os
-import re
+import os, re
+from dotenv import load_dotenv
+
+load_dotenv()
 from db import db, init_db
 from models import (
-    Nivel, PeriodoAcademico, Bimestre, Grado, Seccion,
-    Colaborador, Estudiante, Apoderado,
-    Curso, Inscripcion, Horario, Evaluacion, Asistencia,
-    Justificacion, Comentario, PagoPlan, PagoRealizado,
-    CarpetaDocente, DocumentoDocente, LogAcceso, IntentoLogin, Baneo,
-    Evento, SolicitudReporte
+    MensajeContacto, Colaborador, Rol, Usuario, UsuarioRol,
+    LogAcceso, IntentoLogin, Baneo, Estudiante, Familiar,
+    EstudianteFamiliar, PeriodoAcademico, Nivel, Grado, Seccion,
+    Curso, AulaAsignada, Matricula, Inscripcion, AsignacionDocente,
+    Asistencia, Justificacion, Evaluacion, Calificacion,
+    SeguimientoEstudiante, CarpetaDocente, DocumentoDocente,
+    PagoPlan, Pago
 )
-
 import logging
-try:
-    import openpyxl
-    HAS_OPENPYXL = True
-except ImportError:
-    HAS_OPENPYXL = False
 
-logging.basicConfig(level=logging.WARNING)
-logger = logging.getLogger(__name__)
-
-# ====================== CONFIG ======================
 app = Flask(__name__)
-app.secret_key = "clave_super_segura_2026_ColegioSys"
+app.secret_key = os.environ.get('SECRET_KEY', 'clave_super_segura_2026_ColegioSys')
 
 MAX_INTENTOS_USUARIO = 3
 TIEMPO_BANEO_MINUTOS = 5
 VENTANA_TIEMPO_MINUTOS = 5
-FECHA_PERMANENTE = datetime(2100, 1, 1)
-PESOS_EVALUACION = {'cuaderno': 0.10, 'libro': 0.10, 'practicas': 0.20, 'exposiciones': 0.10, 'examen': 0.50}
 
 init_db(app)
 bcrypt = Bcrypt(app)
-UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'static', 'uploads')
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-
-ALLOWED_EXTENSIONS = {'pdf', 'doc', 'docx', 'xls', 'xlsx', 'jpg', 'jpeg', 'png', 'gif', 'txt'}
-MAX_FILE_SIZE = 10 * 1024 * 1024
-app.config['MAX_CONTENT_LENGTH'] = MAX_FILE_SIZE
-
-def extension_permitida(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
-def validar_archivo(archivo):
-    if not archivo or not archivo.filename:
-        return False, 'No se seleccionó ningún archivo'
-    if not extension_permitida(archivo.filename):
-        return False, 'Tipo de archivo no permitido. Extensiones: pdf, doc, docx, xls, xlsx, jpg, png, gif, txt'
-    archivo.seek(0, os.SEEK_END)
-    size = archivo.tell()
-    archivo.seek(0)
-    if size > MAX_FILE_SIZE:
-        return False, 'El archivo excede el tamaño máximo de 10MB'
-    return True, None
-
-# ====================== VALIDACIONES ======================
-def validar_clave(clave, usuario=None):
-    errores = []
-    if len(clave) < 8: errores.append('Mínimo 8 caracteres')
-    if len(clave) > 50: errores.append('Máximo 50 caracteres')
-    if not re.search(r'[A-Z]', clave): errores.append('Debe incluir mayúsculas')
-    if not re.search(r'[a-z]', clave): errores.append('Debe incluir minúsculas')
-    if not re.search(r'\d', clave): errores.append('Debe incluir números')
-    if not re.search(r'[!@#$%^&*(),.?":{}|<>_\-+=]', clave): errores.append('Debe incluir símbolos')
-    if usuario:
-        for campo in ['dni', 'nombres', 'apellido_paterno', 'apellido_materno']:
-            val = getattr(usuario, campo, '')
-            if val and val.lower() in clave.lower():
-                errores.append(f'No debe contener {campo.replace("_", " ")}')
-    return errores
 
 def obtener_ip():
     if request.headers.get('X-Forwarded-For'):
         return request.headers.get('X-Forwarded-For').split(',')[0].strip()
     return request.remote_addr
 
-def tiempo_actual():
-    return datetime.utcnow()
-
-# ====================== DECORADORES ======================
 def login_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
@@ -105,55 +54,21 @@ def role_required(*roles):
         return decorated
     return decorator
 
-def log_accion(accion):
-    def decorator(f):
-        @wraps(f)
-        def decorated(*args, **kwargs):
-            resultado = f(*args, **kwargs)
-            try:
-                log = LogAcceso(
-                    colaborador_id=session.get('usuario_id') if session.get('tipo') == 'colaborador' else None,
-                    estudiante_id=session.get('usuario_id') if session.get('tipo') == 'estudiante' else None,
-                    accion=accion
-                )
-                db.session.add(log)
-                db.session.commit()
-            except Exception:
-                db.session.rollback()
-            return resultado
-        return decorated
-    return decorator
-
-# ====================== HELPERS (used by blueprints) =====
-def obtener_bimestre_actual():
-    hoy = datetime.now().date()
-    return Bimestre.query.filter(
-        Bimestre.fecha_inicio <= hoy,
-        Bimestre.fecha_fin >= hoy
-    ).first()
-
-def _calcular_promedio_desde_datos(evals, asistencias, pesos=None):
-    if not evals:
-        return None, 0, 0
-    if pesos is None:
-        pesos = {'cuaderno': 0.10, 'libro': 0.10, 'practicas': 0.20, 'exposiciones': 0.10, 'examen': 0.50}
-    notas_por_tipo = {}
-    for e in evals:
-        notas_por_tipo.setdefault(e.tipo, []).append(float(e.calificacion))
-    suma_ponderada = 0
-    for tipo, peso in pesos.items():
-        if tipo in notas_por_tipo and notas_por_tipo[tipo]:
-            suma_ponderada += (sum(notas_por_tipo[tipo]) / len(notas_por_tipo[tipo])) * peso
-    total_asistencias = len(asistencias)
-    faltas = sum(1 for a in asistencias if a.estado == 'falta')
-    pct_asistencia = 0
-    if total_asistencias > 0:
-        pct_asistencia = ((total_asistencias - faltas) / total_asistencias) * 100
-        if faltas / total_asistencias >= 0.3:
-            return 0, round(pct_asistencia, 1), total_asistencias
-        if pct_asistencia == 100:
-            suma_ponderada += 1
-    return round(min(suma_ponderada, 20), 2), round(pct_asistencia, 1), total_asistencias
+def log_login(nombre_usuario, ip, exitoso):
+    try:
+        log = LogAcceso(
+            nombre_usuario_intentado=nombre_usuario,
+            ip_direccion=ip,
+            exitoso=exitoso
+        )
+        if exitoso:
+            usuario = Usuario.query.filter_by(nombre_usuario=nombre_usuario).first()
+            if usuario:
+                log.id_colaborador = usuario.id_colaborador
+        db.session.add(log)
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
 
 def nota_a_letra(nota):
     if nota is None: return '-'
@@ -162,179 +77,136 @@ def nota_a_letra(nota):
     if nota >= 12: return 'B'
     return 'C'
 
-def sincronizar_estado_pagos(estudiante_id=None):
-    query = PagoRealizado.query.options(joinedload(PagoRealizado.plan))
-    if estudiante_id:
-        query = query.filter_by(estudiante_id=estudiante_id)
-    pagos = query.filter(PagoRealizado.estado != 'pagado').all()
-    ahora = datetime.utcnow().date()
-    for p in pagos:
-        if p.plan and p.plan.fecha_vencimiento < ahora:
-            p.estado = 'atrasado'
-    db.session.commit()
-
-def sincronizar_mora(estudiante_id=None):
-    query = PagoRealizado.query.options(joinedload(PagoRealizado.plan))
-    if estudiante_id:
-        query = query.filter_by(estudiante_id=estudiante_id)
-    pagos = query.filter(PagoRealizado.estado.in_(['pendiente', 'atrasado'])).all()
-    ahora = datetime.utcnow().date()
-    for p in pagos:
-        if p.plan and p.plan.fecha_vencimiento < ahora:
-            dias_mora = (ahora - p.plan.fecha_vencimiento).days
-            p.mora_acumulada = dias_mora * 5
-            p.estado = 'atrasado'
-    db.session.commit()
-
-# Registrar helpers como globales de Jinja
-def calcular_promedio_bimestre(estudiante_id, curso_id, bimestre_id):
-    evals = Evaluacion.query.filter_by(
-        estudiante_id=estudiante_id, curso_id=curso_id, bimestre_id=bimestre_id
-    ).all()
-    asistencias = Asistencia.query.filter_by(
-        estudiante_id=estudiante_id, curso_id=curso_id, bimestre_id=bimestre_id
-    ).all()
-    return _calcular_promedio_desde_datos(evals, asistencias)
-app.jinja_env.globals.update(calcular_promedio_bimestre=calcular_promedio_bimestre)
 app.jinja_env.globals.update(nota_a_letra=nota_a_letra)
-app.jinja_env.globals.update(obtener_bimestre_actual=obtener_bimestre_actual)
-app.jinja_env.globals.update(ahora=lambda: datetime.now().strftime('%d/%m/%Y %H:%M'))
 app.jinja_env.globals.update(now=datetime.now)
 
-# ====================== AUTH ======================
 @app.route('/')
 def index():
     if 'usuario_id' in session:
         r = session.get('rol')
-        if r == 'directora': return redirect(url_for('directora.dashboard'))
-        if r == 'docente': return redirect(url_for('docente.dashboard'))
+        if r == 'director': return redirect(url_for('directora.dashboard'))
+        if r in ('docente', 'coordinador'): return redirect(url_for('docente.dashboard'))
         if r == 'alumno': return redirect(url_for('estudiante.dashboard'))
-    eventos = Evento.query.filter_by(activo=True).order_by(Evento.orden).all()
-    return render_template('home.html', eventos=eventos)
+    return render_template('home.html')
 
 @app.route('/contacto', methods=['POST'])
 def contacto():
-    nombre = request.form.get('nombre', '')
-    flash(f'Gracias {nombre}, hemos recibido tu solicitud. Te contactaremos pronto.', 'success')
+    try:
+        msg = MensajeContacto(
+            nombre_remitente=request.form.get('nombre', ''),
+            correo_remitente=request.form.get('correo', ''),
+            telefono_remitente=request.form.get('telefono', ''),
+            asunto=request.form.get('asunto', ''),
+            mensaje=request.form.get('mensaje', '')
+        )
+        db.session.add(msg)
+        db.session.commit()
+        flash('Gracias por contactarnos, te responderemos pronto.', 'success')
+    except Exception:
+        db.session.rollback()
+        flash('Error al enviar el mensaje. Intenta nuevamente.', 'danger')
     return redirect(url_for('index') + '#contacto')
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        correo = request.form.get('correo', '').strip()
+        nombre_usuario = request.form.get('usuario', '').strip()
         clave = request.form.get('clave', '')
         ip = obtener_ip()
         ahora = datetime.utcnow()
 
         baneo = Baneo.query.filter(
             db.or_(
-                db.and_(Baneo.tipo_baneo == 'usuario', Baneo.identificador == correo),
-                db.and_(Baneo.tipo_baneo == 'ip', Baneo.ip_address == ip)
+                Baneo.id_colaborador == None,
+                Baneo.ip_direccion == ip
             ),
-            Baneo.activo.is_(True), Baneo.fecha_fin > ahora
+            db.or_(
+                Baneo.fecha_expiracion == None,
+                Baneo.fecha_expiracion > ahora
+            )
         ).first()
         if baneo:
-            flash('Cuenta temporalmente bloqueada. Intente más tarde.', 'danger')
+            flash('Cuenta bloqueada. Intente más tarde.', 'danger')
             return render_template('login.html')
 
-        usuario = Colaborador.query.filter_by(correo=correo).first()
-        tipo = 'colaborador'
-        if not usuario:
-            usuario = Estudiante.query.filter_by(correo=correo).first()
-            tipo = 'estudiante'
+        usuario = Usuario.query.filter_by(nombre_usuario=nombre_usuario).first()
 
-        if usuario and bcrypt.check_password_hash(usuario.clave, clave):
-            if not usuario.activo:
-                flash('Usuario inactivo', 'danger')
-                return render_template('login.html')
-            IntentoLogin.query.filter_by(correo=correo).delete()
+        if usuario and usuario.estado_activo and bcrypt.check_password_hash(usuario.contrasena_hash, clave):
+            IntentoLogin.query.filter_by(ip_direccion=ip).delete()
             session.clear()
-            session['usuario_id'] = usuario.id
-            session['tipo'] = tipo
-            session['nombres'] = usuario.nombres
-            if tipo == 'colaborador':
-                session['rol'] = usuario.rol
-                if usuario.rol == 'directora': return redirect(url_for('directora.dashboard'))
-                return redirect(url_for('docente.dashboard'))
-            else:
-                session['rol'] = 'alumno'
-                return redirect(url_for('estudiante.dashboard'))
 
-        intento = IntentoLogin(correo=correo, ip_address=ip, tipo_usuario=tipo if usuario else 'colaborador')
-        db.session.add(intento)
+            roles = UsuarioRol.query.filter_by(id_colaborador=usuario.id_colaborador).join(Rol).all()
+            session['usuario_id'] = str(usuario.id_colaborador)
+            session['nombres'] = usuario.colaborador.nombre_completo
+            session['roles'] = [r.rol.nombre_rol for r in roles]
+            session['rol'] = session['roles'][0] if roles else 'alumno'
+
+            log_login(nombre_usuario, ip, True)
+
+            r = session['rol']
+            if r == 'director': return redirect(url_for('directora.dashboard'))
+            if r in ('docente', 'coordinador'): return redirect(url_for('docente.dashboard'))
+            return redirect(url_for('estudiante.dashboard'))
+
+        intento = IntentoLogin(
+            ip_direccion=ip,
+            intentos_fallidos=1,
+            ultima_falla=ahora
+        )
+        db.session.merge(intento)
         db.session.commit()
+        log_login(nombre_usuario, ip, False)
 
         desde = ahora - timedelta(minutes=VENTANA_TIEMPO_MINUTOS)
         intentos_recientes = IntentoLogin.query.filter(
-            IntentoLogin.correo == correo,
-            IntentoLogin.fecha_intento > desde
+            IntentoLogin.ip_direccion == ip,
+            IntentoLogin.ultima_falla > desde
         ).count()
         if intentos_recientes >= MAX_INTENTOS_USUARIO:
             ban = Baneo(
-                tipo_baneo='usuario', identificador=correo, ip_address=ip,
-                fecha_fin=ahora + timedelta(minutes=TIEMPO_BANEO_MINUTOS)
+                ip_direccion=ip,
+                razon_baneo=f'Demasiados intentos fallidos desde {ip}',
+                fecha_expiracion=ahora + timedelta(minutes=TIEMPO_BANEO_MINUTOS)
             )
             db.session.add(ban)
             db.session.commit()
-            flash('Demasiados intentos. Cuenta bloqueada por 5 minutos.', 'danger')
+            flash('Demasiados intentos. IP bloqueada por 5 minutos.', 'danger')
             return render_template('login.html')
 
-        flash('Correo o Contraseña incorrecta', 'danger')
-        return render_template('login.html')
+        flash('Usuario o contraseña incorrectos', 'danger')
     return render_template('login.html')
 
 @app.after_request
 def add_cache_headers(response):
     if 'usuario_id' in session:
-        response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0'
+        response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
         response.headers['Pragma'] = 'no-cache'
         response.headers['Expires'] = '0'
     return response
+
+@app.route('/recuperar_contrasena')
+def recuperar_contrasena():
+    return render_template('recuperar_contrasena.html')
 
 @app.route('/logout')
 def logout():
     session.clear()
     flash('Sesión cerrada', 'success')
     resp = redirect(url_for('login'))
-    resp.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0'
+    resp.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
     resp.headers['Pragma'] = 'no-cache'
     resp.headers['Expires'] = '0'
     return resp
 
-@app.route('/recuperar_contrasena')
-def recuperar_contrasena():
-    return render_template('recuperar_contrasena.html')
-
-# ====================== PERFIL ======================
 @app.route('/perfil')
 @login_required
 def perfil():
-    uid = request.args.get('id', type=int) or session.get('usuario_id')
-    t = session.get('tipo')
-    r = session.get('rol')
-
-    # Si se pide un perfil distinto al propio, verificar permisos
-    if uid != session.get('usuario_id'):
-        if r not in ('directora', 'docente'):
-            flash('No tienes permiso para ver este perfil', 'danger')
-            return redirect(url_for('login'))
-        # Buscar en colaboradores primero, luego estudiantes
-        usuario = Colaborador.query.get(uid)
-        if not usuario:
-            usuario = Estudiante.query.get(uid)
-    else:
-        if t == 'colaborador': usuario = Colaborador.query.get(uid)
-        elif t == 'estudiante': usuario = Estudiante.query.get(uid)
-        else: return redirect(url_for('logout'))
-    if not usuario:
+    uid = request.args.get('id') or session.get('usuario_id')
+    colaborador = Colaborador.query.get(uid)
+    if not colaborador:
         flash('Usuario no encontrado', 'danger')
-        return redirect(url_for('directora.dashboard') if r == 'directora' else url_for('docente.dashboard'))
-    # Determinar rol del usuario visto
-    if hasattr(usuario, 'rol'):
-        viewed_rol = usuario.rol
-    else:
-        viewed_rol = 'alumno'
-    return render_template('perfil.html', usuario=usuario, viewed_rol=viewed_rol)
+        return redirect(url_for('index'))
+    return render_template('perfil.html', usuario=colaborador)
 
 @app.route('/cambiar_clave', methods=['POST'])
 @login_required
@@ -346,23 +218,18 @@ def cambiar_clave():
         flash('Las contraseñas nuevas no coinciden', 'danger')
         return redirect(url_for('perfil'))
     uid = session.get('usuario_id')
-    t = session.get('tipo')
-    usuario = None
-    if t == 'colaborador': usuario = Colaborador.query.get(uid)
-    elif t == 'estudiante': usuario = Estudiante.query.get(uid)
-    if not usuario or not bcrypt.check_password_hash(usuario.clave, actual):
+    usuario = Usuario.query.get(uid)
+    if not usuario or not bcrypt.check_password_hash(usuario.contrasena_hash, actual):
         flash('Contraseña actual incorrecta', 'danger')
         return redirect(url_for('perfil'))
-    errores = validar_clave(nueva, usuario)
-    if errores:
-        for e in errores: flash(e, 'danger')
+    if len(nueva) < 8:
+        flash('La contraseña debe tener al menos 8 caracteres', 'danger')
         return redirect(url_for('perfil'))
-    usuario.clave = bcrypt.generate_password_hash(nueva).decode('utf-8')
+    usuario.contrasena_hash = bcrypt.generate_password_hash(nueva).decode('utf-8')
     db.session.commit()
     flash('Contraseña cambiada exitosamente', 'success')
     return redirect(url_for('perfil'))
 
-# ====================== BLUEPRINT REGISTRATION ==========
 from routes.routes_directora import directora_bp
 from routes.routes_docente import docente_bp
 from routes.routes_estudiante import estudiante_bp
@@ -371,7 +238,6 @@ app.register_blueprint(directora_bp)
 app.register_blueprint(docente_bp)
 app.register_blueprint(estudiante_bp)
 
-# ====================== ERROR HANDLERS ======================
 @app.errorhandler(404)
 def not_found(e):
     return render_template('error.html', error='Página no encontrada'), 404

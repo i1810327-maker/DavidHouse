@@ -45,11 +45,11 @@
     {% for c in comentarios %}
     <div class="comentario-card">
         <div class="flex-between">
-            <strong>{{ c.estudiante.nombre_completo if c.estudiante else '-' }}</strong>
-            <span style="background:{{ '#e6fffa' if c.tipo == 'positivo' else '#fff5f5' if c.tipo == 'negativo' else '#e3f2fd' }};color:{{ '#234e52' if c.tipo == 'positivo' else '#9b2c2c' if c.tipo == 'negativo' else '#1565c0' }};padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">{{ c.tipo|title }}</span>
+            <strong>{{ c.inscripcion.matricula.estudiante.colaborador.nombre_completo if c.inscripcion and c.inscripcion.matricula and c.inscripcion.matricula.estudiante and c.inscripcion.matricula.estudiante.colaborador else '-' }}</strong>
+            <span style="background:{{ '#e6fffa' if c.tipo_seguimiento == 'positivo' else '#fff5f5' if c.tipo_seguimiento == 'negativo' else '#e3f2fd' }};color:{{ '#234e52' if c.tipo_seguimiento == 'positivo' else '#9b2c2c' if c.tipo_seguimiento == 'negativo' else '#1565c0' }};padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;">{{ c.tipo_seguimiento|title }}</span>
         </div>
-        <p>{{ c.contenido }}</p>
-        <small class="text-muted">{{ c.fecha_creacion.strftime('%d/%m/%Y') }}</small>
+        <p>{{ c.descripcion }}</p>
+        <small class="text-muted">{{ c.fecha_registro.strftime('%d/%m/%Y') }}</small>
     </div>
     {% else %}
     <p class="text-center mt-1">Sin comentarios aún</p>

@@ -1,374 +1,323 @@
+import uuid
 from db import db
 from datetime import datetime
 
-# ===== EVENTO (carrusel landing page) =====
-class Evento(db.Model):
-    __tablename__ = 'eventos'
-    id = db.Column(db.Integer, primary_key=True)
-    titulo = db.Column(db.String(200), nullable=False)
-    descripcion = db.Column(db.Text)
-    imagen_url = db.Column(db.String(500))
-    activo = db.Column(db.Boolean, default=True)
-    fecha_publicacion = db.Column(db.DateTime, default=datetime.utcnow)
-    orden = db.Column(db.Integer, default=0)
+class MensajeContacto(db.Model):
+    __tablename__ = 'mensajes_contacto'
+    id = db.Column(db.Uuid, primary_key=True, default=uuid.uuid4)
+    nombre_remitente = db.Column(db.String(100), nullable=False)
+    correo_remitente = db.Column(db.String(254), nullable=False)
+    telefono_remitente = db.Column(db.String(20))
+    asunto = db.Column(db.String(150), nullable=False)
+    mensaje = db.Column(db.Text, nullable=False)
+    fecha_envio = db.Column(db.DateTime(timezone=True), default=datetime.utcnow)
+    estado_atencion = db.Column(db.String(20), default='Pendiente')
+    notas_administrador = db.Column(db.Text)
 
-# ===== SOLICITUD REPORTE (director solicita, docente sube) =====
-class SolicitudReporte(db.Model):
-    __tablename__ = 'solicitudes_reportes'
-    id = db.Column(db.Integer, primary_key=True)
-    nivel_id = db.Column(db.Integer, db.ForeignKey('niveles.id'))
-    grado_id = db.Column(db.Integer, db.ForeignKey('grados.id'))
-    seccion_id = db.Column(db.Integer, db.ForeignKey('secciones.id'))
-    titulo = db.Column(db.String(200), nullable=False)
-    descripcion = db.Column(db.Text)
-    fecha_maxima = db.Column(db.DateTime, nullable=False)
-    activa = db.Column(db.Boolean, default=True)
-    creado_por = db.Column(db.Integer, db.ForeignKey('colaboradores.id'), nullable=False)
-    fecha_creacion = db.Column(db.DateTime, default=datetime.utcnow)
-    creador = db.relationship('Colaborador', backref='solicitudes_creadas', lazy=True)
-
-# ===== NIVEL =====
-class Nivel(db.Model):
-    __tablename__ = 'niveles'
-    id = db.Column(db.Integer, primary_key=True)
-    nombre = db.Column(db.String(50), nullable=False)
-    activo = db.Column(db.Boolean, default=True)
-    grados = db.relationship('Grado', backref='nivel_rel', lazy=True)
-
-# ===== PERIODO ACADEMICO =====
-class PeriodoAcademico(db.Model):
-    __tablename__ = 'periodos_academicos'
-    id = db.Column(db.Integer, primary_key=True)
-    nombre = db.Column(db.String(50), nullable=False)
-    fecha_inicio = db.Column(db.Date, nullable=False)
-    fecha_fin = db.Column(db.Date, nullable=False)
-    activo = db.Column(db.Boolean, default=True)
-    bimestres = db.relationship('Bimestre', backref='periodo_rel', lazy=True, cascade='all, delete-orphan')
-
-# ===== BIMESTRE =====
-class Bimestre(db.Model):
-    __tablename__ = 'bimestres'
-    id = db.Column(db.Integer, primary_key=True)
-    periodo_academico_id = db.Column(db.Integer, db.ForeignKey('periodos_academicos.id'), nullable=False)
-    nombre = db.Column(db.String(50), nullable=False)
-    numero = db.Column(db.Integer, nullable=False)
-    fecha_inicio = db.Column(db.Date, nullable=False)
-    fecha_fin = db.Column(db.Date, nullable=False)
-
-# ===== GRADO (existente + nivel_id) =====
-class Grado(db.Model):
-    __tablename__ = 'grados'
-    id = db.Column(db.Integer, primary_key=True)
-    nombre = db.Column(db.String(50), nullable=False)
-    descripcion = db.Column(db.String(200))
-    nivel = db.Column(db.String(20))
-    nivel_id = db.Column(db.Integer, db.ForeignKey('niveles.id'), nullable=False)
-    activo = db.Column(db.Boolean, default=True)
-    secciones = db.relationship('Seccion', backref='grado', lazy=True, cascade='all, delete-orphan')
-
-# ===== SECCION (existente) =====
-class Seccion(db.Model):
-    __tablename__ = 'secciones'
-    id = db.Column(db.Integer, primary_key=True)
-    nombre = db.Column(db.String(50), nullable=False)
-    grado_id = db.Column(db.Integer, db.ForeignKey('grados.id'), nullable=False)
-    docente_id = db.Column(db.Integer, db.ForeignKey('colaboradores.id'))
-    capacidad = db.Column(db.Integer, default=30)
-    activo = db.Column(db.Boolean, default=True)
-    colaborador = db.relationship('Colaborador', backref='secciones_docente', lazy=True, foreign_keys=[docente_id])
-
-# ===== COLABORADOR =====
 class Colaborador(db.Model):
     __tablename__ = 'colaboradores'
-    id = db.Column(db.Integer, primary_key=True)
-    dni = db.Column(db.String(20), unique=True, nullable=False)
-    nombres = db.Column(db.String(100), nullable=False)
-    apellido_paterno = db.Column(db.String(80), nullable=False)
-    apellido_materno = db.Column(db.String(80), nullable=False)
-    correo = db.Column(db.String(120), unique=True, nullable=False)
-    clave = db.Column(db.String(255), nullable=False)
-    rol = db.Column(db.Enum('directora', 'docente'), nullable=False)
-    telefono_principal = db.Column(db.String(20))
+    id = db.Column(db.Uuid, primary_key=True, default=uuid.uuid4)
+    tipo_documento = db.Column(db.String(15), nullable=False)
+    numero_documento = db.Column(db.String(20), unique=True, nullable=False)
+    nombres = db.Column(db.String(70), nullable=False)
+    apellidos = db.Column(db.String(70), nullable=False)
+    fecha_nacimiento = db.Column(db.Date, nullable=False)
+    genero = db.Column(db.String(1), nullable=False)
+    telefono_principal = db.Column(db.String(20), nullable=False)
     telefono_secundario = db.Column(db.String(20))
-    profesion = db.Column(db.String(100))
-    tiene_especialidad = db.Column(db.Boolean, default=False)
-    descripcion_especialidad = db.Column(db.Text)
-    seccion_id = db.Column(db.Integer, db.ForeignKey('secciones.id'))
-    activo = db.Column(db.Boolean, default=True)
-    fecha_registro = db.Column(db.DateTime, default=datetime.utcnow)
-    seccion_rel = db.relationship('Seccion', lazy=True, foreign_keys=[seccion_id], uselist=False)
+    direccion_fisica = db.Column(db.Text, nullable=False)
+    tipo_direccion = db.Column(db.String(30), default='Casa')
+    fecha_registro = db.Column(db.DateTime(timezone=True), default=datetime.utcnow)
+    fecha_actualizacion = db.Column(db.DateTime(timezone=True), default=datetime.utcnow)
+
+    usuario = db.relationship('Usuario', backref='colaborador', uselist=False, lazy=True)
+    estudiante = db.relationship('Estudiante', backref='colaborador', uselist=False, lazy=True)
+    familiar = db.relationship('Familiar', backref='colaborador', uselist=False, lazy=True)
 
     @property
     def nombre_completo(self):
-        return f"{self.nombres} {self.apellido_paterno} {self.apellido_materno}"
+        return f"{self.nombres} {self.apellidos}"
 
-    def obtener_niveles(self):
-        niveles = set()
-        for c in self.cursos_dictados:
-            if c.grado_rel and c.grado_rel.nivel_rel:
-                niveles.add(c.grado_rel.nivel_rel.nombre)
-        return ','.join(niveles)
-
-    def obtener_grados(self):
-        grados = set()
-        for c in self.cursos_dictados:
-            if c.grado_rel:
-                grados.add(str(c.grado_id))
-        return ','.join(grados)
-
-    def obtener_secciones(self):
-        secciones = set()
-        for c in self.cursos_dictados:
-            if c.seccion_rel:
-                secciones.add(str(c.seccion_id))
-        return ','.join(secciones)
-
-# ===== ESTUDIANTE =====
-class Estudiante(db.Model):
-    __tablename__ = 'estudiantes'
+class Rol(db.Model):
+    __tablename__ = 'roles'
     id = db.Column(db.Integer, primary_key=True)
-    dni = db.Column(db.String(20), unique=True, nullable=False)
-    nombres = db.Column(db.String(100), nullable=False)
-    apellido_paterno = db.Column(db.String(80), nullable=False)
-    apellido_materno = db.Column(db.String(80), nullable=False)
-    correo = db.Column(db.String(120), unique=True, nullable=False)
-    clave = db.Column(db.String(255), nullable=False)
-    grado_id = db.Column(db.Integer, db.ForeignKey('grados.id'))
-    seccion_id = db.Column(db.Integer, db.ForeignKey('secciones.id'))
-    activo = db.Column(db.Boolean, default=True)
-    fecha_registro = db.Column(db.DateTime, default=datetime.utcnow)
-    grado_rel = db.relationship('Grado', backref='estudiantes', lazy=True, foreign_keys=[grado_id])
-    seccion_rel = db.relationship('Seccion', backref='estudiantes', lazy=True, foreign_keys=[seccion_id])
+    nombre_rol = db.Column(db.String(30), unique=True, nullable=False)
+    descripcion_rol = db.Column(db.Text)
+    fecha_registro = db.Column(db.DateTime(timezone=True), default=datetime.utcnow)
 
-    @property
-    def nombre_completo(self):
-        return f"{self.nombres} {self.apellido_paterno} {self.apellido_materno}"
+    usuarios = db.relationship('UsuarioRol', backref='rol', lazy=True)
 
-# ===== APODERADO (existente) =====
-class Apoderado(db.Model):
-    __tablename__ = 'apoderados'
-    id = db.Column(db.Integer, primary_key=True)
-    alumno_id = db.Column(db.Integer, db.ForeignKey('estudiantes.id'), nullable=False)
-    dni = db.Column(db.String(20))
-    nombres = db.Column(db.String(100), nullable=False)
-    apellido_paterno = db.Column(db.String(80), nullable=False)
-    apellido_materno = db.Column(db.String(80), nullable=False)
-    telefono_principal = db.Column(db.String(20))
-    telefono_secundario = db.Column(db.String(20))
-    es_apoderado = db.Column(db.Boolean, default=True)
-    activo = db.Column(db.Boolean, default=True)
-    fecha_registro = db.Column(db.DateTime, default=datetime.utcnow)
-    alumno = db.relationship('Estudiante', backref='apoderados', lazy=True)
+class Usuario(db.Model):
+    __tablename__ = 'usuarios'
+    id_colaborador = db.Column(db.Uuid, db.ForeignKey('colaboradores.id'), primary_key=True)
+    nombre_usuario = db.Column(db.String(50), unique=True, nullable=False)
+    contrasena_hash = db.Column(db.String(255), nullable=False)
+    estado_activo = db.Column(db.Boolean, default=True, nullable=False)
+    fecha_registro = db.Column(db.DateTime(timezone=True), default=datetime.utcnow)
+    fecha_actualizacion = db.Column(db.DateTime(timezone=True), default=datetime.utcnow)
 
-    @property
-    def nombre_completo(self):
-        return f"{self.nombres} {self.apellido_paterno} {self.apellido_materno}"
+    roles = db.relationship('UsuarioRol', backref='usuario', lazy=True)
+    logs = db.relationship('LogAcceso', backref='usuario', lazy=True)
+    asignaciones = db.relationship('AsignacionDocente', backref='profesor', lazy=True)
 
-# ===== CURSO =====
-class Curso(db.Model):
-    __tablename__ = 'cursos_nuevos'
-    id = db.Column(db.Integer, primary_key=True)
-    nombre = db.Column(db.String(100), nullable=False)
-    codigo = db.Column(db.String(20), unique=True, nullable=False)
-    descripcion = db.Column(db.Text)
-    docente_id = db.Column(db.Integer, db.ForeignKey('colaboradores.id'), nullable=False)
-    grado_id = db.Column(db.Integer, db.ForeignKey('grados.id'), nullable=False)
-    seccion_id = db.Column(db.Integer, db.ForeignKey('secciones.id'), nullable=False)
-    periodo_academico_id = db.Column(db.Integer, db.ForeignKey('periodos_academicos.id'), nullable=False)
-    activo = db.Column(db.Boolean, default=True)
-    docente = db.relationship('Colaborador', backref='cursos_dictados', lazy=True)
-    grado_rel = db.relationship('Grado', backref='cursos', lazy=True)
-    seccion_rel = db.relationship('Seccion', backref='cursos', lazy=True)
-    periodo = db.relationship('PeriodoAcademico', backref='cursos', lazy=True)
+class UsuarioRol(db.Model):
+    __tablename__ = 'usuarios_roles'
+    id_colaborador = db.Column(db.Uuid, db.ForeignKey('usuarios.id_colaborador'), primary_key=True)
+    id_rol = db.Column(db.Integer, db.ForeignKey('roles.id'), primary_key=True)
+    fecha_asignacion = db.Column(db.DateTime(timezone=True), default=datetime.utcnow)
 
-# ===== INSCRIPCION (existente) =====
-class Inscripcion(db.Model):
-    __tablename__ = 'inscripciones'
-    id = db.Column(db.Integer, primary_key=True)
-    alumno_id = db.Column(db.Integer, db.ForeignKey('estudiantes.id'), nullable=False)
-    curso_id = db.Column(db.Integer, db.ForeignKey('cursos_nuevos.id'), nullable=False)
-    fecha_inscripcion = db.Column(db.DateTime, default=datetime.utcnow)
-    calificacion = db.Column(db.Numeric(5, 2))
-    asistencia = db.Column(db.Integer, default=0)
-    alumno = db.relationship('Estudiante', backref='inscripciones', lazy=True, foreign_keys=[alumno_id])
-    curso = db.relationship('Curso', backref='inscripciones', lazy=True)
-    __table_args__ = (db.UniqueConstraint('alumno_id', 'curso_id', name='unique_inscripcion'),)
-
-# ===== HORARIO =====
-class Horario(db.Model):
-    __tablename__ = 'horarios'
-    id = db.Column(db.Integer, primary_key=True)
-    curso_id = db.Column(db.Integer, db.ForeignKey('cursos_nuevos.id'), nullable=False)
-    seccion_id = db.Column(db.Integer, db.ForeignKey('secciones.id'), nullable=False)
-    docente_id = db.Column(db.Integer, db.ForeignKey('colaboradores.id'), nullable=False)
-    dia_semana = db.Column(db.Integer, nullable=False)
-    hora_inicio = db.Column(db.Time, nullable=False)
-    hora_fin = db.Column(db.Time, nullable=False)
-    bimestre_id = db.Column(db.Integer, db.ForeignKey('bimestres.id'))
-    curso = db.relationship('Curso', backref='horarios', lazy=True)
-    seccion = db.relationship('Seccion', backref='horarios', lazy=True)
-    docente = db.relationship('Colaborador', backref='horarios', lazy=True)
-    bimestre = db.relationship('Bimestre', backref='horarios', lazy=True)
-
-# ===== EVALUACION =====
-class Evaluacion(db.Model):
-    __tablename__ = 'evaluaciones'
-    id = db.Column(db.Integer, primary_key=True)
-    curso_id = db.Column(db.Integer, db.ForeignKey('cursos_nuevos.id'), nullable=False)
-    estudiante_id = db.Column(db.Integer, db.ForeignKey('estudiantes.id'), nullable=False)
-    bimestre_id = db.Column(db.Integer, db.ForeignKey('bimestres.id'), nullable=False)
-    tipo = db.Column(db.Enum('cuaderno', 'libro', 'practicas', 'exposiciones', 'examen'), nullable=False)
-    calificacion = db.Column(db.Numeric(4, 2), nullable=False)
-    fecha = db.Column(db.Date, nullable=False)
-    observaciones = db.Column(db.Text)
-    curso = db.relationship('Curso', backref='evaluaciones', lazy=True)
-    estudiante = db.relationship('Estudiante', backref='evaluaciones', lazy=True)
-    bimestre = db.relationship('Bimestre', backref='evaluaciones', lazy=True)
-
-# ===== ASISTENCIA =====
-class Asistencia(db.Model):
-    __tablename__ = 'asistencias'
-    id = db.Column(db.Integer, primary_key=True)
-    curso_id = db.Column(db.Integer, db.ForeignKey('cursos_nuevos.id'), nullable=False)
-    estudiante_id = db.Column(db.Integer, db.ForeignKey('estudiantes.id'), nullable=False)
-    bimestre_id = db.Column(db.Integer, db.ForeignKey('bimestres.id'), nullable=False)
-    fecha = db.Column(db.Date, nullable=False)
-    estado = db.Column(db.Enum('presente', 'tarde', 'falta', 'justificado'), nullable=False, default='presente')
-    marcado_por = db.Column(db.Integer, db.ForeignKey('colaboradores.id'), nullable=False)
-    curso = db.relationship('Curso', backref='asistencias', lazy=True)
-    estudiante = db.relationship('Estudiante', backref='asistencias', lazy=True)
-    bimestre = db.relationship('Bimestre', backref='asistencias', lazy=True)
-    marcador = db.relationship('Colaborador', backref='asistencias_marcadas', lazy=True)
-
-# ===== JUSTIFICACION =====
-class Justificacion(db.Model):
-    __tablename__ = 'justificaciones'
-    id = db.Column(db.Integer, primary_key=True)
-    asistencia_id = db.Column(db.Integer, db.ForeignKey('asistencias.id'), nullable=False)
-    estudiante_id = db.Column(db.Integer, db.ForeignKey('estudiantes.id'), nullable=False)
-    titulo = db.Column(db.String(200), default='')
-    motivo = db.Column(db.Text, nullable=False)
-    archivo_ruta = db.Column(db.String(500))
-    archivo_nombre = db.Column(db.String(255))
-    estado = db.Column(db.Enum('pendiente', 'aprobado', 'rechazado'), default='pendiente')
-    revisado_por = db.Column(db.Integer, db.ForeignKey('colaboradores.id'))
-    comentario_revision = db.Column(db.Text)
-    fecha_envio = db.Column(db.DateTime, default=datetime.utcnow)
-    fecha_revision = db.Column(db.DateTime)
-    asistencia = db.relationship('Asistencia', backref='justificacion', lazy=True, uselist=False)
-    estudiante = db.relationship('Estudiante', backref='justificaciones', lazy=True)
-    revisor = db.relationship('Colaborador', backref='justificaciones_revisadas', lazy=True)
-
-# ===== COMENTARIO =====
-class Comentario(db.Model):
-    __tablename__ = 'comentarios'
-    id = db.Column(db.Integer, primary_key=True)
-    docente_id = db.Column(db.Integer, db.ForeignKey('colaboradores.id'), nullable=False)
-    estudiante_id = db.Column(db.Integer, db.ForeignKey('estudiantes.id'), nullable=False)
-    tipo = db.Column(db.Enum('positivo', 'negativo', 'neutral', 'informativo', 'comportamiento', 'recomendacion', 'otro'), nullable=False)
-    contenido = db.Column(db.Text, nullable=False)
-    bimestre_id = db.Column(db.Integer, db.ForeignKey('bimestres.id'))
-    fecha_creacion = db.Column(db.DateTime, default=datetime.utcnow)
-    docente = db.relationship('Colaborador', backref='comentarios', lazy=True)
-    estudiante = db.relationship('Estudiante', backref='comentarios', lazy=True)
-    bimestre = db.relationship('Bimestre', backref='comentarios', lazy=True)
-
-# ===== PAGO PLAN =====
-class PagoPlan(db.Model):
-    __tablename__ = 'pago_planes'
-    id = db.Column(db.Integer, primary_key=True)
-    periodo_academico_id = db.Column(db.Integer, db.ForeignKey('periodos_academicos.id'), nullable=False)
-    nombre = db.Column(db.String(100), nullable=False)
-    monto = db.Column(db.Numeric(8, 2), nullable=False)
-    nivel_id = db.Column(db.Integer, db.ForeignKey('niveles.id'))
-    grado_id = db.Column(db.Integer, db.ForeignKey('grados.id'))
-    tipo = db.Column(db.Enum('matricula', 'mensualidad', 'otro'), nullable=False)
-    metodo_pago = db.Column(db.String(30), default='efectivo')
-    fecha_vencimiento = db.Column(db.Date, nullable=False)
-    activo = db.Column(db.Boolean, default=True)
-    periodo = db.relationship('PeriodoAcademico', backref='pago_planes', lazy=True)
-    nivel = db.relationship('Nivel', backref='pago_planes', lazy=True)
-    grado = db.relationship('Grado', backref='pago_planes', lazy=True)
-
-# ===== PAGO REALIZADO =====
-class PagoRealizado(db.Model):
-    __tablename__ = 'pago_realizados'
-    id = db.Column(db.Integer, primary_key=True)
-    estudiante_id = db.Column(db.Integer, db.ForeignKey('estudiantes.id'), nullable=False)
-    pago_plan_id = db.Column(db.Integer, db.ForeignKey('pago_planes.id'), nullable=False)
-    monto_pagado = db.Column(db.Numeric(8, 2), nullable=False)
-    fecha_pago = db.Column(db.DateTime, default=datetime.utcnow)
-    estado = db.Column(db.Enum('pagado', 'pendiente', 'atrasado'), default='pendiente')
-    metodo_pago = db.Column(db.String(30), default='efectivo')
-    mora_acumulada = db.Column(db.Numeric(8, 2), default=0)
-    observaciones = db.Column(db.Text)
-    estudiante = db.relationship('Estudiante', backref='pagos', lazy=True)
-    plan = db.relationship('PagoPlan', backref='pagos_realizados', lazy=True)
-
-# ===== CARPETA DOCENTE =====
-class CarpetaDocente(db.Model):
-    __tablename__ = 'carpetas_docentes'
-    id = db.Column(db.Integer, primary_key=True)
-    nombre = db.Column(db.String(100), nullable=False)
-    descripcion = db.Column(db.Text)
-    bimestre_id = db.Column(db.Integer, db.ForeignKey('bimestres.id'))
-    fecha_inicio_entrega = db.Column(db.DateTime, nullable=False)
-    fecha_fin_entrega = db.Column(db.DateTime, nullable=False)
-    activo = db.Column(db.Boolean, default=True)
-    creado_por = db.Column(db.Integer, db.ForeignKey('colaboradores.id'), nullable=False)
-    bimestre = db.relationship('Bimestre', backref='carpetas', lazy=True)
-    creador = db.relationship('Colaborador', backref='carpetas_creadas', lazy=True)
-
-# ===== DOCUMENTO DOCENTE =====
-class DocumentoDocente(db.Model):
-    __tablename__ = 'documentos_docentes'
-    id = db.Column(db.Integer, primary_key=True)
-    carpeta_id = db.Column(db.Integer, db.ForeignKey('carpetas_docentes.id'))
-    docente_id = db.Column(db.Integer, db.ForeignKey('colaboradores.id'), nullable=False)
-    solicitud_reporte_id = db.Column(db.Integer, db.ForeignKey('solicitudes_reportes.id'))
-    titulo = db.Column(db.String(200), nullable=False)
-    descripcion = db.Column(db.Text)
-    archivo_nombre = db.Column(db.String(255), nullable=False)
-    archivo_ruta = db.Column(db.String(500), nullable=False)
-    fecha_subida = db.Column(db.DateTime, default=datetime.utcnow)
-    estado = db.Column(db.Enum('pendiente', 'aprobado', 'rechazado'), default='pendiente')
-    comentario_revision = db.Column(db.Text)
-    fecha_revision = db.Column(db.DateTime)
-    carpeta = db.relationship('CarpetaDocente', backref='documentos', lazy=True)
-    docente = db.relationship('Colaborador', backref='documentos', lazy=True)
-    solicitud = db.relationship('SolicitudReporte', backref='documentos', lazy=True)
-
-# ===== LOG ACCESO (existente, modificado) =====
 class LogAcceso(db.Model):
     __tablename__ = 'logs_acceso'
-    id = db.Column(db.Integer, primary_key=True)
-    colaborador_id = db.Column(db.Integer, db.ForeignKey('colaboradores.id'))
-    estudiante_id = db.Column(db.Integer, db.ForeignKey('estudiantes.id'))
-    apoderado_id = db.Column(db.Integer)
-    accion = db.Column(db.String(255))
-    fecha_hora = db.Column(db.DateTime, default=datetime.utcnow)
+    id = db.Column(db.Uuid, primary_key=True, default=uuid.uuid4)
+    id_colaborador = db.Column(db.Uuid, db.ForeignKey('usuarios.id_colaborador'))
+    nombre_usuario_intentado = db.Column(db.String(50))
+    ip_direccion = db.Column(db.String(45), nullable=False)
+    dispositivo = db.Column(db.Text)
+    fecha_ingreso = db.Column(db.DateTime(timezone=True), default=datetime.utcnow)
+    exitoso = db.Column(db.Boolean, nullable=False)
 
-# ===== INTENTO LOGIN =====
 class IntentoLogin(db.Model):
     __tablename__ = 'intentos_login'
-    id = db.Column(db.Integer, primary_key=True)
-    correo = db.Column(db.String(120), nullable=False)
-    ip_address = db.Column(db.String(45), nullable=False)
-    tipo_usuario = db.Column(db.Enum('colaborador', 'estudiante', 'apoderado'))
-    fecha_intento = db.Column(db.DateTime, default=datetime.utcnow)
+    ip_direccion = db.Column(db.String(45), primary_key=True)
+    intentos_fallidos = db.Column(db.Integer, default=1, nullable=False)
+    ultima_falla = db.Column(db.DateTime(timezone=True), default=datetime.utcnow)
 
-# ===== BANEO =====
 class Baneo(db.Model):
     __tablename__ = 'baneos'
-    id = db.Column(db.Integer, primary_key=True)
-    tipo_baneo = db.Column(db.Enum('usuario', 'ip'), nullable=False)
-    identificador = db.Column(db.String(120), nullable=False)
-    ip_address = db.Column(db.String(45))
-    motivo = db.Column(db.String(255), default='Demasiados intentos fallidos')
-    fecha_inicio = db.Column(db.DateTime, default=datetime.utcnow)
-    fecha_fin = db.Column(db.DateTime, nullable=False)
-    activo = db.Column(db.Boolean, default=True)
+    id = db.Column(db.Uuid, primary_key=True, default=uuid.uuid4)
+    ip_direccion = db.Column(db.String(45), unique=True)
+    id_colaborador = db.Column(db.Uuid, db.ForeignKey('usuarios.id_colaborador'))
+    razon_baneo = db.Column(db.Text, nullable=False)
+    fecha_baneo = db.Column(db.DateTime(timezone=True), default=datetime.utcnow)
+    fecha_expiracion = db.Column(db.DateTime(timezone=True))
 
-    @property
-    def esta_activo(self):
-        return self.activo and self.fecha_fin > datetime.utcnow()
+class Estudiante(db.Model):
+    __tablename__ = 'estudiantes'
+    id_colaborador = db.Column(db.Uuid, db.ForeignKey('colaboradores.id'), primary_key=True)
+    codigo_estudiante = db.Column(db.String(20), unique=True, nullable=False)
+    historial_medico = db.Column(db.Text)
+    fecha_registro = db.Column(db.DateTime(timezone=True), default=datetime.utcnow)
+    fecha_actualizacion = db.Column(db.DateTime(timezone=True), default=datetime.utcnow)
+
+    familiares = db.relationship('EstudianteFamiliar', backref='estudiante', lazy=True)
+    matriculas = db.relationship('Matricula', backref='estudiante', lazy=True)
+
+class Familiar(db.Model):
+    __tablename__ = 'familiares'
+    id_colaborador = db.Column(db.Uuid, db.ForeignKey('colaboradores.id'), primary_key=True)
+    ocupacion_laboral = db.Column(db.String(100))
+    telefono_emergencia = db.Column(db.String(20), nullable=False)
+    fecha_registro = db.Column(db.DateTime(timezone=True), default=datetime.utcnow)
+    fecha_actualizacion = db.Column(db.DateTime(timezone=True), default=datetime.utcnow)
+
+    estudiantes = db.relationship('EstudianteFamiliar', backref='familiar', lazy=True)
+    justificaciones = db.relationship('Justificacion', backref='familiar', lazy=True)
+
+class EstudianteFamiliar(db.Model):
+    __tablename__ = 'estudiante_familiares'
+    id_estudiante = db.Column(db.Uuid, db.ForeignKey('estudiantes.id_colaborador'), primary_key=True)
+    id_familiar = db.Column(db.Uuid, db.ForeignKey('familiares.id_colaborador'), primary_key=True)
+    parentesco = db.Column(db.String(30), nullable=False)
+    es_apoderado_legal = db.Column(db.Boolean, default=False, nullable=False)
+    fecha_registro = db.Column(db.DateTime(timezone=True), default=datetime.utcnow)
+
+class PeriodoAcademico(db.Model):
+    __tablename__ = 'periodos_academicos'
+    id = db.Column(db.Uuid, primary_key=True, default=uuid.uuid4)
+    nombre_periodo = db.Column(db.String(50), unique=True, nullable=False)
+    fecha_inicio = db.Column(db.Date, nullable=False)
+    fecha_fin = db.Column(db.Date, nullable=False)
+    estado_activo = db.Column(db.Boolean, default=True, nullable=False)
+    fecha_registro = db.Column(db.DateTime(timezone=True), default=datetime.utcnow)
+
+    aulas = db.relationship('AulaAsignada', backref='periodo', lazy=True)
+    matriculas = db.relationship('Matricula', backref='periodo', lazy=True)
+
+class Nivel(db.Model):
+    __tablename__ = 'niveles'
+    id = db.Column(db.Uuid, primary_key=True, default=uuid.uuid4)
+    nombre_nivel = db.Column(db.String(30), unique=True, nullable=False)
+    descripcion_nivel = db.Column(db.Text)
+    fecha_registro = db.Column(db.DateTime(timezone=True), default=datetime.utcnow)
+
+    grados = db.relationship('Grado', backref='nivel', lazy=True)
+
+class Grado(db.Model):
+    __tablename__ = 'grados'
+    id = db.Column(db.Uuid, primary_key=True, default=uuid.uuid4)
+    id_nivel = db.Column(db.Uuid, db.ForeignKey('niveles.id'), nullable=False)
+    nombre_grado = db.Column(db.String(50), nullable=False)
+    descripcion_grado = db.Column(db.Text)
+    fecha_registro = db.Column(db.DateTime(timezone=True), default=datetime.utcnow)
+
+    secciones = db.relationship('Seccion', backref='grado', lazy=True)
+
+class Seccion(db.Model):
+    __tablename__ = 'secciones'
+    id = db.Column(db.Uuid, primary_key=True, default=uuid.uuid4)
+    id_grado = db.Column(db.Uuid, db.ForeignKey('grados.id'), nullable=False)
+    nombre_seccion = db.Column(db.String(10), nullable=False)
+    fecha_registro = db.Column(db.DateTime(timezone=True), default=datetime.utcnow)
+
+    aulas = db.relationship('AulaAsignada', backref='seccion', lazy=True)
+
+class Curso(db.Model):
+    __tablename__ = 'cursos'
+    id = db.Column(db.Uuid, primary_key=True, default=uuid.uuid4)
+    nombre_curso = db.Column(db.String(100), unique=True, nullable=False)
+    descripcion_curso = db.Column(db.Text)
+    estado_curso = db.Column(db.String(20), default='Activo')
+    fecha_registro = db.Column(db.DateTime(timezone=True), default=datetime.utcnow)
+    fecha_actualizacion = db.Column(db.DateTime(timezone=True), default=datetime.utcnow)
+
+    asignaciones = db.relationship('AsignacionDocente', backref='curso', lazy=True)
+
+class AulaAsignada(db.Model):
+    __tablename__ = 'aulas_asignadas'
+    id = db.Column(db.Uuid, primary_key=True, default=uuid.uuid4)
+    id_periodo_academico = db.Column(db.Uuid, db.ForeignKey('periodos_academicos.id'), nullable=False)
+    id_seccion = db.Column(db.Uuid, db.ForeignKey('secciones.id'), nullable=False)
+    capacidad_maxima = db.Column(db.Integer, default=30, nullable=False)
+    fecha_registro = db.Column(db.DateTime(timezone=True), default=datetime.utcnow)
+
+    inscripciones = db.relationship('Inscripcion', backref='aula', lazy=True)
+    asignaciones = db.relationship('AsignacionDocente', backref='aula', lazy=True)
+    planes_pago = db.relationship('PagoPlan', backref='aula', lazy=True)
+
+class Matricula(db.Model):
+    __tablename__ = 'matriculas'
+    id = db.Column(db.Uuid, primary_key=True, default=uuid.uuid4)
+    id_estudiante = db.Column(db.Uuid, db.ForeignKey('estudiantes.id_colaborador'), nullable=False)
+    id_periodo_academico = db.Column(db.Uuid, db.ForeignKey('periodos_academicos.id'), nullable=False)
+    fecha_matricula = db.Column(db.DateTime(timezone=True), default=datetime.utcnow)
+    estado_matricula = db.Column(db.String(20), default='Activo')
+    fecha_registro = db.Column(db.DateTime(timezone=True), default=datetime.utcnow)
+    fecha_actualizacion = db.Column(db.DateTime(timezone=True), default=datetime.utcnow)
+
+    inscripciones = db.relationship('Inscripcion', backref='matricula', lazy=True)
+    pagos = db.relationship('Pago', backref='matricula', lazy=True)
+
+class Inscripcion(db.Model):
+    __tablename__ = 'inscripciones'
+    id = db.Column(db.Uuid, primary_key=True, default=uuid.uuid4)
+    id_matricula = db.Column(db.Uuid, db.ForeignKey('matriculas.id'), nullable=False)
+    id_aula_asignada = db.Column(db.Uuid, db.ForeignKey('aulas_asignadas.id'), nullable=False)
+    fecha_inscripcion = db.Column(db.DateTime(timezone=True), default=datetime.utcnow)
+    estado_inscripcion = db.Column(db.String(20), default='Asignado')
+    fecha_registro = db.Column(db.DateTime(timezone=True), default=datetime.utcnow)
+    fecha_actualizacion = db.Column(db.DateTime(timezone=True), default=datetime.utcnow)
+
+    asistencias = db.relationship('Asistencia', backref='inscripcion', lazy=True)
+    calificaciones = db.relationship('Calificacion', backref='inscripcion', lazy=True)
+    seguimientos = db.relationship('SeguimientoEstudiante', backref='inscripcion', lazy=True)
+
+class AsignacionDocente(db.Model):
+    __tablename__ = 'asignaciones_docentes'
+    id = db.Column(db.Uuid, primary_key=True, default=uuid.uuid4)
+    id_profesor = db.Column(db.Uuid, db.ForeignKey('usuarios.id_colaborador'), nullable=False)
+    id_curso = db.Column(db.Uuid, db.ForeignKey('cursos.id'), nullable=False)
+    id_aula_asignada = db.Column(db.Uuid, db.ForeignKey('aulas_asignadas.id'), nullable=False)
+    fecha_registro = db.Column(db.DateTime(timezone=True), default=datetime.utcnow)
+    fecha_actualizacion = db.Column(db.DateTime(timezone=True), default=datetime.utcnow)
+
+    evaluaciones = db.relationship('Evaluacion', backref='asignacion', lazy=True)
+    carpeta = db.relationship('CarpetaDocente', backref='asignacion', uselist=False, lazy=True)
+
+class Asistencia(db.Model):
+    __tablename__ = 'asistencias'
+    id = db.Column(db.Uuid, primary_key=True, default=uuid.uuid4)
+    id_inscripcion = db.Column(db.Uuid, db.ForeignKey('inscripciones.id'), nullable=False)
+    fecha_asistencia = db.Column(db.Date, nullable=False, default=datetime.utcnow)
+    estado_asistencia = db.Column(db.String(1), nullable=False)
+    fecha_registro = db.Column(db.DateTime(timezone=True), default=datetime.utcnow)
+
+    justificacion = db.relationship('Justificacion', backref='asistencia', uselist=False, lazy=True)
+
+class Justificacion(db.Model):
+    __tablename__ = 'justificaciones'
+    id = db.Column(db.Uuid, primary_key=True, default=uuid.uuid4)
+    id_asistencia = db.Column(db.Uuid, db.ForeignKey('asistencias.id'), unique=True, nullable=False)
+    id_familiar = db.Column(db.Uuid, db.ForeignKey('familiares.id_colaborador'), nullable=False)
+    motivo_justificacion = db.Column(db.Text, nullable=False)
+    evidencia_archivo_url = db.Column(db.String(255))
+    fecha_presentacion = db.Column(db.DateTime(timezone=True), default=datetime.utcnow)
+
+class Evaluacion(db.Model):
+    __tablename__ = 'evaluaciones'
+    id = db.Column(db.Uuid, primary_key=True, default=uuid.uuid4)
+    id_asignacion_docente = db.Column(db.Uuid, db.ForeignKey('asignaciones_docentes.id'), nullable=False)
+    nombre_evaluacion = db.Column(db.String(100), nullable=False)
+    bimestre_bloque = db.Column(db.Integer, nullable=False)
+    porcentaje_peso = db.Column(db.Numeric(5, 2), nullable=False)
+    fecha_limite = db.Column(db.Date, nullable=False)
+    fecha_registro = db.Column(db.DateTime(timezone=True), default=datetime.utcnow)
+    fecha_actualizacion = db.Column(db.DateTime(timezone=True), default=datetime.utcnow)
+
+    calificaciones = db.relationship('Calificacion', backref='evaluacion', lazy=True)
+
+class Calificacion(db.Model):
+    __tablename__ = 'calificaciones'
+    id = db.Column(db.Uuid, primary_key=True, default=uuid.uuid4)
+    id_inscripcion = db.Column(db.Uuid, db.ForeignKey('inscripciones.id'), nullable=False)
+    id_evaluacion = db.Column(db.Uuid, db.ForeignKey('evaluaciones.id'), nullable=False)
+    nota = db.Column(db.Numeric(4, 2), nullable=False)
+    comentarios = db.Column(db.Text)
+    fecha_registro = db.Column(db.DateTime(timezone=True), default=datetime.utcnow)
+    fecha_actualizacion = db.Column(db.DateTime(timezone=True), default=datetime.utcnow)
+
+class SeguimientoEstudiante(db.Model):
+    __tablename__ = 'seguimientos_estudiantes'
+    id = db.Column(db.Uuid, primary_key=True, default=uuid.uuid4)
+    id_inscripcion = db.Column(db.Uuid, db.ForeignKey('inscripciones.id'), nullable=False)
+    id_colaborador_registra = db.Column(db.Uuid, db.ForeignKey('usuarios.id_colaborador'), nullable=False)
+    tipo_registro = db.Column(db.String(30), nullable=False)
+    gravedad = db.Column(db.String(15), default='Informativo')
+    descripcion = db.Column(db.Text, nullable=False)
+    fecha_suceso = db.Column(db.Date, nullable=False, default=datetime.utcnow)
+    fecha_registro = db.Column(db.DateTime(timezone=True), default=datetime.utcnow)
+    fecha_actualizacion = db.Column(db.DateTime(timezone=True), default=datetime.utcnow)
+
+    registrador = db.relationship('Usuario', backref='seguimientos', lazy=True)
+
+class CarpetaDocente(db.Model):
+    __tablename__ = 'carpetas_docentes'
+    id = db.Column(db.Uuid, primary_key=True, default=uuid.uuid4)
+    id_asignacion_docente = db.Column(db.Uuid, db.ForeignKey('asignaciones_docentes.id'), unique=True, nullable=False)
+    nombre_carpeta = db.Column(db.String(100), nullable=False)
+    fecha_registro = db.Column(db.DateTime(timezone=True), default=datetime.utcnow)
+    fecha_actualizacion = db.Column(db.DateTime(timezone=True), default=datetime.utcnow)
+
+    documentos = db.relationship('DocumentoDocente', backref='carpeta', lazy=True)
+
+class DocumentoDocente(db.Model):
+    __tablename__ = 'documentos_docentes'
+    id = db.Column(db.Uuid, primary_key=True, default=uuid.uuid4)
+    id_carpeta = db.Column(db.Uuid, db.ForeignKey('carpetas_docentes.id'), nullable=False)
+    nombre_archivo = db.Column(db.String(150), nullable=False)
+    archivo_url = db.Column(db.String(255), nullable=False)
+    fecha_subida = db.Column(db.DateTime(timezone=True), default=datetime.utcnow)
+
+class PagoPlan(db.Model):
+    __tablename__ = 'pago_planes'
+    id = db.Column(db.Uuid, primary_key=True, default=uuid.uuid4)
+    id_aula_asignada = db.Column(db.Uuid, db.ForeignKey('aulas_asignadas.id'), nullable=False)
+    concepto_pago = db.Column(db.String(100), nullable=False)
+    monto_base = db.Column(db.Numeric(10, 2), nullable=False)
+    fecha_vencimiento = db.Column(db.Date, nullable=False)
+    fecha_registro = db.Column(db.DateTime(timezone=True), default=datetime.utcnow)
+    fecha_actualizacion = db.Column(db.DateTime(timezone=True), default=datetime.utcnow)
+
+    pagos = db.relationship('Pago', backref='plan', lazy=True)
+
+class Pago(db.Model):
+    __tablename__ = 'pagos'
+    id = db.Column(db.Uuid, primary_key=True, default=uuid.uuid4)
+    id_matricula = db.Column(db.Uuid, db.ForeignKey('matriculas.id'), nullable=False)
+    id_pago_plan = db.Column(db.Uuid, db.ForeignKey('pago_planes.id'), nullable=False)
+    monto_pagado = db.Column(db.Numeric(10, 2), nullable=False)
+    monto_mora = db.Column(db.Numeric(10, 2), default=0.00, nullable=False)
+    fecha_transaccion = db.Column(db.DateTime(timezone=True), default=datetime.utcnow)
+    metodo_pago = db.Column(db.String(30), nullable=False)
+    comprobante_numero = db.Column(db.String(50), unique=True, nullable=False)
+    fecha_registro = db.Column(db.DateTime(timezone=True), default=datetime.utcnow)
+    fecha_actualizacion = db.Column(db.DateTime(timezone=True), default=datetime.utcnow)

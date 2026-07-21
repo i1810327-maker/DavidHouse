@@ -197,7 +197,7 @@
     <div class="ref-modal" style="max-width:500px;max-height:85vh;overflow-y:auto;">
         <span class="close" onclick="document.getElementById('modal-subir-reporte').style.display='none'">&times;</span>
         <h3 id="modal-reporte-title">Subir Reporte</h3>
-        <form method="POST" action="{{ url_for('docente.documentos') }}" enctype="multipart/form-data">
+        <form method="POST" action="{{ url_for('docente.carpeta') }}" enctype="multipart/form-data">
             <input type="hidden" name="solicitud_reporte_id" id="reporte-solicitud-id" value="">
             <div class="row g-3 mb-3">
                 <div class="col-12"><label class="form-label">Título *</label><input type="text" name="titulo" class="form-control w-100" style="min-height:44px;" required></div>
